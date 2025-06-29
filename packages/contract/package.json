@@ -1,0 +1,14 @@
+{
+  "name": "contract",
+  "type": "module",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.0-next.20",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0-next.20",
+    "@types/node": "^22.8.5",
+    "forge-std": "foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.0.0-next.20",
+    "typescript": "~5.8.0",
+    "viem": "^2.30.0"
+  }
+}
