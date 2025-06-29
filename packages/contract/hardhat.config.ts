@@ -1,9 +1,9 @@
 import type { HardhatUserConfig } from "hardhat/config";
 
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
-import { configVariable } from "hardhat/config";
+import { hardhat, monadTestnet } from "viem/chains";
 
-const config: HardhatUserConfig = {
+const config = {
   /*
    * In Hardhat 3, plugins are defined as part of the Hardhat config instead of
    * being based on the side-effect of imports.
@@ -64,21 +64,22 @@ const config: HardhatUserConfig = {
    *   found in the "Sending a Transaction to Optimism Sepolia" of the README.
    */
   networks: {
-    hardhatMainnet: {
-      type: "edr",
-      chainType: "l1",
-    },
-    hardhatOp: {
-      type: "edr",
-      chainType: "optimism",
-    },
-    sepolia: {
+    monadTestnet: {
       type: "http",
-      chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      url: monadTestnet.rpcUrls.default.http[0],
+      chainId: monadTestnet.id,
+    },
+    localhost: {
+      type: "http",
+      url: hardhat.rpcUrls.default.http[0],
+      chainId: hardhat.id,
     },
   },
-};
+} satisfies HardhatUserConfig;
+
+if (process.env.DEPLOYER_PRIVATE_KEY)
+  Reflect.set(config.networks.monadTestnet, "accounts", [
+    process.env.DEPLOYER_PRIVATE_KEY,
+  ]);
 
 export default config;
