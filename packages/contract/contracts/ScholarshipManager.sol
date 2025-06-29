@@ -23,7 +23,7 @@ contract ScholarshipManager is
 
     function startApplication(
         uint256 _quorum
-    ) external onlyInStatus(ScholarshipStatus.Pending) onlyOwner {
+    ) external onlyOwner {
         _openBatch();
         quorumVote[appBatch] = _quorum;
     }

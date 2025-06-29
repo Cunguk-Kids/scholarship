@@ -2,6 +2,12 @@
   "name": "contract",
   "type": "module",
   "version": "1.0.0",
+  "scripts": {
+    "active-node": "hardhat node",
+    "deploy": "bun scripts/deploy.ts",
+    "test": "hardhat test",
+    "compile": "hardhat compile"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.0-next.20",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0-next.20",
