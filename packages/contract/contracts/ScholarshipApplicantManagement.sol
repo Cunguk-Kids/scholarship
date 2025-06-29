@@ -21,7 +21,10 @@ contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
         return applicantSize[appBatch];
     }
 
-    function _addApplicant(address _applicantAddress) internal {
+    function _addApplicant(
+        address _applicantAddress,
+        uint[] calldata milestones_
+    ) internal {
         if (getApplicant(_applicantAddress).applicantAddress != address(0x0))
             revert AlreadyApply();
         addressToApplicants[appBatch][_applicantAddress] = Applicant({
@@ -29,6 +32,7 @@ contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
             voteCount: 0
         });
         applicantSize[appBatch] += 1;
+        _addMilestones(_applicantAddress, milestones_);
     }
 
     function _voteApplicant(
@@ -37,6 +41,7 @@ contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
     ) internal onlyValidApplicant(_applicant) {
         if (getIsAlreadyVote(_voter)) revert AlreadyVote();
         addressToApplicants[appBatch][_applicant].voteCount += 1;
+        isAlreadyVote[appBatch][_voter] = true;
     }
 
     function getApplicant(

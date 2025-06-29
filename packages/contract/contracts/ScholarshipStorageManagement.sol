@@ -3,10 +3,9 @@ pragma solidity ^0.8.20;
 import {ScholarshipStatus} from "./ScholarshipStruct.sol";
 import {ScholarshipApplicantManagement} from "./ScholarshipApplicantManagement.sol";
 
-contract ScholarshipStorageManagement is
-    ScholarshipApplicantManagement
-{
-    uint public scholarshipTargetAmount;
+contract ScholarshipStorageManagement is ScholarshipApplicantManagement {
+    uint public constant TRANSACTION_FEE = 0.01 ether;
+    uint public constant MINIMAL_DONATION = 0.03 ether;
     uint public stackedToken;
-    uint public quorumVote;
+    mapping(uint => uint) quorumVote;
 }

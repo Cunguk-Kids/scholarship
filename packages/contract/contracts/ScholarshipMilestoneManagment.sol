@@ -19,6 +19,8 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     error OnlyValidMilestone();
     error OnlyApplicantCanWithdraw();
     error DonationIsNotEnough();
+    error ArrayCannotEmpty();
+    error WithdrawMilestoneOnlyOnce();
 
     function getNextMilestone() public view returns (uint) {
         return nextMilestone[appBatch];
@@ -28,7 +30,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         nextMilestone[appBatch] += 1;
     }
 
-    function _onlyValidMilestone(uint id) public view {
+    function _onlyValidMilestone(uint id) internal view {
         uint _nextMilestone = getNextMilestone();
         if (_nextMilestone == 0 || id > _nextMilestone)
             revert OnlyValidMilestone();
@@ -43,6 +45,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         address applicant_,
         uint[] calldata _milestones
     ) internal {
+        if (_milestones.length < 1) revert ArrayCannotEmpty();
         for (uint i = 0; i < _milestones.length; i += 1) {
             uint price = _milestones[i];
             _addNextMilestone();
@@ -65,12 +68,13 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         Milestone memory milestone = milestones[batch][id];
         if (milestone.applicant != msg.sender)
             revert OnlyApplicantCanWithdraw();
+            if (milestone.isWithdrawed) revert WithdrawMilestoneOnlyOnce();
         milestones[batch][id].metadata = metadata;
         milestones[batch][id].isWithdrawed = true;
         (bool isSuccess, ) = milestone.applicant.call{value: milestone.price}(
             ""
         );
-        if (isSuccess) revert DonationIsNotEnough();
+        if (!isSuccess) revert DonationIsNotEnough();
     }
 
     function getMilestone(
