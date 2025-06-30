@@ -39,8 +39,8 @@ export const investorNFTController = new Elysia({ prefix: "/investor-nft" })
     const jsonMetadata = await pinata.upload.public.json(finalProcess);
 
     const finalResult = {
-      metadataURL: `https://gateway.pinata.cloud/ipfs/${jsonMetadata.cid}`,
-      imageURL: `https://gateway.pinata.cloud/ipfs/${uploadedMedia.cid}`,
+      metadataURL: `${process.env.IPFS_URL}/${jsonMetadata.cid}`,
+      imageURL: `${process.env.IPFS_URL}/${uploadedMedia.cid}`,
       metadata: finalProcess
     };
 
