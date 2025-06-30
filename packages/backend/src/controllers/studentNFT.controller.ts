@@ -3,6 +3,7 @@ import path from 'path';
 import Elysia from "elysia";
 import type { StudentMetadata } from "@back/types/metadata.type";
 import { publicDir } from "@back/utils/publicDirectory";
+import fs from "fs";
 
 export const studentNFTController = new Elysia({ prefix: "/student-nft" })
   .post("/generate", ({ body, set }) => {
@@ -14,6 +15,9 @@ export const studentNFTController = new Elysia({ prefix: "/student-nft" })
     }
     const outputPath = path.join(publicDir, 'output', `template-${Date.now()}.png`);
     const templatePath = path.join(publicDir, 'templates', 'template-two.svg');
+
+    // delete file
+    // fs.unlinkSync(outputPath);
 
     console.log(templatePath);
 
