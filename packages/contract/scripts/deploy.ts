@@ -10,7 +10,8 @@ async function deploy() {
     donaterNFT.address,
   ]);
   console.log("Transferring ownership of DonaterNFT to ScholarshipManager");
-  donaterNFT.write.transferOwnership([manager.address]);
+  const minterRole = await donaterNFT.read.MINTER_ROLE();
+  donaterNFT.write.grantRole([minterRole, manager.address]);
 
   console.log("DonaterNFT:", donaterNFT.address);
   console.log("Manager:", manager.address);
