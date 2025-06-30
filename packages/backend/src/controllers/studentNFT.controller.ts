@@ -41,7 +41,7 @@ export const studentNFTController = new Elysia({ prefix: "/student-nft" })
     const finalResult = {
       metadataURL: `${process.env.IPFS_URL}/${jsonMetadata.cid}`,
       imageURL: `${process.env.IPFS_URL}/${uploadedMedia.cid}`,
-      metadata: finalProcess
+      metadata: { ...finalProcess, cid: jsonMetadata.cid }
     };
 
     return { success: true, finalResult };
