@@ -4,9 +4,10 @@ import Elysia from "elysia";
 import type { StudentMetadata } from "@back/types/metadata.type";
 import { publicDir } from "@back/utils/publicDirectory";
 import fs from "fs";
+import { pinata } from "@back/lib/pinata";
 
 export const studentNFTController = new Elysia({ prefix: "/student-nft" })
-  .post("/generate", ({ body, set }) => {
+  .post("/generate", async ({ body, set }) => {
     const metadata = body as StudentMetadata;
 
     if (!metadata.studentID || !metadata.enrollDate) {
@@ -14,14 +15,34 @@ export const studentNFTController = new Elysia({ prefix: "/student-nft" })
       return { error: 'Missing required metadata fields' };
     }
     const outputPath = path.join(publicDir, 'output', `template-${Date.now()}.png`);
-    const templatePath = path.join(publicDir, 'templates', 'template-two.svg');
+    const templatePath = path.join(publicDir, 'templates', 'student', 'template-two.svg');
+
+    // generate image
+    generateImage(templatePath, outputPath, metadata);
+
+    const imageBuffer = fs.readFileSync(outputPath);
+    const base64String = imageBuffer.toString('base64');
+    const uploadedMedia = await pinata.upload.public.base64(base64String);
+
+    // ipfs
+    // const result = await ipfs.add(imageBuffer);
+    // const imageUri = `${result.path}`;
 
     // delete file
     // fs.unlinkSync(outputPath);
 
-    console.log(templatePath);
+    const finalProcess = {
+      ...metadata,
+      imageCID: uploadedMedia.cid,
+    };
 
-    generateImage(templatePath, outputPath, metadata);
+    const jsonMetadata = await pinata.upload.public.json(finalProcess);
 
-    return { success: true, templatePath, path: outputPath };
+    const finalResult = {
+      metadataURL: `https://gateway.pinata.cloud/ipfs/${jsonMetadata.cid}`,
+      imageURL: `https://gateway.pinata.cloud/ipfs/${uploadedMedia.cid}`,
+      metadata: finalProcess
+    };
+
+    return { success: true, finalResult };
   });
