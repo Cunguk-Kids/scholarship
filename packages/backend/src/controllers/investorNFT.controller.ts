@@ -10,7 +10,7 @@ export const investorNFTController = new Elysia({ prefix: "/investor-nft" })
   .post("/generate", async ({ body, set }) => {
     const metadata = body as StudentMetadata;
 
-    if (!metadata.studentID || !metadata.enrollDate) {
+    if (!metadata.enrollDate) {
       set.status = 400;
       return { error: 'Missing required metadata' };
     }
