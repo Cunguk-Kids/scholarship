@@ -6,7 +6,7 @@ import { publicDir } from "@back/utils/publicDirectory";
 import fs from "fs";
 import { pinata } from "@back/lib/pinata";
 
-export const studentNFTController = new Elysia({ prefix: "/student-nft" })
+export const investorNFTController = new Elysia({ prefix: "/investor-nft" })
   .post("/generate", async ({ body, set }) => {
     const metadata = body as StudentMetadata;
 
@@ -15,7 +15,7 @@ export const studentNFTController = new Elysia({ prefix: "/student-nft" })
       return { error: 'Missing required metadata' };
     }
     const outputPath = path.join(publicDir, 'output', `template-${Date.now()}.png`);
-    const templatePath = path.join(publicDir, 'templates', 'student', 'template-two.svg');
+    const templatePath = path.join(publicDir, 'templates', 'investor', 'template-two.svg');
 
     // generate image
     generateImage(templatePath, outputPath, metadata);
