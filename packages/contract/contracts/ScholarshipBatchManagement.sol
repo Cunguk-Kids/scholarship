@@ -9,12 +9,30 @@ contract ScholarshipBatchManagement {
 
     error OnlyInStatus(ScholarshipStatus status);
 
-    function _openBatch() internal {
+    function _openBatch() internal onlyInStatus(ScholarshipStatus.Pending) {
         appBatch += 1;
-        appStatus = ScholarshipStatus.OpenForApplications;
+        _changeStatus(ScholarshipStatus.OpenForApplications);
     }
 
-    function _changeStatus(ScholarshipStatus status) internal {
+    function _openVote()
+        internal
+        onlyInStatus(ScholarshipStatus.OpenForApplications)
+    {
+        _changeStatus(ScholarshipStatus.VotingOpen);
+    }
+
+    function _closeBatch() internal onlyInStatus(ScholarshipStatus.VotingOpen) {
+        _changeStatus(ScholarshipStatus.Completed);
+    }
+
+    function _openForDonation()
+        internal
+        onlyInStatus(ScholarshipStatus.Completed)
+    {
+        _changeStatus(ScholarshipStatus.Pending);
+    }
+
+    function _changeStatus(ScholarshipStatus status) private {
         appStatus = status;
     }
 
