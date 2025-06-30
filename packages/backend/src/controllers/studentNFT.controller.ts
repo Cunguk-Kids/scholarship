@@ -15,7 +15,7 @@ export const studentNFTController = new Elysia({ prefix: "/student-nft" })
       return { error: 'Missing required metadata' };
     }
     const outputPath = path.join(publicDir, 'output', `template-${Date.now()}.png`);
-    const templatePath = path.join(publicDir, 'templates', 'student', 'template-two.svg');
+    const templatePath = path.join(publicDir, 'templates', 'student', 'test.svg');
 
     // generate image
     generateImage(templatePath, outputPath, metadata);
