@@ -31,5 +31,4 @@ export function generateImage<T extends Record<string, unknown>>(
   }
 
   fs.writeFileSync(outputPath, pngBuffer);
-  console.log(`Image saved at: ${outputPath}`);
 }
