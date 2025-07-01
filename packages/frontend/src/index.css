@@ -1,1 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Paytone+One&display=swap");
 @import "tailwindcss";
+@theme {
+  --color-skpurple: #6a88f8;
+  --color-skred: #f55f4b;
+  --color-skyellow: #fcd343;
+  --color-skpink: #ff7989;
+  --color-skbw: #fcf0e3;
+  --color-skgreen: #82b5a5;
+  --font-nunito: "Nunito Sans", sans-serif;
+  --font-paytone: "Paytone One", sans-serif;
+}
