@@ -1,6 +1,6 @@
 import { generateImage } from "@back/lib/ImageTemplateReSVG";
 import path from 'path';
-import Elysia from "elysia";
+import Elysia, { t } from "elysia";
 import type { StudentMetadata } from "@back/types/metadata.type";
 import { publicDir } from "@back/utils/publicDirectory";
 import fs from "fs";
@@ -45,4 +45,9 @@ export const studentNFTController = new Elysia({ prefix: "/student-nft" })
     };
 
     return { success: true, finalResult };
+  }, {
+    body: t.Object({
+      studentID: t.String(),
+      enrollDate: t.String()
+    })
   });

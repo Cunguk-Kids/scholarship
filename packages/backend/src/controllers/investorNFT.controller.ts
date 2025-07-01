@@ -1,6 +1,6 @@
 import { generateImage } from "@back/lib/ImageTemplateReSVG";
 import path from 'path';
-import Elysia from "elysia";
+import Elysia, { t } from "elysia";
 import type { StudentMetadata } from "@back/types/metadata.type";
 import { publicDir } from "@back/utils/publicDirectory";
 import fs from "fs";
@@ -10,10 +10,6 @@ export const investorNFTController = new Elysia({ prefix: "/investor-nft" })
   .post("/generate", async ({ body, set }) => {
     const metadata = body as StudentMetadata;
 
-    if (!metadata.enrollDate) {
-      set.status = 400;
-      return { error: 'Missing required metadata' };
-    }
     const outputPath = path.join(publicDir, 'output', `template-${Date.now()}.png`);
     const templatePath = path.join(publicDir, 'templates', 'investor', 'template-two.svg');
 
@@ -45,4 +41,8 @@ export const investorNFTController = new Elysia({ prefix: "/investor-nft" })
     };
 
     return { success: true, finalResult };
+  }, {
+    body: t.Object({
+      enrollDate: t.String()
+    })
   });
