@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "active-node": "hardhat node",
-    "deploy": "bun scripts/deploy.ts",
+    "deploy": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network localhost",
     "test": "hardhat test",
     "compile": "hardhat compile"
   },
