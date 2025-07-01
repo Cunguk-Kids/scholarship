@@ -16,8 +16,9 @@ contract ScholarshipManager is
     Ownable(msg.sender)
 {
     constructor(
-        address _donaterNFTAddress
-    ) ScholarshipNFTMintingManager(_donaterNFTAddress) {}
+        address _donaterNFTAddress,
+        address _studentNFTAddress
+    ) ScholarshipNFTMintingManager(_donaterNFTAddress, _studentNFTAddress) {}
 
     event ApplicantApplied(address indexed applicantAddress, uint256 batchId);
     event Voted(address voter, address applicant, uint256 batchId);
@@ -38,6 +39,7 @@ contract ScholarshipManager is
     error NotInMinimalAmount();
     error CannotWithdrawNotInQuorum();
     error ApplicantNotEnough();
+    error OnlyDonateOnce();
 
     function startApplication(
         uint256 _quorum,
@@ -66,16 +68,22 @@ contract ScholarshipManager is
     }
 
     function applyApplicant(
-        uint256[] calldata milestones_
+        uint256[] calldata milestones_,
+        string calldata uri
     ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
         _addApplicant(msg.sender, milestones_);
+        _mintForStudent(uri);
         emit ApplicantApplied(msg.sender, appBatch);
     }
 
-    function donate() external payable onlyInStatus(ScholarshipStatus.Pending) {
+    function donate(
+        string calldata uri
+    ) external payable onlyInStatus(ScholarshipStatus.Pending) {
         if (msg.value < MINIMAL_DONATION) revert NotInMinimalAmount();
+        if (alreadyDonate[appBatch][msg.sender]) revert OnlyDonateOnce();
         stackedToken += msg.value - TRANSACTION_FEE;
-        _mintForDonater(msg.value);
+        _mintForDonater(uri);
+        alreadyDonate[appBatch][msg.sender] = true;
         emit Donated(msg.sender, appBatch, msg.value);
     }
 

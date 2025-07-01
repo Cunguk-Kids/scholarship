@@ -14,6 +14,7 @@ import "../contracts/ScholarshipStruct.sol";
 contract ScholarshipManagerTest is Test {
     ScholarshipManager public scholarshipManager;
     ScholarshipDonaterNFT public donaterNFT;
+    ScholarshipStudentNFT public applicantNFT;
 
     address public owner;
     address public donor1;
@@ -55,13 +56,21 @@ contract ScholarshipManagerTest is Test {
 
         // Deploy NFT contract
         donaterNFT = new ScholarshipDonaterNFT();
+        applicantNFT = new ScholarshipStudentNFT();
 
         // Deploy main contract
-        scholarshipManager = new ScholarshipManager(address(donaterNFT));
+        scholarshipManager = new ScholarshipManager(
+            address(donaterNFT),
+            address(applicantNFT)
+        );
 
         // Grant minting role to the scholarship manager
         donaterNFT.grantRole(
             donaterNFT.MINTER_ROLE(),
+            address(scholarshipManager)
+        );
+        applicantNFT.grantRole(
+            applicantNFT.MINTER_ROLE(),
             address(scholarshipManager)
         );
 
@@ -90,7 +99,7 @@ contract ScholarshipManagerTest is Test {
         vm.prank(donor1);
         vm.expectEmit(true, false, false, true);
         emit Donated(donor1, 0, donationAmount);
-        scholarshipManager.donate{value: donationAmount}();
+        scholarshipManager.donate{value: donationAmount}("");
 
         assertEq(
             scholarshipManager.stackedToken(),
@@ -104,7 +113,7 @@ contract ScholarshipManagerTest is Test {
 
         vm.prank(donor1);
         vm.expectRevert(ScholarshipManager.NotInMinimalAmount.selector);
-        scholarshipManager.donate{value: donationAmount}();
+        scholarshipManager.donate{value: donationAmount}("");
     }
 
     function testDonationOnlyInPendingStatus() public {
@@ -118,21 +127,7 @@ contract ScholarshipManagerTest is Test {
                 ScholarshipStatus.Pending
             )
         );
-        scholarshipManager.donate{value: 0.5 ether}();
-    }
-
-    // Test NFT rarity mapping
-    function testNFTRarityMapping() public {
-        // Common (0.1 ether or less)
-        vm.prank(donor1);
-        scholarshipManager.donate{value: 0.1 ether}();
-
-        // Rare (0.5 ether or less)
-        vm.prank(donor2);
-        scholarshipManager.donate{value: 0.5 ether}();
-
-        assertEq(donaterNFT.balanceOf(donor1), 1);
-        assertEq(donaterNFT.balanceOf(donor2), 1);
+        scholarshipManager.donate{value: 0.5 ether}("");
     }
 
     // Test batch management
@@ -165,7 +160,7 @@ contract ScholarshipManagerTest is Test {
         vm.prank(applicant1);
         vm.expectEmit(true, false, false, true);
         emit ApplicantApplied(applicant1, 1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         assertEq(scholarshipManager.getApplicantSize(), 1);
 
@@ -182,12 +177,12 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         // Try to apply again
         vm.prank(applicant1);
         vm.expectRevert(ScholarshipApplicantManagement.AlreadyApply.selector);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
     }
 
     function testApplyWithEmptyMilestones() public {
@@ -199,7 +194,7 @@ contract ScholarshipManagerTest is Test {
         vm.expectRevert(
             ScholarshipMilestoneManagement.ArrayCannotEmpty.selector
         );
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
     }
 
     // Test voting functionality
@@ -211,10 +206,10 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         vm.prank(applicant2);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         vm.expectEmit(false, false, false, true);
         emit VotingStarted(1);
@@ -234,7 +229,7 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         vm.expectRevert(ScholarshipManager.ApplicantNotEnough.selector);
         scholarshipManager.openVote();
@@ -248,10 +243,10 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         vm.prank(applicant2);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         scholarshipManager.openVote();
 
@@ -277,10 +272,10 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         vm.prank(applicant2);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         scholarshipManager.openVote();
 
@@ -301,10 +296,10 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         vm.prank(applicant2);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         scholarshipManager.openVote();
 
@@ -325,7 +320,7 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         scholarshipManager.openVote();
 
@@ -356,7 +351,7 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         scholarshipManager.openVote();
 
@@ -380,7 +375,7 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         scholarshipManager.openVote();
 
@@ -406,7 +401,7 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         scholarshipManager.openVote();
 
@@ -437,7 +432,7 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         scholarshipManager.openVote();
 
@@ -481,10 +476,10 @@ contract ScholarshipManagerTest is Test {
     function testFullWorkflow() public {
         // 1. Start with donations
         vm.prank(donor1);
-        scholarshipManager.donate{value: 0.5 ether}();
+        scholarshipManager.donate{value: 0.5 ether}("");
 
         vm.prank(donor2);
-        scholarshipManager.donate{value: 1.0 ether}();
+        scholarshipManager.donate{value: 1.0 ether}("");
 
         assertEq(scholarshipManager.stackedToken(), 1.48 ether); // Total - 2 * fee
 
@@ -500,10 +495,10 @@ contract ScholarshipManagerTest is Test {
         milestones2[0] = 0.5 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones1);
+        scholarshipManager.applyApplicant(milestones1, "");
 
         vm.prank(applicant2);
-        scholarshipManager.applyApplicant(milestones2);
+        scholarshipManager.applyApplicant(milestones2, "");
 
         // 4. Start voting
         scholarshipManager.openVote();
@@ -547,7 +542,7 @@ contract ScholarshipManagerTest is Test {
         milestones[0] = 0.1 ether;
 
         vm.prank(applicant1);
-        scholarshipManager.applyApplicant(milestones);
+        scholarshipManager.applyApplicant(milestones, "");
 
         ScholarshipMilestoneManagement.Milestone
             memory mile = scholarshipManager.getMilestone(1);

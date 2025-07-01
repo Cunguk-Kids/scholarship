@@ -9,4 +9,5 @@ contract ScholarshipStorageManagement is ScholarshipApplicantManagement {
     uint public stackedToken;
     mapping(uint => uint) applicantTarget;
     mapping(uint => uint) quorumVote;
+    mapping(uint => mapping(address => bool)) alreadyDonate;
 }
