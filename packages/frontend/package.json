@@ -11,8 +11,15 @@
   },
   "dependencies": {
     "@elysiajs/eden": "^1.3.2",
+    "@rainbow-me/rainbowkit": "^2.2.8",
+    "@tailwindcss/vite": "^4.1.11",
+    "@tanstack/react-query": "^5.81.5",
+    "@tanstack/react-router": "^1.123.2",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.11",
+    "viem": "2.x",
+    "wagmi": "^2.15.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
@@ -27,6 +34,7 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.34.1",
     "vite": "^7.0.0",
-    "~backend": "workspace:*"
+    "~backend": "workspace:*",
+    "@tanstack/router-plugin": "^1.123.2"
   }
 }
