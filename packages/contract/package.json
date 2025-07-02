@@ -5,6 +5,7 @@
   "scripts": {
     "active-node": "hardhat node",
     "deploy": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network localhost",
+    "deploy-ganache": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network ganache",
     "test": "hardhat test",
     "compile": "hardhat compile"
   },
