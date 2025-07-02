@@ -3,6 +3,7 @@ import { task, type HardhatUserConfig } from "hardhat/config";
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { hardhat, monadTestnet } from "viem/chains";
 import * as dotenv from "dotenv";
+
 dotenv.config();
 
 console.log(process.env.MNEMONIC, process.env.DEPLOYER_PRIVATE_KEY);
@@ -31,6 +32,12 @@ const config = {
        */
       default: {
         version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       /*
        * The production profile is meant to be used for deployments, providing
@@ -42,7 +49,7 @@ const config = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 50,
+            runs: 200,
           },
         },
       },

@@ -90,10 +90,6 @@ contract ScholarshipProgram is
         emit Donated(msg.sender, appBatch, msg.value);
     }
 
-    // function getApplicants() external view returns (address[] memory) {
-    //     return applicantTarget;
-    // }
-
     function getDonators() external view returns (address[] memory) {
         return donators;
     }
