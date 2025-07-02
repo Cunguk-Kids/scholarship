@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-export function createInjection<T>(hook: () => T) {
+export function createInjection<T, Args extends unknown[]>(hook: (...args: Args) => T) {
   const ctx = createContext<T>(undefined as never);
   return {
     init: hook,
