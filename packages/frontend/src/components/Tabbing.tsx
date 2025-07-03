@@ -54,9 +54,9 @@ export const Tabbing = () => {
   const [activeTab, setActiveTab] = useState<TabStatus>("active");
 
   return (
-    <div className="shrink-0">
+    <div className="grow min-w-[70.5rem]">
       {/* Tabs */}
-      <div className="relative -left-2 shrink-0 z-10">
+      <div className="relative -left-2 -top-1 shrink-0 z-10 flex items-end -space-x-1">
         {tabs.map((tab) => (
           <TabButton
             key={tab.id}
@@ -70,8 +70,8 @@ export const Tabbing = () => {
       </div>
 
       {/* Cards */}
-      <div className="shrink-0 bg-black rounded-3xl">
-        <div className="relative w-[70.5rem] h-[35.875rem] bg-skbw rounded-e-3xl rounded-bl-3xl border-4 -left-2 -top-2">
+      <div className="shrink-0 bg-black rounded-3xl w-full">
+        <div className="relative w-full h-[35.875rem] bg-skbw rounded-e-3xl rounded-bl-3xl border-4 -left-2 -top-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-[3.75rem] p-20">
             {[...Array(2)].map((_, i) => (
               <CardScholarship key={i} status={activeTab} />
