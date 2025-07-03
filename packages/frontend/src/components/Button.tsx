@@ -16,7 +16,7 @@ const getButtonClasses = (
     size === "small" ? "py-2 px-4 text-base" : "px-6 py-3 text-2xl";
   return `flex relative -left-1 -top-1 font-nunito ${sizeClass} items-center gap-2.5 rounded-lg border-solid border-black ${bgColor} text-white ${
     hover ? `hover:${hover}` : "hover:bg-skpurple-hover"
-  } active:inset-shadow-pressed`;
+  } active:inset-shadow-pressed transition-transform active:translate-x-1 active:translate-y-1 border-2 border-black`;
 };
 
 const ButtonWrapper = ({ children }: { children: React.ReactNode }) => (

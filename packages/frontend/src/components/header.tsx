@@ -1,5 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { Button } from "./Button";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -8,12 +10,22 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard" },
 ];
 
+
 export function Header() {
   const router = useRouter();
   const currentPath = router.state.location.pathname;
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    gsap.fromTo(
+      ref.current,
+      { opacity: 0, y: "100%" },
+      { opacity: 1, y: "0%", duration: 2, ease: "power3.out" }
+    );
+  }, []);
 
   return (
-    <header className="flex py-[1.375rem] px-6 bg-white m-9 justify-between items-center rounded-2xl border-2 border-black inset-shadow-sksm shrink-0">
+    <header ref={ref} className="flex py-[1.375rem] px-6 bg-white m-9 justify-between items-center rounded-2xl border-2 border-black inset-shadow-sksm shrink-0">
       <img src="/skoolcein-logo.svg" alt="logo" />
       <nav>
         <ul className="flex gap-6 text-gray-800 items-center">
