@@ -17,8 +17,18 @@ enum ScholarshipStatus {
     Completed
 }
 
-
 // --- Structs ---
+
+// program
+struct ScholarshipProgramDetails {
+    uint256 id;
+    address initiatorAddress;
+    string programMetadataCID;
+    uint256 targetApplicant;
+    uint256 startDate;
+    uint256 endDate;
+    address programContractAddress;
+}
 
 /**
  * @dev Defines the structure for a scholarship applicant's data.

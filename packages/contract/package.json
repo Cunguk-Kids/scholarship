@@ -5,6 +5,7 @@
   "scripts": {
     "active-node": "hardhat node",
     "deploy": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network localhost",
+    "deploy-ganache": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network ganache",
     "test": "hardhat test",
     "compile": "hardhat compile"
   },
@@ -18,6 +19,8 @@
     "viem": "^2.30.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.3.0"
+    "@openzeppelin/contracts": "^5.3.0",
+    "@openzeppelin/contracts-upgradeable": "^5.3.0",
+    "dotenv": "^17.0.1"
   }
 }

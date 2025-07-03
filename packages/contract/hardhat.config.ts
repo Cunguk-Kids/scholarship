@@ -1,7 +1,11 @@
-import type { HardhatUserConfig } from "hardhat/config";
-
+import { task, type HardhatUserConfig } from "hardhat/config";
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { hardhat, monadTestnet } from "viem/chains";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+console.log(process.env.MNEMONIC, process.env.DEPLOYER_PRIVATE_KEY);
 
 const config = {
   /*
@@ -27,6 +31,12 @@ const config = {
        */
       default: {
         version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       /*
        * The production profile is meant to be used for deployments, providing
@@ -74,6 +84,14 @@ const config = {
       url: hardhat.rpcUrls.default.http[0],
       chainId: hardhat.id,
     },
+    ganache: {
+      type: "http",
+      url: "http://127.0.0.1:8545",
+      chainId: 1337,
+      accounts: {
+        mnemonic: process.env.MNEMONIC!,
+      },
+    }
   },
 } satisfies HardhatUserConfig;
 

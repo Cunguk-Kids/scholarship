@@ -6,6 +6,7 @@ import {ScholarshipMilestoneManagement} from "./ScholarshipMilestoneManagment.so
 
 contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
     mapping(uint => mapping(address => Applicant)) addressToApplicants;
+    mapping(uint => address[]) internal batchApplicants;
     mapping(uint => mapping(address => bool)) isAlreadyVote;
     mapping(uint => uint) public applicantSize;
 
@@ -31,6 +32,8 @@ contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
             applicantAddress: _applicantAddress,
             voteCount: 0
         });
+
+        batchApplicants[appBatch].push(_applicantAddress);
         applicantSize[appBatch] += 1;
         _addMilestones(_applicantAddress, milestones_);
     }
@@ -58,5 +61,23 @@ contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
     modifier onlyValidApplicant(address _applicantAddress) {
         _onlyValidApplicant(_applicantAddress);
         _;
+    }
+
+    function _getAllApplicantsWithVotes()
+        external
+        view
+        returns (address[] memory, uint[] memory)
+    {
+        uint size = batchApplicants[appBatch].length;
+        address[] memory addresses = new address[](size);
+        uint[] memory votes = new uint[](size);
+
+        for (uint i = 0; i < size; i++) {
+            address applicant = batchApplicants[appBatch][i];
+            addresses[i] = applicant;
+            votes[i] = addressToApplicants[appBatch][applicant].voteCount;
+        }
+
+        return (addresses, votes);
     }
 }
