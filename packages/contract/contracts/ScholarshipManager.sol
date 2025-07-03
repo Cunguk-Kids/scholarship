@@ -5,10 +5,16 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ScholarshipProgramDetails, ScholarshipStatus} from "./ScholarshipStruct.sol";
 import {ScholarshipProgram} from "./ScholarshipProgram.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+//
 contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
     uint256 public nextProgramId;
     mapping(uint256 => ScholarshipProgramDetails) public programs;
+    address public immutable programImplementation;
+
+    constructor(address _programImplementation) {
+        programImplementation = _programImplementation;
+    }
 
     error ProgramNotFound();
     error NotAcceptingDonations();
@@ -38,13 +44,22 @@ contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
         program = ScholarshipProgram(programs[id].programContractAddress);
     }
 
+    function getProgramData(
+        uint256 id
+    ) external view returns (ScholarshipProgram program) {
+        if (id >= nextProgramId) revert ProgramNotFound();
+        program = ScholarshipProgram(programs[id].programContractAddress);
+        return program;
+    }
+
     function createProgram(
         string memory cid,
         uint256 target,
         uint256 start,
         uint256 end
     ) external {
-        ScholarshipProgram newProgram = new ScholarshipProgram(
+        address clone = Clones.clone(programImplementation);
+        ScholarshipProgram(clone).initialize(
             cid,
             msg.sender,
             target,
@@ -58,10 +73,16 @@ contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
             targetApplicant: target,
             startDate: start,
             endDate: end,
-            programContractAddress: address(newProgram)
+            programContractAddress: clone
         });
-        emit ProgramCreated(nextProgramId, address(newProgram), msg.sender);
+        emit ProgramCreated(nextProgramId, clone, msg.sender);
         ++nextProgramId;
+    }
+
+    function getProgramDetails(
+        uint256 id
+    ) external view returns (ScholarshipProgramDetails memory) {
+        return programs[id];
     }
 
     function donateToProgram(uint256 id) external payable {

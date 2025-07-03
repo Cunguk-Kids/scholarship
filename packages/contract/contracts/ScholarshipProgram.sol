@@ -2,16 +2,18 @@
 pragma solidity ^0.8.20;
 
 import {ScholarshipProgramDetails, ScholarshipStatus} from "./ScholarshipStruct.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {ScholarshipStorageManagement} from "./ScholarshipStorageManagement.sol";
 import {ScholarshipManagerAccessControl} from "./ScholarshipManagerAccessControl.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract ScholarshipProgram is
+    Initializable,
     ScholarshipStorageManagement,
     ReentrancyGuard,
-    ScholarshipManagerAccessControl,
-    Ownable
+    OwnableUpgradeable,
+    ScholarshipManagerAccessControl
 {
     string public programMetadataCID;
     address public initiatorAddress;
@@ -38,18 +40,15 @@ contract ScholarshipProgram is
     error NotInMinimalAmount();
     error OnlyDonateOnce();
 
-    constructor(
+    function initialize(
         string memory _programMetadataCID,
         address _initiatorAddress,
         uint256 _targetApplicant,
         uint256 _startDate,
         uint256 _endDate
-    )
-        ScholarshipStorageManagement()
-        ReentrancyGuard()
-        ScholarshipManagerAccessControl()
-        Ownable(_initiatorAddress)
-    {
+    ) external initializer {
+        __Ownable_init(_initiatorAddress);
+        __ScholarshipManagerAccessControl_init();
         programMetadataCID = _programMetadataCID;
         initiatorAddress = _initiatorAddress;
         startDate = _startDate;

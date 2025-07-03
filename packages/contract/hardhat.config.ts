@@ -1,5 +1,4 @@
 import { task, type HardhatUserConfig } from "hardhat/config";
-
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { hardhat, monadTestnet } from "viem/chains";
 import * as dotenv from "dotenv";
