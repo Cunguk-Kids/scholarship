@@ -12,12 +12,38 @@ pragma solidity ^0.8.20;
  */
 enum ScholarshipStatus {
     Pending,
-    OpenForApplications,
+    OpenForApplications, // applican and donator masuk
+    DonationClose,
     VotingOpen,
     Completed
 }
 
+enum MilestoneType {
+    TEMPLATE,
+    CUSTOM
+}
+
 // --- Structs ---
+
+struct Milestone {
+    uint price;
+    string metadata;
+    address applicant;
+    bool isWithdrawed;
+    MilestoneType mType;
+}
+
+struct MilestoneTemplate {
+    uint price;
+    string metadata;
+}
+
+struct MilestoneInput {
+    MilestoneType mType;
+    uint price;
+    uint templateId;
+    string metadata;
+}
 
 // program
 struct ScholarshipProgramDetails {

@@ -14,6 +14,17 @@ contract ScholarshipBatchManagement {
         _changeStatus(ScholarshipStatus.OpenForApplications);
     }
 
+    function _openDonation() internal {
+        _changeStatus(ScholarshipStatus.OpenForApplications);
+    }
+
+    function _closeDonation()
+        internal
+        onlyInStatus(ScholarshipStatus.OpenForApplications)
+    {
+        _changeStatus(ScholarshipStatus.DonationClose);
+    }
+
     function _openVote()
         internal
         onlyInStatus(ScholarshipStatus.OpenForApplications)
@@ -23,13 +34,6 @@ contract ScholarshipBatchManagement {
 
     function _closeBatch() internal onlyInStatus(ScholarshipStatus.VotingOpen) {
         _changeStatus(ScholarshipStatus.Completed);
-    }
-
-    function _openForDonation()
-        internal
-        onlyInStatus(ScholarshipStatus.Completed)
-    {
-        _changeStatus(ScholarshipStatus.Pending);
     }
 
     function _changeStatus(ScholarshipStatus status) private {

@@ -15,14 +15,14 @@ contract ScholarshipManagerAccessControl is AccessControlUpgradeable {
     error OnlyCloseRole();
     error OnlyOpenDonationRole();
 
-    function __ScholarshipManagerAccessControl_init()
-        internal
-        onlyInitializing
-    {
+    function __ScholarshipManagerAccessControl_init(
+        address initialOwner
+    ) internal onlyInitializing {
         __AccessControl_init();
-        _grantRole(OPEN_ROLE, msg.sender);
-        _grantRole(OPEN_VOTE_ROLE, msg.sender);
-        _grantRole(CLOSE_ROLE, msg.sender);
-        _grantRole(OPEN_DONATION_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, initialOwner);
+        _grantRole(OPEN_ROLE, initialOwner);
+        _grantRole(OPEN_VOTE_ROLE, initialOwner);
+        _grantRole(CLOSE_ROLE, initialOwner);
+        _grantRole(OPEN_DONATION_ROLE, initialOwner);
     }
 }
