@@ -10,7 +10,6 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard" },
 ];
 
-
 export function Header() {
   const router = useRouter();
   const currentPath = router.state.location.pathname;
@@ -25,7 +24,10 @@ export function Header() {
   }, []);
 
   return (
-    <header ref={ref} className="flex py-[1.375rem] px-6 bg-white m-9 justify-between items-center rounded-2xl border-2 border-black inset-shadow-sksm shrink-0 z-10">
+    <header
+      ref={ref}
+      className="flex py-[1.375rem] px-6 bg-white m-9 justify-between items-center rounded-2xl border-2 border-black inset-shadow-sksm shrink-0 z-10"
+    >
       <img src="/skoolcein-logo.svg" alt="logo" />
       <nav>
         <ul className="flex gap-6 text-gray-800 items-center">

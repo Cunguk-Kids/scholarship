@@ -1,5 +1,5 @@
 import { Outlet, createRootRoute } from "@tanstack/react-router";
-import { Header } from "../components/header";
+import { Header } from "../components/Header";
 import { appStateInjection } from "../hooks/inject/app-state";
 import { useBlockNumber } from "wagmi";
 
