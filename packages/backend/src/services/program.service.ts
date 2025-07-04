@@ -1,5 +1,26 @@
-import type { createProgramDto } from "@back/db/dto";
+import { db } from "@/db";
+import { programTable } from "@/db/schema";
+import type { createProgramDto, programInsertDto } from "@back/db/dto";
 import { pinata } from "@back/lib/pinata";
+
+//  `${process.env.IPFS_URL}/${(await pinata.upload.public.json(metadata)).cid}`,
+export async function getProgram(id: string) {
+  return db.query.programTable.findFirst({
+    where: (program, { eq }) => eq(program.id, id),
+    with: {
+      milestoneTemplates: true,
+      donations: true,
+    },
+  });
+}
+
+export async function getAllProgram() {
+  return await db.select().from(programTable);
+}
+
+export function addProgram(dto: typeof programInsertDto.static) {
+  return db.insert(programTable).values(dto);
+}
 
 export async function createProgramService({
   description,

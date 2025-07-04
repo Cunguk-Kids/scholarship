@@ -1,14 +1,14 @@
 import { generateImage } from "@back/lib/ImageTemplateReSVG";
 import path from 'path';
 import Elysia, { t } from "elysia";
-import type { StudentMetadata } from "@back/types/metadata.type";
+import type { IMetadata } from "@back/types/metadata.type";
 import { publicDir } from "@back/utils/publicDirectory";
 import fs from "fs";
 import { pinata } from "@back/lib/pinata";
 
 export const studentNFTController = new Elysia({ prefix: "/student-nft" })
   .post("/generate", async ({ body, set }) => {
-    const metadata = body as StudentMetadata;
+    const metadata = body as IMetadata;
 
     if (!metadata.studentID || !metadata.enrollDate) {
       set.status = 400;
