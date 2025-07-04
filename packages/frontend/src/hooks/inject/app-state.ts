@@ -1,62 +1,12 @@
-import { useReadContracts } from "wagmi";
-import { scholarshipAbi } from "../../repo/abi";
-import { skoolchainAddress } from "../../constants/contractAddress";
+import { useBlockNumber } from "wagmi";
 import { createInjection } from "../../util/create-inject";
-import { useEffect, useMemo } from "react";
 
-const appStatusEnum = [
-  "PENDING",
-  "OPEN_FOR_APPLICATIONS",
-  "VOTING_OPEN",
-  "COMPLETED",
-] as const;
-
-export const appStateInjection = createInjection((blockNumber: bigint) => {
-  const { data: [appStatus, appBatch, applicantSize] = [], ...queryState } =
-    useReadContracts({
-      contracts: [
-        {
-          abi: scholarshipAbi,
-          address: skoolchainAddress,
-          functionName: "appStatus",
-          args: [],
-        },
-        {
-          abi: scholarshipAbi,
-          address: skoolchainAddress,
-          functionName: "appBatch",
-          args: [],
-        },
-        {
-          abi: scholarshipAbi,
-          address: skoolchainAddress,
-          functionName: "getApplicantSize",
-          args: [],
-        },
-      ],
-      query: {
-        enabled: !!skoolchainAddress,
-      },
-    });
-
-  const readableAppStatus = useMemo(
-    () => appStatusEnum[appStatus?.result ?? 0],
-    [appStatus?.result]
-  );
-
-  useEffect(() => {
-    console.log("render");
-
-    queryState.refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blockNumber]);
+export const appStateInjection = createInjection(() => {
+  const blockNumber =
+    useBlockNumber({ cacheTime: 5 * 1_000, watch: true }) ?? 0n;
 
   const injected = {
-    appStatus,
-    appBatch,
-    readableAppStatus,
-    applicantSize,
-    queryState,
+    blockNumber,
   };
 
   return injected;

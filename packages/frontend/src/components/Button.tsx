@@ -37,7 +37,7 @@ export const Button = ({
         <ButtonWrapper>
           <button
             onClick={onClick}
-            type="button"
+            type={type as never}
             className={getButtonClasses(size)}
           >
             {label}

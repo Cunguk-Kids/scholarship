@@ -3,9 +3,11 @@ import { applicantController } from "./applicant.controller";
 import { milestoneController } from "./milestone.controller";
 import { studentNFTController } from "./studentNFT.controller";
 import { investorNFTController } from "./investorNFT.controller";
+import { programController } from "./program.controller";
 
 export const allController = new Elysia({ prefix: "/v1" })
   .use(applicantController)
   .use(milestoneController)
   .use(studentNFTController)
-  .use(investorNFTController);
+  .use(investorNFTController)
+  .use(programController);

@@ -23,6 +23,7 @@
     "elysia": "^1.3.5",
     "ipfs-http-client": "^60.0.1",
     "lodash": "^4.17.21",
-    "pinata": "^2.4.8"
+    "pinata": "^2.4.8",
+    "viem": "2.x"
   }
 }

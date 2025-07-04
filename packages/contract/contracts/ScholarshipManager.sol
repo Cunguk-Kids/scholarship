@@ -7,13 +7,14 @@ import {ScholarshipProgram} from "./ScholarshipProgram.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {MilestoneInput, ProgramSummary} from "./ScholarshipStruct.sol";
+import {ScholarshipNFTMintingManager} from "./ScholarshipNFTMintingManager.sol";
 
-contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable {
+contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable, ScholarshipNFTMintingManager {
     uint256 public nextProgramId;
     mapping(uint256 => ScholarshipProgramDetails) public programs;
     address public immutable programImplementation;
 
-    constructor(address _programImplementation) {
+    constructor(address _programImplementation, address _donaterNFTAddress, address _studentNFTAddress) ScholarshipNFTMintingManager(_donaterNFTAddress, _studentNFTAddress) {
         programImplementation = _programImplementation;
     }
 
@@ -94,7 +95,8 @@ contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable {
         ScholarshipProgram program = _getProgram(id);
         if (program.appStatus() != ScholarshipStatus.OpenForApplications)
             revert NotAcceptingDonations();
-        try program.donate{value: 0.1 ether}(msg.sender) {
+        try program.donate{value: msg.value}(msg.sender) {
+            _setAllowedDonaterToMint(msg.sender, program.appBatch());
             emit Donated(id, msg.sender, msg.value);
         } catch {
             revert DonationFailed();
@@ -105,7 +107,9 @@ contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable {
         uint256 id,
         MilestoneInput[] calldata milestone
     ) external {
+        ScholarshipProgram program = _getProgram(id);
         _getProgram(id).applyProgram(msg.sender, milestone);
+        _setAllowedStudentToMint(msg.sender, program.appBatch());
         emit Applied(id, msg.sender);
     }
 
@@ -155,10 +159,9 @@ contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable {
     function claimMilestone(
         uint256 id,
         uint256 batch,
-        uint256 milestone,
-        string calldata metadata
+        uint256 milestone
     ) external {
-        _getProgram(id).withrawMilestone(batch, milestone, metadata);
+        _getProgram(id).withrawMilestone(batch, milestone);
         emit MilestoneClaimed(id, milestone, msg.sender);
     }
 
