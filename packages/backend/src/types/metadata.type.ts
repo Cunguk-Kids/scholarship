@@ -1,3 +1,3 @@
-export interface StudentMetadata {
+export interface IMetadata {
   [key: string]: unknown;
 }
