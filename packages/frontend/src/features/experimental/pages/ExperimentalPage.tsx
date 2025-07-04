@@ -10,30 +10,40 @@ import {
   MiniMap,
   addEdge,
 } from '@xyflow/react';
-import type { Node, NodeTypes, Connection } from '@xyflow/react';
+import type { Node, Edge, NodeTypes, Connection } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { useCallback, useRef } from 'react';
-import {
-  getLayoutedInitialNodes,
-  initialEdges,
-  initialNodes as rawInitialNodes,
-} from '../constants/node';
+import { initialEdges, initialNodes } from '../constants/node';
 import { Button } from '@/components/Button';
 import NodeItem from '../components/NodeItem';
 import GroupItem from '../components/GroupItem';
-import { getLayoutedElements } from '../utils/autoLayout';
+import AddressGroup from '../components/AddressGroup';
+import { ExperimentalInjection } from '../context/experimental-context';
+import BalanceDisplay from '../components/BalanceDisplay';
 
 const nodeTypes: NodeTypes = {
   nodeItem: NodeItem,
   group: GroupItem,
 };
 
+const getLayoutedElements = (nodes: Node[], edges: Edge[]): { nodes: Node[]; edges: Edge[] } => {
+  return { nodes, edges };
+};
+
 export function ExperimentalPage() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { fitView, getNode } = useReactFlow();
-  const [nodes, setNodes, onNodesChange] = useNodesState(getLayoutedInitialNodes(rawInitialNodes));
+  const { fitView } = useReactFlow();
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // CONTEXT
+  const {
+    data: {
+      address,
+      contractBalance: { data: balance },
+    },
+  } = ExperimentalInjection.use();
 
   const onConnect = useCallback(
     (params: Connection) =>
@@ -69,7 +79,7 @@ export function ExperimentalPage() {
   );
 
   const onLayout = useCallback(() => {
-    const layouted = getLayoutedElements(nodes, edges, 'LR');
+    const layouted = getLayoutedElements(nodes, edges);
     setNodes(
       layouted.nodes.map((node) => ({
         ...node,
@@ -92,9 +102,23 @@ export function ExperimentalPage() {
 
   return (
     <div className="m-10 relative">
-      <div className="w-fit mb-4">
-        <Button onClick={onLayout} label="Fit View" />
+      <div className="w-full grid grid-cols-2 ">
+        <div className="w-fit mb-4">
+          <Button onClick={onLayout} label="Fit View" />
+        </div>
+        <div className="w-full flex flex-row justify-between">
+          <BalanceDisplay
+            balance={
+              typeof balance?.value === 'bigint' ? Number(balance.value) : balance?.value || 0
+            }
+            currency="ETH"
+          />
+          <div className="w-fit mb-4">
+            <Button label={address || 'No Address Selected'} />
+          </div>
+        </div>
       </div>
+      <AddressGroup />
 
       <div
         ref={reactFlowWrapper}

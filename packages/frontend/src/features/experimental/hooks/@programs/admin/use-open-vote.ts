@@ -1,8 +1,11 @@
 import { useWriteContract } from "wagmi";
-import { scholarshipProgramAbi } from "../../../repo/abi";
+import { scholarshipProgramAbi } from "../../../../../repo/abi";
+import { ExperimentalInjection } from "@/features/experimental/context/experimental-context";
 
 export function useOpenVote() {
   const query = useWriteContract();
+  const { data: { address } } = ExperimentalInjection.use();
+
   /**
    * @function useOpenVote
    * @description Opens the voting phase.
@@ -11,7 +14,7 @@ export function useOpenVote() {
   const write = () =>
     query.writeContract({
       abi: scholarshipProgramAbi,
-      address: "0x-dummy",
+      address: address || "0x001",
       functionName: "openVote",
       args: [],
     });

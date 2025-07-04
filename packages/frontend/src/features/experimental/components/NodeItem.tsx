@@ -1,16 +1,22 @@
-import { type FC } from 'react';
+import { createElement, type FC } from 'react';
 import { Handle, Position } from '@xyflow/react';
+import CreateProgram from './form/CreateProgram';
+import OpenDonation from './form/OpenDonation';
 
 interface ProcessNodeProps {
   data: {
     label: string;
     isExpanded: boolean;
+    key: string;
   };
 }
 
-const NodeItem: FC<ProcessNodeProps> = ({ data }) => {
-  console.log(data, '-----data------');
+const componentMap: Record<string, React.ComponentType> = {
+  createContract: CreateProgram,
+  openDonation: OpenDonation,
+};
 
+const NodeItem: FC<ProcessNodeProps> = ({ data }) => {
   return (
     <div className="relative">
       <div className="p-1 rounded-sm bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 cursor-pointer hover:shadow-lg transition-shadow duration-200">
@@ -22,30 +28,13 @@ const NodeItem: FC<ProcessNodeProps> = ({ data }) => {
 
       {data.isExpanded && (
         <div className=" expanded-panel absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-white rounded-lg shadow-xl border p-4 animate-fade-in z-50">
-          <h3 className="font-semibold text-gray-800 mb-2">Decision Properties</h3>
+          <h3 className="font-semibold text-gray-800 mb-2">{data.label}</h3>
           <div className="space-y-2">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Question:</label>
-              <input
-                type="text"
-                defaultValue={data.label.replace('\n', ' ')}
-                className="w-full px-3 py-2 border rounded-md text-sm nodrag"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Input Type:</label>
-              <select className="w-full px-3 py-2 border rounded-md text-sm nodrag">
-                <option>Text Input</option>
-                <option>Multiple Choice</option>
-                <option>Yes/No</option>
-                <option>Number</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Required:</label>
-              <input type="checkbox" className="mr-2" />
-              <span className="text-sm">This field is required</span>
-            </div>
+            {data.key && componentMap[data.key] ? (
+              createElement(componentMap[data.key])
+            ) : (
+              <div className="text-gray-400 text-sm italic">No form available.</div>
+            )}
           </div>
         </div>
       )}

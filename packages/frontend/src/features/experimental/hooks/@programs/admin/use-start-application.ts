@@ -1,5 +1,5 @@
 import { useWriteContract } from "wagmi";
-import { scholarshipProgramAbi } from "../../../repo/abi";
+import { scholarshipProgramAbi } from "../../../../../repo/abi";
 
 export function useStartApplication() {
   const query = useWriteContract();
