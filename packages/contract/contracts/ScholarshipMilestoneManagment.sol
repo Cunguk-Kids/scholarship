@@ -6,9 +6,17 @@ import {Milestone, MilestoneTemplate, MilestoneType, MilestoneInput} from "./Sch
 contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     mapping(uint => mapping(uint => Milestone)) milestones;
     mapping(uint => uint) nextMilestone;
-    mapping(uint batchId => MilestoneTemplate[]) public milestoneTemplates;
+    mapping(uint batchId => uint) nextMilestoneTemplate;
+    mapping(uint batchId => mapping(uint templateId => MilestoneTemplate))
+        public milestoneTemplates;
 
     event AddMilestone(uint indexed id, uint price, address applicant);
+    event MilestoneTemplateAdded(
+        uint indexed batchId,
+        uint indexed templateId,
+        uint price,
+        string metadata
+    );
 
     error OnlyValidMilestone();
     error OnlyApplicantCanWithdraw();
@@ -40,9 +48,15 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         uint price,
         string calldata metadataCID
     ) external {
-        milestoneTemplates[batchId].push(
-            MilestoneTemplate({price: price, metadata: metadataCID})
-        );
+        uint currentId = nextMilestoneTemplate[batchId];
+        milestoneTemplates[batchId][currentId] = MilestoneTemplate({
+            price: price,
+            metadata: metadataCID
+        });
+
+        nextMilestoneTemplate[batchId]++;
+
+        emit MilestoneTemplateAdded(batchId, currentId, price, metadataCID);
     }
 
     function _addMilestones(
