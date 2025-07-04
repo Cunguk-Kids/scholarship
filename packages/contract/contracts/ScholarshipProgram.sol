@@ -107,6 +107,7 @@ contract ScholarshipProgram is
     ) external onlyRole(OPEN_ROLE) {
         _openBatch();
         applicantTarget[appBatch] = _applicantTarget;
+        targetApplicant = _applicantTarget;
         emit BatchStarted(appBatch, _applicantTarget);
     }
 
