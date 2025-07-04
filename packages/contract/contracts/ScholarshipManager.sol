@@ -6,7 +6,7 @@ import {ScholarshipProgramDetails, ScholarshipStatus} from "./ScholarshipStruct.
 import {ScholarshipProgram} from "./ScholarshipProgram.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {MilestoneInput} from "./ScholarshipStruct.sol";
+import {MilestoneInput, ProgramSummary} from "./ScholarshipStruct.sol";
 
 contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable {
     uint256 public nextProgramId;
@@ -176,5 +176,38 @@ contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable {
         uint256 id
     ) external view returns (ScholarshipStatus) {
         return _getProgram(id).getAppStatus();
+    }
+
+    // jangan dipakai
+    function getOpenProgramsSummaryPaged(
+        uint256 offset,
+        uint256 limit
+    ) external view returns (ProgramSummary[] memory) {
+        uint256 totalPrograms = nextProgramId;
+        ProgramSummary[] memory temp = new ProgramSummary[](limit);
+        uint256 count = 0;
+        uint256 idx = 0;
+
+        for (uint256 i = offset; i < totalPrograms && count < limit; i++) {
+            ScholarshipProgram prog = ScholarshipProgram(
+                payable(programs[idx].programContractAddress)
+            );
+            if (prog.getAppStatus() == ScholarshipStatus.OpenForApplications) {
+                temp[count] = ProgramSummary({
+                    programAddress: address(prog),
+                    balance: prog.getBalance(),
+                    applicants: prog.getApplicants(),
+                    metadataCID: prog.programMetadataCID()
+                });
+                count++;
+            }
+            idx++;
+        }
+
+        ProgramSummary[] memory result = new ProgramSummary[](count);
+        for (uint256 j = 0; j < count; j++) {
+            result[j] = temp[j];
+        }
+        return result;
     }
 }

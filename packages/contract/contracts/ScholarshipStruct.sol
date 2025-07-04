@@ -25,6 +25,13 @@ enum MilestoneType {
 
 // --- Structs ---
 
+struct ProgramSummary {
+    address programAddress;
+    uint256 balance;
+    address[] applicants;
+    string metadataCID;
+}
+
 struct Milestone {
     uint price;
     string metadata;
