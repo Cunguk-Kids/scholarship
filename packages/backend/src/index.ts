@@ -11,6 +11,6 @@ const elysia = new Elysia()
   )
   .use(allController);
 
-elysia.listen(6666).on("start", () => console.log("Listening on port 6666"));
+elysia.listen(3001, () => console.log("Listening on port 3001"));
 
 export type App = typeof elysia;

@@ -89,7 +89,7 @@ const config = {
       url: "http://127.0.0.1:8545",
       chainId: 1337,
       accounts: {
-        mnemonic: process.env.MNEMONIC!,
+        mnemonic: process.env.MNEMONIC! ?? "THE HECK IS THIS",
       },
     }
   },

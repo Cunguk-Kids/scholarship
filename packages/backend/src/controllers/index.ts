@@ -12,4 +12,5 @@ export const allController = new Elysia({ prefix: "/v1" })
   .use(studentNFTController)
   .use(programController)
   .use(milestoneTemplateController)
-  .use(investorNFTController);
+  .use(investorNFTController)
+  .use(programController);

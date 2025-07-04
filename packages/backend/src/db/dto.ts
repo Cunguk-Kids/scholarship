@@ -6,3 +6,9 @@ export const milestoneInsertDto = createInsertSchema(milestoneTable);
 export const milestoneTemplateInsertDto = createInsertSchema(milestoneTemplateTable);
 export const donationInsertDto = createInsertSchema(donationTable);
 export const programInsertDto = createInsertSchema(programTable);
+
+
+// export const createProgramDto = t.Object({
+//   title: t.String(),
+//   description: t.String(),
+// });

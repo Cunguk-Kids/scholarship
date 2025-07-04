@@ -135,15 +135,14 @@ contract ScholarshipProgram is
 
     function withrawMilestone(
         uint256 batch,
-        uint256 id,
-        string calldata metadata
+        uint256 id
     ) external nonReentrant {
         Milestone storage _mile = milestones[batch][id];
         if (
             addressToApplicants[batch][_mile.applicant].voteCount <
             quorumVote[batch]
         ) revert CannotWithdrawNotInQuorum();
-        _withDrawMilestone(batch, id, metadata);
+        _withDrawMilestone(batch, id);
         emit MilestoneWithdrawed(id, batch, msg.sender);
     }
 

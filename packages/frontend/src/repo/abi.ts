@@ -3,14 +3,681 @@ export const scholarshipAbi = [
     inputs: [
       {
         internalType: "address",
-        name: "_donaterNFTAddress",
-        type: "address",
-      }, {
-        internalType: "address",
-        name: "_studentNFTAddress",
+        name: "_programImplementation",
         type: "address",
       }
     ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  }, {
+    inputs: [],
+    name: "DonationFailed",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "FailedDeployment",
+    type: "error",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "balance",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "needed",
+        type: "uint256",
+      }
+    ],
+    name: "InsufficientBalance",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "InvalidInitialization",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "NotAcceptingDonations",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "NotInitializing",
+    type: "error",
+  }, {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      }
+    ],
+    name: "OwnableInvalidOwner",
+    type: "error",
+  }, {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      }
+    ],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "ProgramNotFound",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "ReentrancyGuardReentrantCall",
+    type: "error",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "programId",
+        type: "uint256",
+      }, {
+        indexed: true,
+        internalType: "address",
+        name: "applicant",
+        type: "address",
+      }
+    ],
+    name: "Applied",
+    type: "event",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "programId",
+        type: "uint256",
+      }, {
+        indexed: true,
+        internalType: "address",
+        name: "donor",
+        type: "address",
+      }, {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      }
+    ],
+    name: "Donated",
+    type: "event",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint64",
+        name: "version",
+        type: "uint64",
+      }
+    ],
+    name: "Initialized",
+    type: "event",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "programId",
+        type: "uint256",
+      }, {
+        indexed: false,
+        internalType: "uint256",
+        name: "milestoneId",
+        type: "uint256",
+      }, {
+        indexed: false,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      }
+    ],
+    name: "MilestoneClaimed",
+    type: "event",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "previousOwner",
+        type: "address",
+      }, {
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      }
+    ],
+    name: "OwnershipTransferred",
+    type: "event",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }, {
+        indexed: false,
+        internalType: "address",
+        name: "programContract",
+        type: "address",
+      }, {
+        indexed: true,
+        internalType: "address",
+        name: "initiator",
+        type: "address",
+      }
+    ],
+    name: "ProgramCreated",
+    type: "event",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }, {
+        components: [
+          {
+            internalType: "enum MilestoneType",
+            name: "mType",
+            type: "uint8",
+          }, {
+            internalType: "uint256",
+            name: "price",
+            type: "uint256",
+          }, {
+            internalType: "uint256",
+            name: "templateId",
+            type: "uint256",
+          }, {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          }
+        ],
+        internalType: "struct MilestoneInput[]",
+        name: "milestone",
+        type: "tuple[]",
+      }
+    ],
+    name: "applyToProgram",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "batch",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "milestone",
+        type: "uint256",
+      }
+    ],
+    name: "claimMilestone",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "closeBatch",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "closeDonation",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "string",
+        name: "cid",
+        type: "string",
+      }, {
+        internalType: "uint256",
+        name: "target",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "start",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "end",
+        type: "uint256",
+      }
+    ],
+    name: "createProgram",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "donateToProgram",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "getAllPrograms",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "id",
+            type: "uint256",
+          }, {
+            internalType: "address",
+            name: "initiatorAddress",
+            type: "address",
+          }, {
+            internalType: "string",
+            name: "programMetadataCID",
+            type: "string",
+          }, {
+            internalType: "uint256",
+            name: "targetApplicant",
+            type: "uint256",
+          }, {
+            internalType: "uint256",
+            name: "startDate",
+            type: "uint256",
+          }, {
+            internalType: "uint256",
+            name: "endDate",
+            type: "uint256",
+          }, {
+            internalType: "address",
+            name: "programContractAddress",
+            type: "address",
+          }
+        ],
+        internalType: "struct ScholarshipProgramDetails[]",
+        name: "list",
+        type: "tuple[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "getApplicants",
+    outputs: [
+      {
+        internalType: "address[]",
+        name: "",
+        type: "address[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "getContractBalance",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "getDonators",
+    outputs: [
+      {
+        internalType: "address[]",
+        name: "",
+        type: "address[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "offset",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "limit",
+        type: "uint256",
+      }
+    ],
+    name: "getOpenProgramsSummaryPaged",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "programAddress",
+            type: "address",
+          }, {
+            internalType: "uint256",
+            name: "balance",
+            type: "uint256",
+          }, {
+            internalType: "address[]",
+            name: "applicants",
+            type: "address[]",
+          }, {
+            internalType: "string",
+            name: "metadataCID",
+            type: "string",
+          }
+        ],
+        internalType: "struct ProgramSummary[]",
+        name: "",
+        type: "tuple[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "getProgramData",
+    outputs: [
+      {
+        internalType: "contract ScholarshipProgram",
+        name: "program",
+        type: "address",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "getProgramDetails",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "id",
+            type: "uint256",
+          }, {
+            internalType: "address",
+            name: "initiatorAddress",
+            type: "address",
+          }, {
+            internalType: "string",
+            name: "programMetadataCID",
+            type: "string",
+          }, {
+            internalType: "uint256",
+            name: "targetApplicant",
+            type: "uint256",
+          }, {
+            internalType: "uint256",
+            name: "startDate",
+            type: "uint256",
+          }, {
+            internalType: "uint256",
+            name: "endDate",
+            type: "uint256",
+          }, {
+            internalType: "address",
+            name: "programContractAddress",
+            type: "address",
+          }
+        ],
+        internalType: "struct ScholarshipProgramDetails",
+        name: "",
+        type: "tuple",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "getProgramStatus",
+    outputs: [
+      {
+        internalType: "enum ScholarshipStatus",
+        name: "",
+        type: "uint8",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "nextProgramId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "openDonation",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }
+    ],
+    name: "openVote",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "programImplementation",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    name: "programs",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }, {
+        internalType: "address",
+        name: "initiatorAddress",
+        type: "address",
+      }, {
+        internalType: "string",
+        name: "programMetadataCID",
+        type: "string",
+      }, {
+        internalType: "uint256",
+        name: "targetApplicant",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "startDate",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "endDate",
+        type: "uint256",
+      }, {
+        internalType: "address",
+        name: "programContractAddress",
+        type: "address",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "target",
+        type: "uint256",
+      }
+    ],
+    name: "startApplication",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      }
+    ],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      }, {
+        internalType: "address",
+        name: "applicant",
+        type: "address",
+      }
+    ],
+    name: "voteApplicant",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }
+] as const
+export const scholarshipProgramAbi = [
+  {
+    inputs: [],
     stateMutability: "nonpayable",
     type: "constructor",
   }, {
@@ -57,7 +724,15 @@ export const scholarshipAbi = [
     type: "error",
   }, {
     inputs: [],
+    name: "InvalidInitialization",
+    type: "error",
+  }, {
+    inputs: [],
     name: "NotInMinimalAmount",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "NotInitializing",
     type: "error",
   }, {
     inputs: [],
@@ -157,7 +832,7 @@ export const scholarshipAbi = [
       {
         indexed: true,
         internalType: "address",
-        name: "applicantAddress",
+        name: "applicant",
         type: "address",
       }, {
         indexed: false,
@@ -179,16 +854,28 @@ export const scholarshipAbi = [
       }, {
         indexed: false,
         internalType: "uint256",
-        name: "quromVote",
-        type: "uint256",
-      }, {
-        indexed: false,
-        internalType: "uint256",
         name: "applicantTarget",
         type: "uint256",
       }
     ],
     name: "BatchStarted",
+    type: "event",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "caller",
+        type: "address",
+      }, {
+        indexed: false,
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      }
+    ],
+    name: "DebugDonateCalled",
     type: "event",
   }, {
     anonymous: false,
@@ -206,11 +893,23 @@ export const scholarshipAbi = [
       }, {
         indexed: false,
         internalType: "uint256",
-        name: "value",
+        name: "amount",
         type: "uint256",
       }
     ],
     name: "Donated",
+    type: "event",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint64",
+        name: "version",
+        type: "uint64",
+      }
+    ],
+    name: "Initialized",
     type: "event",
   }, {
     anonymous: false,
@@ -449,6 +1148,42 @@ export const scholarshipAbi = [
     type: "function",
   }, {
     inputs: [],
+    name: "_getAllApplicantsWithVotes",
+    outputs: [
+      {
+        internalType: "address[]",
+        name: "",
+        type: "address[]",
+      }, {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "batchId",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "price",
+        type: "uint256",
+      }, {
+        internalType: "string",
+        name: "metadataCID",
+        type: "string",
+      }
+    ],
+    name: "addMilestoneTemplate",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [],
     name: "appBatch",
     outputs: [
       {
@@ -492,16 +1227,35 @@ export const scholarshipAbi = [
   }, {
     inputs: [
       {
-        internalType: "uint256[]",
-        name: "milestones_",
-        type: "uint256[]",
+        internalType: "address",
+        name: "_applicant",
+        type: "address",
       }, {
-        internalType: "string",
-        name: "uri",
-        type: "string",
+        components: [
+          {
+            internalType: "enum MilestoneType",
+            name: "mType",
+            type: "uint8",
+          }, {
+            internalType: "uint256",
+            name: "price",
+            type: "uint256",
+          }, {
+            internalType: "uint256",
+            name: "templateId",
+            type: "uint256",
+          }, {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          }
+        ],
+        internalType: "struct MilestoneInput[]",
+        name: "milestoneIds",
+        type: "tuple[]",
       }
     ],
-    name: "applyApplicant",
+    name: "applyProgram",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -512,16 +1266,64 @@ export const scholarshipAbi = [
     stateMutability: "nonpayable",
     type: "function",
   }, {
+    inputs: [],
+    name: "closeDonation",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
     inputs: [
       {
-        internalType: "string",
-        name: "uri",
-        type: "string",
+        internalType: "address",
+        name: "donator",
+        type: "address",
       }
     ],
     name: "donate",
     outputs: [],
     stateMutability: "payable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    name: "donators",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "endDate",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "getAppStatus",
+    outputs: [
+      {
+        internalType: "enum ScholarshipStatus",
+        name: "",
+        type: "uint8",
+      }
+    ],
+    stateMutability: "view",
     type: "function",
   }, {
     inputs: [
@@ -565,6 +1367,42 @@ export const scholarshipAbi = [
     stateMutability: "view",
     type: "function",
   }, {
+    inputs: [],
+    name: "getApplicants",
+    outputs: [
+      {
+        internalType: "address[]",
+        name: "",
+        type: "address[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "getBalance",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "getDonators",
+    outputs: [
+      {
+        internalType: "address[]",
+        name: "",
+        type: "address[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
     inputs: [
       {
         internalType: "address",
@@ -585,6 +1423,10 @@ export const scholarshipAbi = [
   }, {
     inputs: [
       {
+        internalType: "uint256",
+        name: "batch",
+        type: "uint256",
+      }, {
         internalType: "uint256",
         name: "id",
         type: "uint256",
@@ -610,9 +1452,13 @@ export const scholarshipAbi = [
             internalType: "bool",
             name: "isWithdrawed",
             type: "bool",
+          }, {
+            internalType: "enum MilestoneType",
+            name: "mType",
+            type: "uint8",
           }
         ],
-        internalType: "struct ScholarshipMilestoneManagement.Milestone",
+        internalType: "struct Milestone",
         name: "",
         type: "tuple",
       }
@@ -688,6 +1534,72 @@ export const scholarshipAbi = [
     stateMutability: "view",
     type: "function",
   }, {
+    inputs: [
+      {
+        internalType: "string",
+        name: "_programMetadataCID",
+        type: "string",
+      }, {
+        internalType: "address",
+        name: "_initiatorAddress",
+        type: "address",
+      }, {
+        internalType: "uint256",
+        name: "_targetApplicant",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "_startDate",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "_endDate",
+        type: "uint256",
+      }
+    ],
+    name: "initialize",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "initiatorAddress",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "batchId",
+        type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    name: "milestoneTemplates",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "price",
+        type: "uint256",
+      }, {
+        internalType: "string",
+        name: "metadata",
+        type: "string",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
     inputs: [],
     name: "openDonation",
     outputs: [],
@@ -707,6 +1619,18 @@ export const scholarshipAbi = [
         internalType: "address",
         name: "",
         type: "address",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "programMetadataCID",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
       }
     ],
     stateMutability: "view",
@@ -765,10 +1689,6 @@ export const scholarshipAbi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_quorum",
-        type: "uint256",
-      }, {
-        internalType: "uint256",
         name: "_applicantTarget",
         type: "uint256",
       }
@@ -776,6 +1696,18 @@ export const scholarshipAbi = [
     name: "startApplication",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "startDate",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    stateMutability: "view",
     type: "function",
   }, {
     inputs: [
@@ -796,6 +1728,18 @@ export const scholarshipAbi = [
     stateMutability: "view",
     type: "function",
   }, {
+    inputs: [],
+    name: "targetApplicant",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
     inputs: [
       {
         internalType: "address",
@@ -811,7 +1755,11 @@ export const scholarshipAbi = [
     inputs: [
       {
         internalType: "address",
-        name: "_applicantAddress",
+        name: "voter",
+        type: "address",
+      }, {
+        internalType: "address",
+        name: "applicant",
         type: "address",
       }
     ],
@@ -829,15 +1777,14 @@ export const scholarshipAbi = [
         internalType: "uint256",
         name: "id",
         type: "uint256",
-      }, {
-        internalType: "string",
-        name: "metadata",
-        type: "string",
       }
     ],
     name: "withrawMilestone",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
+  }, {
+    stateMutability: "payable",
+    type: "receive",
   }
 ] as const
