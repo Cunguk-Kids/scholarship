@@ -1,6 +1,7 @@
-import { Outlet, createRootRoute } from "@tanstack/react-router";
-import { Header } from "../components/Header";
-import { appStateInjection } from "../hooks/inject/app-state";
+import { Outlet, createRootRoute } from '@tanstack/react-router';
+import { Header } from '../components/header';
+import { appStateInjection } from '../hooks/inject/app-state';
+import { ReactFlowProvider } from '@xyflow/react';
 export const Route = createRootRoute({
   component: RootComponent,
 });
@@ -11,7 +12,9 @@ function RootComponent() {
     <appStateInjection.provider value={provider}>
       <main className="bg-skbw min-h-screen flex flex-col font-nunito w-full overflow-x-hidden">
         <Header />
-        <Outlet />
+        <ReactFlowProvider>
+          <Outlet />
+        </ReactFlowProvider>
       </main>
     </appStateInjection.provider>
   );

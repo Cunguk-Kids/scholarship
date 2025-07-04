@@ -5,10 +5,22 @@ export const scholarshipAbi = [
         internalType: "address",
         name: "_programImplementation",
         type: "address",
+      }, {
+        internalType: "address",
+        name: "_donaterNFTAddress",
+        type: "address",
+      }, {
+        internalType: "address",
+        name: "_studentNFTAddress",
+        type: "address",
       }
     ],
     stateMutability: "nonpayable",
     type: "constructor",
+  }, {
+    inputs: [],
+    name: "AlreadyMint",
+    type: "error",
   }, {
     inputs: [],
     name: "DonationFailed",
@@ -38,6 +50,10 @@ export const scholarshipAbi = [
   }, {
     inputs: [],
     name: "NotAcceptingDonations",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "NotAllowedToMint",
     type: "error",
   }, {
     inputs: [],
@@ -235,30 +251,6 @@ export const scholarshipAbi = [
       }
     ],
     name: "claimMilestone",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  }, {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      }
-    ],
-    name: "closeBatch",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  }, {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      }
-    ],
-    name: "closeDonation",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -522,6 +514,38 @@ export const scholarshipAbi = [
     stateMutability: "view",
     type: "function",
   }, {
+    inputs: [
+      {
+        internalType: "string",
+        name: "uri",
+        type: "string",
+      }, {
+        internalType: "uint256",
+        name: "batchId",
+        type: "uint256",
+      }
+    ],
+    name: "mintDonaterNFT",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "string",
+        name: "uri",
+        type: "string",
+      }, {
+        internalType: "uint256",
+        name: "batchId",
+        type: "uint256",
+      }
+    ],
+    name: "mintStudentNFT",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
     inputs: [],
     name: "nextProgramId",
     outputs: [
@@ -532,30 +556,6 @@ export const scholarshipAbi = [
       }
     ],
     stateMutability: "view",
-    type: "function",
-  }, {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      }
-    ],
-    name: "openDonation",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  }, {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      }
-    ],
-    name: "openVote",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   }, {
     inputs: [],
@@ -626,22 +626,6 @@ export const scholarshipAbi = [
   }, {
     inputs: [],
     name: "renounceOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  }, {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      }, {
-        internalType: "uint256",
-        name: "target",
-        type: "uint256",
-      }
-    ],
-    name: "startApplication",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -777,26 +761,6 @@ export const scholarshipProgramAbi = [
     name: "OnlyVoteRole",
     type: "error",
   }, {
-    inputs: [
-      {
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      }
-    ],
-    name: "OwnableInvalidOwner",
-    type: "error",
-  }, {
-    inputs: [
-      {
-        internalType: "address",
-        name: "account",
-        type: "address",
-      }
-    ],
-    name: "OwnableUnauthorizedAccount",
-    type: "error",
-  }, {
     inputs: [],
     name: "ReentrancyGuardReentrantCall",
     type: "error",
@@ -917,6 +881,33 @@ export const scholarshipProgramAbi = [
       {
         indexed: true,
         internalType: "uint256",
+        name: "batchId",
+        type: "uint256",
+      }, {
+        indexed: true,
+        internalType: "uint256",
+        name: "templateId",
+        type: "uint256",
+      }, {
+        indexed: false,
+        internalType: "uint256",
+        name: "price",
+        type: "uint256",
+      }, {
+        indexed: false,
+        internalType: "string",
+        name: "metadata",
+        type: "string",
+      }
+    ],
+    name: "MilestoneTemplateAdded",
+    type: "event",
+  }, {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
         name: "id",
         type: "uint256",
       }, {
@@ -932,23 +923,6 @@ export const scholarshipProgramAbi = [
       }
     ],
     name: "MilestoneWithdrawed",
-    type: "event",
-  }, {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      }, {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      }
-    ],
-    name: "OwnershipTransferred",
     type: "event",
   }, {
     anonymous: false,
@@ -1581,7 +1555,7 @@ export const scholarshipProgramAbi = [
         type: "uint256",
       }, {
         internalType: "uint256",
-        name: "",
+        name: "templateId",
         type: "uint256",
       }
     ],
@@ -1613,18 +1587,6 @@ export const scholarshipProgramAbi = [
     type: "function",
   }, {
     inputs: [],
-    name: "owner",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      }
-    ],
-    stateMutability: "view",
-    type: "function",
-  }, {
-    inputs: [],
     name: "programMetadataCID",
     outputs: [
       {
@@ -1634,12 +1596,6 @@ export const scholarshipProgramAbi = [
       }
     ],
     stateMutability: "view",
-    type: "function",
-  }, {
-    inputs: [],
-    name: "renounceOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   }, {
     inputs: [
@@ -1738,18 +1694,6 @@ export const scholarshipProgramAbi = [
       }
     ],
     stateMutability: "view",
-    type: "function",
-  }, {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      }
-    ],
-    name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   }, {
     inputs: [
