@@ -23,7 +23,11 @@ contract ScholarshipManagerTest is Test {
 
     function setUp() public {
         logic = new ScholarshipProgram();
-        manager = new ScholarshipManager(address(logic));
+        manager = new ScholarshipManager(
+            address(logic),
+            address(0),
+            address(0)
+        );
 
         (user1, user2, user3, donator, voter) = UserHelper.getUsers();
     }
@@ -118,6 +122,52 @@ contract ScholarshipManagerTest is Test {
         assertEq(donatorsArr[0], donator);
     }
 
+    // vote
+    function testVote() public {
+        ProgramHelper.createProgram(manager, user1, "MetaCID", 1, vm);
+
+        ScholarshipProgramDetails memory details = manager.getProgramDetails(0);
+        ScholarshipProgram program = ScholarshipProgram(
+            payable(details.programContractAddress)
+        );
+
+        ProgramHelper.grantAllRoles(program, user1, vm);
+
+        vm.prank(user1);
+        program.startApplication(0);
+
+        MilestoneInput[] memory milestones = MilestoneHelper.generateMilestones(
+            5
+        );
+
+        vm.prank(user2);
+        manager.applyToProgram(0, milestones);
+
+        vm.prank(user3);
+        manager.applyToProgram(0, milestones);
+
+        console.log("user3");
+        vm.prank(user1);
+        program.openDonation();
+
+        vm.deal(donator, 100 ether);
+        vm.prank(donator);
+        manager.donateToProgram{value: 10 ether}(0);
+        uint256 balance = manager.getContractBalance(0);
+        assertEq(balance, 10 ether);
+
+        console.log("-----balance are same-----");
+        vm.prank(user1);
+        manager.openVote(0);
+        console.log("-----done open vote-----");
+
+        vm.prank(voter);
+        manager.voteApplicant(0, address(user2));
+
+        address[] memory applicantArr = manager.getApplicants(0);
+        assertEq(applicantArr.length, 1);
+        assertEq(applicantArr[0], user2);
+    }
     // withraw milestone
 
     //  vm.startPrank(user1);
@@ -128,5 +178,5 @@ contract ScholarshipManagerTest is Test {
     // vm.startPrank(voter);
     // program.voteApplicant();
     // console.log("voteApplicant done");
-    // vm.stopPrank();
+    //
 }
