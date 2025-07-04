@@ -1,10 +1,16 @@
 import gsap from "gsap";
 import { useEffect, useRef } from "react";
 
+
 export function Hands() {
   const ref = useRef<SVGSVGElement>(null);
   useEffect(() => {
-    gsap.fromTo(ref.current, { y: "-100%" }, { y: "0%", duration: 2, ease: "power3.out" });
+    const onMouseMove = (event: MouseEvent) => {
+      const rect = ref.current!.getBoundingClientRect();
+      gsap.to(ref.current, { y: event.clientY - rect.height - 20 });
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => window.removeEventListener("mousemove", onMouseMove);
   }, []);
   return (
     <svg
@@ -14,6 +20,7 @@ export function Hands() {
       viewBox="0 0 150 584"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="-translate-y-full"
     >
       <path
         d="M115 412H2L2 16C2 7.16342 9.16344 0 18 0H99C107.837 0 115 7.16345 115 16L115 412Z"
