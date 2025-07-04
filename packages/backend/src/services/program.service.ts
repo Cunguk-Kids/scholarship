@@ -1,12 +1,15 @@
 import { db } from "@/db";
 import { programInsertDto } from "@/db/dto";
 import { programTable } from "@/db/schema";
-import { eq } from "drizzle-orm";
 
 export async function getProgram(id: string) {
-  return (
-    await db.select().from(programTable).where(eq(programTable.id, id))
-  )[0];
+  return db.query.programTable.findFirst({
+    where: (program, { eq }) => eq(program.id, id),
+    with: {
+      milestoneTemplates: true,
+      donations: true,
+    },
+  });
 }
 
 export async function getAllProgram() {

@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { uuid, bigint, date, pgTable, varchar, timestamp, numeric } from "drizzle-orm/pg-core";
 import { milestoneType, scholarshipStatusEnum } from "./enum";
+export * from "./enum";
 
 export const applicantTable = pgTable("applicants", {
   id: varchar("id").primaryKey(), // id must format batch_id
