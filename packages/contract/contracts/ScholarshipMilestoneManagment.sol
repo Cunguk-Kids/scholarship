@@ -80,8 +80,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
 
     function _withDrawMilestone(
         uint batch,
-        uint _id,
-        string calldata metadata
+        uint _id
     ) internal {
         if (batch == 0 || batch > appBatch) revert OnlyValidMilestone();
         if (nextMilestone[batch] == 0 || _id > nextMilestone[batch])
@@ -90,7 +89,6 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         if (milestone.applicant != msg.sender)
             revert OnlyApplicantCanWithdraw();
         if (milestone.isWithdrawed) revert WithdrawMilestoneOnlyOnce();
-        milestones[batch][_id].metadata = metadata;
         milestones[batch][_id].isWithdrawed = true;
         (bool isSuccess, ) = milestone.applicant.call{value: milestone.price}(
             ""
