@@ -1,6 +1,7 @@
 import { db } from "@/db";
-import { programInsertDto } from "@/db/dto";
 import { programTable } from "@/db/schema";
+import type { createProgramDto, programInsertDto } from "@back/db/dto";
+import { pinata } from "@back/lib/pinata";
 
 //  `${process.env.IPFS_URL}/${(await pinata.upload.public.json(metadata)).cid}`,
 export async function getProgram(id: string) {
@@ -20,19 +21,17 @@ export async function getAllProgram() {
 export function addProgram(dto: typeof programInsertDto.static) {
   return db.insert(programTable).values(dto);
 }
-// import type { createProgramDto } from "@back/db/dto";
-// import { pinata } from "@back/lib/pinata";
 
-// export async function createProgramService({
-//   description,
-//   title,
-// }: typeof createProgramDto.static) {
-//   const metadata = {
-//     title,
-//     description,
-//   };
-//   return {
-//     metadata,
-//     url: `${process.env.IPFS_URL}/${(await pinata.upload.public.json(metadata)).cid}`,
-//   };
-// }
+export async function createProgramService({
+  description,
+  title,
+}: typeof createProgramDto.static) {
+  const metadata = {
+    title,
+    description,
+  };
+  return {
+    metadata,
+    url: `${process.env.IPFS_URL}/${(await pinata.upload.public.json(metadata)).cid}`,
+  };
+}
