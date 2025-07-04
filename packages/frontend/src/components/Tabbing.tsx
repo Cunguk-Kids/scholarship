@@ -35,7 +35,7 @@ const TabButton = ({
   onClick: () => void;
 }) => {
   const baseStyle =
-    "gap-[0.625rem] items-end rounded-t-3xl px-6 text-2xl font-normal border-l-4 border-t-4 border-r-4 border-black text-black";
+    "gap-[0.625rem] items-end rounded-t-3xl px-6 text-2xl font-normal border-l-4 border-t-4 border-r-4 border-black text-black font-paytone";
   const activeStyle = "bg-skbw py-6";
   const inactiveStyle = `${color} border-b-4 py-4`;
 

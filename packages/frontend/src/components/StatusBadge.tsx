@@ -33,7 +33,7 @@ export const StatusBadge = ({
 
   return (
     <div
-      className={`flex rounded-2xl ${style.bg} ${sizeClasses} justify-center items-center text-white font-bold`}
+      className={`flex rounded-2xl ${style.bg} ${sizeClasses} justify-center items-center ${status === "active" ? "text-white" : "text-black"} font-bold`}
     >
       {style.label}
     </div>
