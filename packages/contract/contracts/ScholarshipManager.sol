@@ -9,12 +9,20 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {MilestoneInput, ProgramSummary} from "./ScholarshipStruct.sol";
 import {ScholarshipNFTMintingManager} from "./ScholarshipNFTMintingManager.sol";
 
-contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable, ScholarshipNFTMintingManager {
+contract ScholarshipManager is
+    ReentrancyGuard,
+    OwnableUpgradeable,
+    ScholarshipNFTMintingManager
+{
     uint256 public nextProgramId;
     mapping(uint256 => ScholarshipProgramDetails) public programs;
     address public immutable programImplementation;
 
-    constructor(address _programImplementation, address _donaterNFTAddress, address _studentNFTAddress) ScholarshipNFTMintingManager(_donaterNFTAddress, _studentNFTAddress) {
+    constructor(
+        address _programImplementation,
+        address _donaterNFTAddress,
+        address _studentNFTAddress
+    ) ScholarshipNFTMintingManager(_donaterNFTAddress, _studentNFTAddress) {
         programImplementation = _programImplementation;
     }
 
@@ -136,23 +144,23 @@ contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable, ScholarshipN
         }
     }
 
-    function startApplication(uint256 id, uint256 target) external onlyOwner {
+    function startApplication(uint256 id, uint256 target) external {
         _getProgram(id).startApplication(target);
     }
 
-    function openVote(uint256 id) external onlyOwner {
+    function openVote(uint256 id) external {
         _getProgram(id).openVote();
     }
 
-    function closeBatch(uint256 id) external onlyOwner {
+    function closeBatch(uint256 id) external {
         _getProgram(id).closeBatch();
     }
 
-    function openDonation(uint256 id) external onlyOwner {
+    function openDonation(uint256 id) external {
         _getProgram(id).openDonation();
     }
 
-    function closeDonation(uint256 id) external onlyOwner {
+    function closeDonation(uint256 id) external {
         _getProgram(id).closeDonation();
     }
 
