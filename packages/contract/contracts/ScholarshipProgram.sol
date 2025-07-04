@@ -6,14 +6,12 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {ScholarshipStorageManagement} from "./ScholarshipStorageManagement.sol";
 import {ScholarshipManagerAccessControl} from "./ScholarshipManagerAccessControl.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {MilestoneInput, Milestone} from "./ScholarshipStruct.sol";
 
 contract ScholarshipProgram is
     Initializable,
     ScholarshipStorageManagement,
     ReentrancyGuard,
-    OwnableUpgradeable,
     ScholarshipManagerAccessControl
 {
     string public programMetadataCID;
@@ -53,7 +51,6 @@ contract ScholarshipProgram is
         uint256 _startDate,
         uint256 _endDate
     ) external initializer {
-        __Ownable_init(_initiatorAddress);
         __ScholarshipManagerAccessControl_init(_initiatorAddress);
 
         programMetadataCID = _programMetadataCID;
@@ -133,10 +130,7 @@ contract ScholarshipProgram is
         _closeDonation();
     }
 
-    function withrawMilestone(
-        uint256 batch,
-        uint256 id
-    ) external nonReentrant {
+    function withrawMilestone(uint256 batch, uint256 id) external nonReentrant {
         Milestone storage _mile = milestones[batch][id];
         if (
             addressToApplicants[batch][_mile.applicant].voteCount <

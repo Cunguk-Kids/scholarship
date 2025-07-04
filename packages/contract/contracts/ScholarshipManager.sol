@@ -144,26 +144,6 @@ contract ScholarshipManager is
         }
     }
 
-    function startApplication(uint256 id, uint256 target) external {
-        _getProgram(id).startApplication(target);
-    }
-
-    function openVote(uint256 id) external {
-        _getProgram(id).openVote();
-    }
-
-    function closeBatch(uint256 id) external {
-        _getProgram(id).closeBatch();
-    }
-
-    function openDonation(uint256 id) external {
-        _getProgram(id).openDonation();
-    }
-
-    function closeDonation(uint256 id) external {
-        _getProgram(id).closeDonation();
-    }
-
     function claimMilestone(
         uint256 id,
         uint256 batch,

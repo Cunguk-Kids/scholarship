@@ -50,7 +50,7 @@ contract ScholarshipManagerTest is Test {
             payable(details.programContractAddress)
         );
 
-        ProgramHelper.grantAllRoles(program, user1, vm);
+        // ProgramHelper.grantAllRoles(program, user1, vm);
 
         vm.prank(user1);
         program.startApplication(0);
@@ -88,7 +88,7 @@ contract ScholarshipManagerTest is Test {
             payable(details.programContractAddress)
         );
 
-        ProgramHelper.grantAllRoles(program, user1, vm);
+        // ProgramHelper.grantAllRoles(program, user1, vm);
 
         vm.prank(user1);
         program.startApplication(0);
@@ -126,12 +126,11 @@ contract ScholarshipManagerTest is Test {
     function testVote() public {
         ProgramHelper.createProgram(manager, user1, "MetaCID", 1, vm);
 
+        console.log(user1, "-----1-----");
         ScholarshipProgramDetails memory details = manager.getProgramDetails(0);
         ScholarshipProgram program = ScholarshipProgram(
             payable(details.programContractAddress)
         );
-
-        ProgramHelper.grantAllRoles(program, user1, vm);
 
         vm.prank(user1);
         program.startApplication(0);
@@ -146,7 +145,7 @@ contract ScholarshipManagerTest is Test {
         vm.prank(user3);
         manager.applyToProgram(0, milestones);
 
-        console.log("user3");
+        console.log("user3", address(user1), address(user2), address(this));
         vm.prank(user1);
         program.openDonation();
 
@@ -156,16 +155,16 @@ contract ScholarshipManagerTest is Test {
         uint256 balance = manager.getContractBalance(0);
         assertEq(balance, 10 ether);
 
-        console.log("-----balance are same-----");
         vm.prank(user1);
-        manager.openVote(0);
+        program.openVote();
         console.log("-----done open vote-----");
 
         vm.prank(voter);
-        manager.voteApplicant(0, address(user2));
+        program.vote(voter, user2);
+        console.log("-----done vote-----");
 
         address[] memory applicantArr = manager.getApplicants(0);
-        assertEq(applicantArr.length, 1);
+        assertEq(applicantArr.length, 2);
         assertEq(applicantArr[0], user2);
     }
     // withraw milestone
