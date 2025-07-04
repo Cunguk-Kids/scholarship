@@ -7,6 +7,7 @@ import {ScholarshipStorageManagement} from "./ScholarshipStorageManagement.sol";
 import {ScholarshipManagerAccessControl} from "./ScholarshipManagerAccessControl.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {MilestoneInput, Milestone} from "./ScholarshipStruct.sol";
 
 contract ScholarshipProgram is
     Initializable,
@@ -34,11 +35,16 @@ contract ScholarshipProgram is
     event BatchStarted(uint256 batchId, uint256 applicantTarget);
     event VotingStarted(uint256 batchId);
     event VotingCompleted(uint256 batchId);
+    event DebugDonateCalled(address caller, uint256 value);
 
     error CannotWithdrawNotInQuorum();
     error ApplicantNotEnough();
     error NotInMinimalAmount();
     error OnlyDonateOnce();
+
+    constructor() {
+        _disableInitializers();
+    }
 
     function initialize(
         string memory _programMetadataCID,
@@ -48,7 +54,8 @@ contract ScholarshipProgram is
         uint256 _endDate
     ) external initializer {
         __Ownable_init(_initiatorAddress);
-        __ScholarshipManagerAccessControl_init();
+        __ScholarshipManagerAccessControl_init(_initiatorAddress);
+
         programMetadataCID = _programMetadataCID;
         initiatorAddress = _initiatorAddress;
         startDate = _startDate;
@@ -61,32 +68,32 @@ contract ScholarshipProgram is
     }
 
     function applyProgram(
-        uint[] calldata milestoneIds
+        address _applicant,
+        MilestoneInput[] calldata milestoneIds
     ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
-        _addApplicant(msg.sender, milestoneIds);
+        _addApplicant(_applicant, milestoneIds);
         // _mintForStudent();
-        emit ApplicantApplied(msg.sender, appBatch);
+        emit ApplicantApplied(_applicant, appBatch);
     }
 
-    function vote(address applicant) external {
-        _voteApplicant(msg.sender, applicant);
-        emit Voted(msg.sender, applicant, appBatch);
+    // stop
+    function vote(address voter, address applicant) external {
+        _voteApplicant(voter, applicant);
+        emit Voted(voter, applicant, appBatch);
     }
 
-    function donate()
-        external
-        payable
-        onlyInStatus(ScholarshipStatus.VotingOpen)
-    {
+    function donate(
+        address donator
+    ) external payable onlyInStatus(ScholarshipStatus.OpenForApplications) {
+        emit DebugDonateCalled(donator, msg.value);
         if (msg.value < MINIMAL_DONATION) revert NotInMinimalAmount();
-        if (alreadyDonate[appBatch][msg.sender]) revert OnlyDonateOnce();
+        if (alreadyDonate[appBatch][donator]) revert OnlyDonateOnce();
 
         stackedToken += msg.value - TRANSACTION_FEE;
-        // _mintForDonater(uri);
-        alreadyDonate[appBatch][msg.sender] = true;
-        donators.push(msg.sender);
+        alreadyDonate[appBatch][donator] = true;
+        donators.push(donator);
 
-        emit Donated(msg.sender, appBatch, msg.value);
+        emit Donated(donator, appBatch, msg.value);
     }
 
     function getDonators() external view returns (address[] memory) {
@@ -107,7 +114,7 @@ contract ScholarshipProgram is
     }
 
     function openVote() external onlyRole(OPEN_VOTE_ROLE) {
-        if (applicantTarget[appBatch] != applicantSize[appBatch])
+        if (applicantSize[appBatch] < applicantTarget[appBatch])
             revert ApplicantNotEnough();
         _openVote();
         emit VotingStarted(appBatch);
@@ -119,7 +126,11 @@ contract ScholarshipProgram is
     }
 
     function openDonation() external onlyRole(OPEN_DONATION_ROLE) {
-        _openForDonation();
+        _openDonation();
+    }
+
+    function closeDonation() external onlyRole(OPEN_DONATION_ROLE) {
+        _closeDonation();
     }
 
     function withrawMilestone(
@@ -139,4 +150,10 @@ contract ScholarshipProgram is
     function getApplicants() external view returns (address[] memory) {
         return batchApplicants[appBatch];
     }
+
+    function getBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+
+    receive() external payable {}
 }

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ScholarshipProgramDetails, ScholarshipStatus} from "./ScholarshipStruct.sol";
 import {ScholarshipProgram} from "./ScholarshipProgram.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-//
-contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
+import {MilestoneInput, ProgramSummary} from "./ScholarshipStruct.sol";
+
+contract ScholarshipManager is ReentrancyGuard, OwnableUpgradeable {
     uint256 public nextProgramId;
     mapping(uint256 => ScholarshipProgramDetails) public programs;
     address public immutable programImplementation;
@@ -41,15 +42,18 @@ contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
         uint256 id
     ) internal view returns (ScholarshipProgram program) {
         if (id >= nextProgramId) revert ProgramNotFound();
-        program = ScholarshipProgram(programs[id].programContractAddress);
+        program = ScholarshipProgram(
+            payable(programs[id].programContractAddress)
+        );
     }
 
     function getProgramData(
         uint256 id
     ) external view returns (ScholarshipProgram program) {
         if (id >= nextProgramId) revert ProgramNotFound();
-        program = ScholarshipProgram(programs[id].programContractAddress);
-        return program;
+        program = ScholarshipProgram(
+            payable(programs[id].programContractAddress)
+        );
     }
 
     function createProgram(
@@ -59,13 +63,14 @@ contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
         uint256 end
     ) external {
         address clone = Clones.clone(programImplementation);
-        ScholarshipProgram(clone).initialize(
+        ScholarshipProgram(payable(clone)).initialize(
             cid,
             msg.sender,
             target,
             start,
             end
         );
+
         programs[nextProgramId] = ScholarshipProgramDetails({
             id: nextProgramId,
             initiatorAddress: msg.sender,
@@ -87,25 +92,30 @@ contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
 
     function donateToProgram(uint256 id) external payable {
         ScholarshipProgram program = _getProgram(id);
-        if (program.appStatus() != ScholarshipStatus.VotingOpen)
+        if (program.appStatus() != ScholarshipStatus.OpenForApplications)
             revert NotAcceptingDonations();
-        (bool success, ) = address(program).call{value: msg.value}(
-            abi.encodeWithSignature("donate()")
-        );
-        if (!success) revert DonationFailed();
-        emit Donated(id, msg.sender, msg.value);
+        try program.donate{value: 0.1 ether}(msg.sender) {
+            emit Donated(id, msg.sender, msg.value);
+        } catch {
+            revert DonationFailed();
+        }
     }
 
     function applyToProgram(
         uint256 id,
-        uint256[] calldata milestoneIds
+        MilestoneInput[] calldata milestone
     ) external {
-        _getProgram(id).applyProgram(milestoneIds);
+        _getProgram(id).applyProgram(msg.sender, milestone);
         emit Applied(id, msg.sender);
     }
 
     function voteApplicant(uint256 id, address applicant) external {
-        _getProgram(id).vote(applicant);
+        _getProgram(id).vote(msg.sender, applicant);
+    }
+
+    function getContractBalance(uint256 id) external view returns (uint256) {
+        ScholarshipProgram program = _getProgram(id);
+        return address(program).balance;
     }
 
     function getAllPrograms()
@@ -114,7 +124,12 @@ contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
         returns (ScholarshipProgramDetails[] memory list)
     {
         list = new ScholarshipProgramDetails[](nextProgramId);
-        for (uint256 i = 0; i < nextProgramId; ++i) list[i] = programs[i];
+        for (uint256 i; i < nextProgramId; ) {
+            list[i] = programs[i];
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function startApplication(uint256 id, uint256 target) external onlyOwner {
@@ -131,6 +146,10 @@ contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
 
     function openDonation(uint256 id) external onlyOwner {
         _getProgram(id).openDonation();
+    }
+
+    function closeDonation(uint256 id) external onlyOwner {
+        _getProgram(id).closeDonation();
     }
 
     function claimMilestone(
@@ -157,5 +176,38 @@ contract ScholarshipManager is ReentrancyGuard, Ownable(msg.sender) {
         uint256 id
     ) external view returns (ScholarshipStatus) {
         return _getProgram(id).getAppStatus();
+    }
+
+    // jangan dipakai
+    function getOpenProgramsSummaryPaged(
+        uint256 offset,
+        uint256 limit
+    ) external view returns (ProgramSummary[] memory) {
+        uint256 totalPrograms = nextProgramId;
+        ProgramSummary[] memory temp = new ProgramSummary[](limit);
+        uint256 count = 0;
+        uint256 idx = 0;
+
+        for (uint256 i = offset; i < totalPrograms && count < limit; i++) {
+            ScholarshipProgram prog = ScholarshipProgram(
+                payable(programs[idx].programContractAddress)
+            );
+            if (prog.getAppStatus() == ScholarshipStatus.OpenForApplications) {
+                temp[count] = ProgramSummary({
+                    programAddress: address(prog),
+                    balance: prog.getBalance(),
+                    applicants: prog.getApplicants(),
+                    metadataCID: prog.programMetadataCID()
+                });
+                count++;
+            }
+            idx++;
+        }
+
+        ProgramSummary[] memory result = new ProgramSummary[](count);
+        for (uint256 j = 0; j < count; j++) {
+            result[j] = temp[j];
+        }
+        return result;
     }
 }

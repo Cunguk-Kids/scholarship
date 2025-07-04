@@ -2,17 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {ScholarshipBatchManagement} from "./ScholarshipBatchManagement.sol";
-
+import {Milestone, MilestoneTemplate, MilestoneType, MilestoneInput} from "./ScholarshipStruct.sol";
 contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
-    struct Milestone {
-        uint price;
-        string metadata;
-        address applicant;
-        bool isWithdrawed;
-    }
-
     mapping(uint => mapping(uint => Milestone)) milestones;
     mapping(uint => uint) nextMilestone;
+    mapping(uint batchId => MilestoneTemplate[]) public milestoneTemplates;
 
     event AddMilestone(uint indexed id, uint price, address applicant);
 
@@ -27,7 +21,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     }
 
     function _addNextMilestone() private {
-        nextMilestone[appBatch] += 1;
+        nextMilestone[appBatch]++;
     }
 
     function _onlyValidMilestone(uint id) internal view {
@@ -41,20 +35,44 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         _;
     }
 
+    function addMilestoneTemplate(
+        uint batchId,
+        uint price,
+        string calldata metadataCID
+    ) external {
+        milestoneTemplates[batchId].push(
+            MilestoneTemplate({price: price, metadata: metadataCID})
+        );
+    }
+
     function _addMilestones(
         address applicant_,
-        uint[] calldata _milestones
+        MilestoneInput[] calldata _milestones
     ) internal {
         if (_milestones.length < 1) revert ArrayCannotEmpty();
         for (uint i = 0; i < _milestones.length; i += 1) {
-            uint price = _milestones[i];
+            MilestoneInput memory inputData = _milestones[i];
+            uint price;
+            string memory metadata;
+
+            if (inputData.mType == MilestoneType.TEMPLATE) {
+                MilestoneTemplate memory tmpl = milestoneTemplates[appBatch][
+                    inputData.templateId
+                ];
+                price = tmpl.price;
+                metadata = tmpl.metadata;
+            } else {
+                price = inputData.price;
+                metadata = inputData.metadata;
+            }
             _addNextMilestone();
             uint currentMilestoneId = getNextMilestone();
             milestones[appBatch][currentMilestoneId] = Milestone({
                 price: price,
-                metadata: "",
+                metadata: metadata,
                 applicant: applicant_,
-                isWithdrawed: false
+                isWithdrawed: false,
+                mType: MilestoneType.CUSTOM
             });
             emit AddMilestone(currentMilestoneId, price, applicant_);
         }
@@ -81,8 +99,16 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     }
 
     function getMilestone(
+        uint batch,
         uint id
     ) public view onlyValidMilestone(id) returns (Milestone memory) {
+        _onlyValidMilestone(batch, id);
         return milestones[appBatch][id];
+    }
+
+    function _onlyValidMilestone(uint batch, uint id) internal view {
+        if (batch == 0 || batch > appBatch) revert OnlyValidMilestone();
+        if (nextMilestone[batch] == 0 || id >= nextMilestone[batch])
+            revert OnlyValidMilestone();
     }
 }
