@@ -35,7 +35,7 @@ export const appStateInjection = createInjection((blockNumber: bigint) => {
         },
       ],
       query: {
-        enabled: blockNumber > 1n,
+        enabled: !!skoolchainAddress,
       },
     });
 
@@ -45,6 +45,8 @@ export const appStateInjection = createInjection((blockNumber: bigint) => {
   );
 
   useEffect(() => {
+    console.log("render");
+
     queryState.refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blockNumber]);
