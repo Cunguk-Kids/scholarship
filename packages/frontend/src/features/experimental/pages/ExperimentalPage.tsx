@@ -107,12 +107,7 @@ export function ExperimentalPage() {
           <Button onClick={onLayout} label="Fit View" />
         </div>
         <div className="w-full flex flex-row justify-between">
-          <BalanceDisplay
-            balance={
-              typeof balance?.value === 'bigint' ? Number(balance.value) : balance?.value || 0
-            }
-            currency="ETH"
-          />
+          <BalanceDisplay balance={balance?.value || BigInt(0)} currency="ETH" />
           <div className="w-fit mb-4">
             <Button label={address || 'No Address Selected'} />
           </div>

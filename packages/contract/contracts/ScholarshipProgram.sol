@@ -73,6 +73,14 @@ contract ScholarshipProgram is
         emit ApplicantApplied(_applicant, appBatch);
     }
 
+    function applySomeProgram(
+        MilestoneInput[] calldata milestoneIds
+    ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
+        _addApplicant(msg.sender, milestoneIds);
+        // _mintForStudent();
+        emit ApplicantApplied(msg.sender, appBatch);
+    }
+
     // stop
     function vote(address voter, address applicant) external {
         _voteApplicant(voter, applicant);
@@ -91,6 +99,22 @@ contract ScholarshipProgram is
         donators.push(donator);
 
         emit Donated(donator, appBatch, msg.value);
+    }
+
+    function makeDonation()
+        external
+        payable
+        onlyInStatus(ScholarshipStatus.OpenForApplications)
+    {
+        emit DebugDonateCalled(msg.sender, msg.value);
+        if (msg.value < MINIMAL_DONATION) revert NotInMinimalAmount();
+        if (alreadyDonate[appBatch][msg.sender]) revert OnlyDonateOnce();
+
+        stackedToken += msg.value - TRANSACTION_FEE;
+        alreadyDonate[appBatch][msg.sender] = true;
+        donators.push(msg.sender);
+
+        emit Donated(msg.sender, appBatch, msg.value);
     }
 
     function getDonators() external view returns (address[] memory) {

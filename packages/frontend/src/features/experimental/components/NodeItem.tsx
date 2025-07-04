@@ -2,6 +2,7 @@ import { createElement, type FC } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import CreateProgram from './form/CreateProgram';
 import OpenDonation from './form/OpenDonation';
+import MakeDonation from './form/MakeDonation';
 
 interface ProcessNodeProps {
   data: {
@@ -14,6 +15,7 @@ interface ProcessNodeProps {
 const componentMap: Record<string, React.ComponentType> = {
   createContract: CreateProgram,
   openDonation: OpenDonation,
+  makeDonation: MakeDonation,
 };
 
 const NodeItem: FC<ProcessNodeProps> = ({ data }) => {

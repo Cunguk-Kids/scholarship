@@ -2,6 +2,8 @@ import type { Node } from "@xyflow/react";
 
 export const initialEdges = [
   { id: 'e1-2', source: 'C1', target: 'C5', animated: true, type: "stright" },
+  { id: 'e1-3', source: 'C5', target: 'C3', animated: true, type: "stright" },
+  { id: 'e1-4', source: 'C3', target: 'C4', animated: true, type: "stright" },
 ];
 
 export const initialNodes: Node[] = [
@@ -23,11 +25,11 @@ export const initialNodes: Node[] = [
     draggable: false
   },
 
-  // applicant
+  // voter
   {
     id: 'G2',
     type: 'group',
-    data: { label: "Applicant" },
+    data: { label: "Voter" },
     position: { x: 50, y: 300 },
     style: { width: 200, height: 200 },
     parentId: 'G1',
@@ -59,18 +61,18 @@ export const initialNodes: Node[] = [
   {
     id: 'C3',
     type: 'nodeItem',
-    data: { label: 'Donor', isExpanded: false },
-    position: { x: 50, y: 300 },
+    data: { label: 'Make Donation', isExpanded: false, key: "makeDonation" },
+    position: { x: 50, y: 50 },
     parentId: 'G3',
     extent: 'parent',
     draggable: false
   },
 
-  // voter
+  // applicant
   {
     id: 'G4',
     type: 'group',
-    data: { label: "Voter" },
+    data: { label: "Applicant" },
     position: { x: 250, y: 300 },
     style: { width: 200, height: 200 },
     draggable: false,
@@ -80,8 +82,8 @@ export const initialNodes: Node[] = [
   {
     id: 'C4',
     type: 'nodeItem',
-    data: { label: 'vote', isExpanded: false },
-    position: { x: 50, y: 10 },
+    data: { label: 'Apply Program', isExpanded: false },
+    position: { x: 50, y: 50 },
     parentId: 'G4',
     extent: 'parent',
     draggable: false

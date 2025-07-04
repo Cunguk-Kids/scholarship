@@ -1234,6 +1234,37 @@ export const scholarshipProgramAbi = [
     stateMutability: "nonpayable",
     type: "function",
   }, {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: "enum MilestoneType",
+            name: "mType",
+            type: "uint8",
+          }, {
+            internalType: "uint256",
+            name: "price",
+            type: "uint256",
+          }, {
+            internalType: "uint256",
+            name: "templateId",
+            type: "uint256",
+          }, {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          }
+        ],
+        internalType: "struct MilestoneInput[]",
+        name: "milestoneIds",
+        type: "tuple[]",
+      }
+    ],
+    name: "applySomeProgram",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
     inputs: [],
     name: "closeBatch",
     outputs: [],
@@ -1546,6 +1577,12 @@ export const scholarshipProgramAbi = [
       }
     ],
     stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "makeDonation",
+    outputs: [],
+    stateMutability: "payable",
     type: "function",
   }, {
     inputs: [

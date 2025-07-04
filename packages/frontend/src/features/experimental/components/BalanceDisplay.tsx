@@ -1,17 +1,22 @@
+import { formatEther } from 'viem';
+
 interface BalanceDisplayProps {
-  balance: number;
+  balance: bigint;
   currency?: string;
 }
 
 const BalanceDisplay = ({ balance, currency = 'ETH' }: BalanceDisplayProps) => {
-  const formatBalance = (amount: number) => {
-    if (amount === 0) return '0.00';
-    return amount.toFixed(4);
+  const formatBalance = (amount: bigint) => {
+    const formatted = amount ? Number(formatEther(amount)).toFixed(2) : '0.00';
+
+    return formatted;
   };
 
-  const getLocalValue = (amount: number) => {
+  const getLocalValue = (amount: bigint) => {
+    const eth = typeof amount === 'bigint' ? Number(formatEther(amount)) : amount;
+
     const ethToIDR = 32000000;
-    return (amount * ethToIDR).toLocaleString('id-ID', {
+    return (eth * ethToIDR).toLocaleString('id-ID', {
       style: 'currency',
       currency: 'IDR',
       maximumFractionDigits: 0,
