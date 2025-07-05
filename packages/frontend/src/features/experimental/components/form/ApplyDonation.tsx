@@ -24,8 +24,7 @@ export default function ApplyDonation() {
         {milestones?.map(({ price }, index) => {
           const haveValue = selectedMilestone.find((item) => item.templateId === BigInt(index));
 
-          if (haveValue)
-            return <div className="text-gray-400 text-sm italic">No form available.</div>;
+          if (haveValue) return <></>;
           return (
             <div key={index} className="w-fit">
               <Button
@@ -47,8 +46,7 @@ export default function ApplyDonation() {
       {milestones?.map(({ price }, index) => {
         const haveValue = selectedMilestone.find((item) => item.templateId === BigInt(index));
 
-        if (!haveValue)
-          return <div className="text-gray-400 text-sm italic">No form available.</div>;
+        if (!haveValue) return <></>;
         return (
           <div key={index} className="w-fit">
             <Button
