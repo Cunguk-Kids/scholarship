@@ -167,6 +167,16 @@ contract ScholarshipManagerTest is Test {
         assertEq(applicantArr.length, 2);
         assertEq(applicantArr[0], user2);
     }
+
+    // get own contract address
+    function getContractByCreator() public {
+        ProgramHelper.createProgram(manager, user1, "MetaCID", 1, vm);
+
+        address[] memory programs = manager.getProgramCreator();
+
+        assertEq(programs.length, 1);
+    }
+
     // withraw milestone
 
     //  vm.startPrank(user1);
