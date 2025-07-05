@@ -3,6 +3,7 @@ import { Handle, Position } from '@xyflow/react';
 import CreateProgram from './form/CreateProgram';
 import OpenDonation from './form/OpenDonation';
 import MakeDonation from './form/MakeDonation';
+import CreateMilestoneTemplate from './form/CreateMilestoneTemplate';
 
 interface ProcessNodeProps {
   data: {
@@ -16,6 +17,7 @@ const componentMap: Record<string, React.ComponentType> = {
   createContract: CreateProgram,
   openDonation: OpenDonation,
   makeDonation: MakeDonation,
+  createMilestoneTemplate: CreateMilestoneTemplate,
 };
 
 const NodeItem: FC<ProcessNodeProps> = ({ data }) => {

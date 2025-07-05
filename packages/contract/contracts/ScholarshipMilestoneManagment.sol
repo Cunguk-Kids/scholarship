@@ -38,16 +38,29 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
             revert OnlyValidMilestone();
     }
 
+    function _getAllMilestoneTemplates(
+        uint batchId
+    ) internal view returns (MilestoneTemplate[] memory) {
+        uint count = nextMilestoneTemplate[batchId];
+        MilestoneTemplate[] memory templates = new MilestoneTemplate[](count);
+
+        for (uint i = 0; i < count; i++) {
+            templates[i] = milestoneTemplates[batchId][i];
+        }
+
+        return templates;
+    }
+
     modifier onlyValidMilestone(uint id) {
         _onlyValidMilestone(id);
         _;
     }
 
-    function addMilestoneTemplate(
+    function _addMilestoneTemplate(
         uint batchId,
         uint price,
         string calldata metadataCID
-    ) external {
+    ) internal {
         uint currentId = nextMilestoneTemplate[batchId];
         milestoneTemplates[batchId][currentId] = MilestoneTemplate({
             price: price,
@@ -92,10 +105,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         }
     }
 
-    function _withDrawMilestone(
-        uint batch,
-        uint _id
-    ) internal {
+    function _withDrawMilestone(uint batch, uint _id) internal {
         if (batch == 0 || batch > appBatch) revert OnlyValidMilestone();
         if (nextMilestone[batch] == 0 || _id > nextMilestone[batch])
             revert OnlyValidMilestone();

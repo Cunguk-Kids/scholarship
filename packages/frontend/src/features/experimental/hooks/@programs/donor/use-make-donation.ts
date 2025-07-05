@@ -16,7 +16,7 @@ export function useMakeDonation() {
       address: address || "0x",
       functionName: "makeDonation",
       args: [],
-      value: BigInt(1 * 1e18)
+      value: BigInt(10 * 1e18)
     });
 
   return [write, query] as const;

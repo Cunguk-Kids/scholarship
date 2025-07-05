@@ -1137,26 +1137,6 @@ export const scholarshipProgramAbi = [
     stateMutability: "view",
     type: "function",
   }, {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
-      }, {
-        internalType: "uint256",
-        name: "price",
-        type: "uint256",
-      }, {
-        internalType: "string",
-        name: "metadataCID",
-        type: "string",
-      }
-    ],
-    name: "addMilestoneTemplate",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  }, {
     inputs: [],
     name: "appBatch",
     outputs: [
@@ -1279,6 +1259,37 @@ export const scholarshipProgramAbi = [
   }, {
     inputs: [
       {
+        components: [
+          {
+            internalType: "enum MilestoneType",
+            name: "mType",
+            type: "uint8",
+          }, {
+            internalType: "uint256",
+            name: "price",
+            type: "uint256",
+          }, {
+            internalType: "uint256",
+            name: "templateId",
+            type: "uint256",
+          }, {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          }
+        ],
+        internalType: "struct MilestoneInput",
+        name: "milestoneInput",
+        type: "tuple",
+      }
+    ],
+    name: "createTemplateMilestone",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
         internalType: "address",
         name: "donator",
         type: "address",
@@ -1314,6 +1325,29 @@ export const scholarshipProgramAbi = [
         internalType: "uint256",
         name: "",
         type: "uint256",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "getAllMilestoneTemplates",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "price",
+            type: "uint256",
+          }, {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          }
+        ],
+        internalType: "struct MilestoneTemplate[]",
+        name: "",
+        type: "tuple[]",
       }
     ],
     stateMutability: "view",

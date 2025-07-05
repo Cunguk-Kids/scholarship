@@ -4,6 +4,7 @@ export const initialEdges = [
   { id: 'e1-2', source: 'C1', target: 'C5', animated: true, type: "stright" },
   { id: 'e1-3', source: 'C5', target: 'C3', animated: true, type: "stright" },
   { id: 'e1-4', source: 'C3', target: 'C4', animated: true, type: "stright" },
+  { id: 'e1-5', source: 'C5', target: 'C6', animated: true, type: "stright" },
 ];
 
 export const initialNodes: Node[] = [
@@ -106,6 +107,16 @@ export const initialNodes: Node[] = [
     type: 'nodeItem',
     data: { label: 'Open Donation', isExpanded: false, key: "openDonation" },
     position: { x: 10, y: 50 },
+
+    parentId: 'G5',
+    extent: 'parent',
+    draggable: false
+  },
+  {
+    id: 'C6',
+    type: 'nodeItem',
+    data: { label: 'Create Milestone Template', isExpanded: false, key: "createMilestoneTemplate" },
+    position: { x: 10, y: 80 },
 
     parentId: 'G5',
     extent: 'parent',

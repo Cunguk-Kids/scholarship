@@ -6,7 +6,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {ScholarshipStorageManagement} from "./ScholarshipStorageManagement.sol";
 import {ScholarshipManagerAccessControl} from "./ScholarshipManagerAccessControl.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {MilestoneInput, Milestone} from "./ScholarshipStruct.sol";
+import {MilestoneInput, Milestone, MilestoneTemplate} from "./ScholarshipStruct.sol";
 
 contract ScholarshipProgram is
     Initializable,
@@ -123,6 +123,24 @@ contract ScholarshipProgram is
 
     function getAppStatus() external view returns (ScholarshipStatus) {
         return appStatus;
+    }
+
+    function createTemplateMilestone(
+        MilestoneInput calldata milestoneInput
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _addMilestoneTemplate(
+            appBatch,
+            milestoneInput.price,
+            milestoneInput.metadata
+        );
+    }
+
+    function getAllMilestoneTemplates()
+        external
+        view
+        returns (MilestoneTemplate[] memory)
+    {
+        return _getAllMilestoneTemplates(appBatch);
     }
 
     // exixting fc
