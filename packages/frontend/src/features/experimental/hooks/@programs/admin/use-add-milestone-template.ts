@@ -37,6 +37,8 @@ export function useAddMilestoneTemplate() {
         price: parseEther(props.price),
         templateId: BigInt(0),
       };
+      console.log("contract");
+
       await writeContractAsync({
         abi: scholarshipProgramAbi,
         address: address || "0x",
@@ -48,8 +50,8 @@ export function useAddMilestoneTemplate() {
     onError: (e) => {
       console.error(e);
     },
-    onMutate: () => {},
-    onSuccess: () => {},
+    onMutate: () => { },
+    onSuccess: () => { },
   });
 
   return [mutation, contractMutation] as const;

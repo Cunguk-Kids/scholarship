@@ -4,10 +4,9 @@ import { useApplyProgram } from '@/hooks/@programs/applicant/use-apply-program';
 import { useGetProgramContract } from '../../hooks/get-programs';
 import { CardForm } from '@/components/CardForm';
 
-function ApplyForm() {
+function ApplyForm({ address }: { address: '0x' }) {
   const {
     ref: { id },
-    data: { address },
   } = RootInjection.use();
 
   const app = useGetProgramContract(address || '0x0');

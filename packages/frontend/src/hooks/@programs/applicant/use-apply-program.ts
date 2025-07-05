@@ -54,6 +54,7 @@ export function useApplyProgram(props: {
           };
         })
       );
+      console.log("contract", props.address);
 
       const tx = await queryWrite.writeContractAsync({
         abi: scholarshipProgramAbi,
