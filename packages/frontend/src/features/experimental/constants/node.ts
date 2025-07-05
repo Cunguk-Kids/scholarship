@@ -41,7 +41,7 @@ export const initialNodes: Node[] = [
   {
     id: 'C00',
     type: 'nodeItem',
-    data: { label: 'Apply From This App', isExpanded: false, key: "ApplyDonationProgram" },
+    data: { label: 'Apply From This App', isExpanded: false, key: "applyDonationProgram" },
     position: { x: 300, y: 510 },
     parentId: 'G1',
     extent: 'parent',
