@@ -5,6 +5,7 @@ import { studentNFTController } from "./studentNFT.controller";
 import { investorNFTController } from "./investorNFT.controller";
 import { programController } from "./program.controller";
 import { milestoneTemplateController } from "./milestone.template.controller";
+import { metadataController } from "./metadata.controller";
 
 export const allController = new Elysia({ prefix: "/v1" })
   .use(applicantController)
@@ -13,4 +14,5 @@ export const allController = new Elysia({ prefix: "/v1" })
   .use(programController)
   .use(milestoneTemplateController)
   .use(investorNFTController)
-  .use(programController);
+  .use(programController)
+  .use(metadataController);

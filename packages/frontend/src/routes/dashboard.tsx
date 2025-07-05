@@ -76,7 +76,7 @@ function RouteComponent() {
       data?.map(({ milestone }, i) => {
         let isActive = false;
         // @ts-expect-error deep
-        if (!mlContracts.data?.[i]?.result.isWithdrawed && !isUsedActive) {
+        if (!mlContracts.data?.[i]?.result?.isWithdrawed && !isUsedActive) {
           isUsedActive = true;
           isActive = true;
         }
@@ -94,12 +94,11 @@ function RouteComponent() {
               ? "disbursed"
               : "locked",
           isActive,
+          address: programs?.contractAddress,
         };
       }) ?? []
     );
-  }, [data, mlContracts.data, isCanWitdraw]);
-
-  console.log(mlContracts.data);
+  }, [data, mlContracts.data, isCanWitdraw, programs?.contractAddress]);
 
   return (
     <div className="w-full h-full flex flex-col">

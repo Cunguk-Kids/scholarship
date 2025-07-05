@@ -2,15 +2,22 @@ import { useState } from "react";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { StatusBadge } from "./StatusBadge";
+import type { Address } from "viem";
+import { useWithdrawMilestone } from "@/features/experimental/hooks/@programs/applicant/use-withdraw-milestone";
+import { useMutation } from "@tanstack/react-query";
+import { api } from "@/repo/api";
+import { useConfig } from "wagmi";
+import { waitForTransactionReceipt } from "@wagmi/core";
 
 type MilestoneStatus = "disbursed" | "pending" | "locked";
 
 interface Milestone {
-  id: number;
+  id: string;
   title: string;
   amount: string;
   status: MilestoneStatus;
   isActive?: boolean;
+  address?: Address;
 }
 
 const MilestoneProgress = ({ milestones }: { milestones: Milestone[] }) => {
@@ -24,7 +31,29 @@ const MilestoneProgress = ({ milestones }: { milestones: Milestone[] }) => {
   const handleUpload = (file: File) => {
     setUploads(() => file);
   };
+  const config = useConfig();
 
+  const [,,prove] = useWithdrawMilestone(milestones[0]?.address as never);
+  const { mutate } = useMutation({
+    mutationFn: async (p: { description: string; file: File; id: string }) => {
+      const metadata = await api.v1.metadata.post({
+        description: p.description,
+        file: p.file,
+      });
+
+
+      if (metadata.error) throw metadata.error;
+
+      const txHash = await prove({
+        id: BigInt(p.id),
+        metadataProve: metadata.data.imageURL,
+      });
+
+      console.log(txHash);
+
+      const result = await waitForTransactionReceipt(config, { hash: txHash! });
+    },
+  });
 
   return (
     <div className="w-full bg-skbw rounded-xl overflow-hidden p-4 space-y-6">
@@ -65,7 +94,7 @@ const MilestoneProgress = ({ milestones }: { milestones: Milestone[] }) => {
               <div className="justify-end">
                 {milestone.status === "locked" ? (
                   <div className="text-xs text-blue-700 flex items-center">
-                    🔒 Locked until Milestone {milestone.id - 1} approved
+                    🔒 Locked until reached quorum
                   </div>
                 ) : (
                   <StatusBadge size="small" status={milestone.status} />
@@ -98,18 +127,41 @@ const MilestoneProgress = ({ milestones }: { milestones: Milestone[] }) => {
                 <div className="border-t h-1 self-stretch border-gray-200"></div>
 
                 {/* Bagian 2: Upload Bukti */}
-                <div className="flex items-center gap-2.5 self-stretch w-full">
-                  <img src="/icons/upload-square.svg" alt="upload-icon" />
-                  <p className="text-sm text-center font-medium">
-                    Upload invoice, receipts, or a short explanation of how the
-                    fund was used.
-                  </p>
-                </div>
-                <Input type="upload" onUpload={handleUpload} />
+                {uploads ? (
+                  <img
+                    onClick={() => {
+                      setUploads(null);
+                    }}
+                    src={URL.createObjectURL(uploads)}
+                    alt="proove"
+                    className="max-h-[500px] block rounded-2xl shadow-neo aspect-video object-contain object-center mx-auto"
+                  />
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2.5 self-stretch w-full">
+                      <img src="/icons/upload-square.svg" alt="upload-icon" />
+                      <p className="text-sm text-center font-medium">
+                        Upload invoice, receipts, or a short explanation of how
+                        the fund was used.
+                      </p>
+                    </div>
+                    <Input type="upload" onUpload={handleUpload} />
+                  </>
+                )}
               </div>
               {/* Submit Button (kanan bawah) */}
-              <div className="flex justify-end p-">
-                <Button label="Submit" />
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={() => {
+                    console.log("djakdsjk");
+                    mutate({
+                      id: milestone.id.split("_")[2]!,
+                      file: uploads!,
+                      description: milestone.id?.split("_")[2],
+                    });
+                  }}
+                  label="Submit"
+                />
               </div>
             </div>
           )}
