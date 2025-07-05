@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CardScholarship } from "./CardScholarship";
-// import MilestoneProgress from "./MilestoneProgress";
+import MilestoneProgress from "./MilestoneProgress";
 
 type Tab = {
   id: string;
@@ -45,7 +45,7 @@ export const Tabbing = <T,>({
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? "");
 
   return (
-    <div className="grow min-w-[70.5rem]">
+    <div className="grow">
       {/* Tabs */}
       <div className="relative -left-2 -top-1 shrink-0 z-10 flex items-end -space-x-1">
         {tabs.map((tab) => (
@@ -73,7 +73,7 @@ export const Tabbing = <T,>({
           )}
           {activeTab.toLowerCase() === "milestone" && (
             <div className="flex px-4 pt-4 pb-8 flex-col items-start gap-2 shrink-0 rounded-b-2xl rounded-tr-2xl">
-              <div className="flex items-start gap-2.5 self-stretch">
+              <div className="flex items-start gap-2.5 self-stretch justify-between">
                 <p className="w-1/2 flex flex-col justify-center">
                   Share your milestones! Every proof keeps your scholarship
                   provider and public informed.
@@ -89,7 +89,7 @@ export const Tabbing = <T,>({
               </div>
               <div className="border-t h-1 self-stretch"></div>
               <div className="flex w-full items-start self-stretch">
-                {/* <MilestoneProgress
+                <MilestoneProgress
                   milestones={[
                     {
                       id: 1,
@@ -102,9 +102,16 @@ export const Tabbing = <T,>({
                       title: "Coursework Essentials",
                       amount: "Rp1.000.000",
                       status: "pending",
+                      isActive: true,
+                    },
+                    {
+                      id: 3,
+                      title: "Thesis Project",
+                      amount: "Rp1.000.000",
+                      status: "locked",
                     },
                   ]}
-                /> */}
+                />
               </div>
             </div>
           )}
