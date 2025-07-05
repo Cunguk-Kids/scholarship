@@ -42,8 +42,9 @@ export function useCreateProgram() {
       const hs = waited.logs.find(
         (log) =>
           log.address.toLowerCase() === skoolchainAddress.toLowerCase() &&
-          log.topics[0] === programCreated?.topicHash
+          log.topics.includes(programCreated?.topicHash as never)
       );
+      console.log(waited.logs);
       if (!hs) throw new Error("Logs hash not found");
       const log = skInterface.parseLog(hs);
       if (!log?.args) throw new Error("Failed to create program");
