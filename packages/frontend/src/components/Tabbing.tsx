@@ -86,6 +86,13 @@ export const Tabbing = <T,>({
                       programMetadataCID: item.title,
                       programContractAddress: item.contractAddress,
                     }}
+                    labelButton={
+                      activeTab === 'active'
+                        ? 'Apply Now'
+                        : activeTab === 'vote'
+                          ? 'Vote Now'
+                          : 'Donate Now'
+                    }
                     status={activeTab}
                     onClickButton={() => onClickAction(item, activeTab)}
                   />
