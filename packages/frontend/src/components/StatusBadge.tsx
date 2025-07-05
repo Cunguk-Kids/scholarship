@@ -9,6 +9,8 @@ const STATUS_STYLES: Record<StatusType, { bg: string; label: string }> = {
   active: { bg: "bg-black", label: "Active" },
   vote: { bg: "bg-skred", label: "On Vote" },
   soon: { bg: "bg-skgreen", label: "Soon" },
+  // @ts-expect-error ytta
+  disbursed: { bg: "bg-skgreen", label: "Disbursed" }
 };
 
 export const StatusBadge = ({

@@ -25,6 +25,7 @@ const MilestoneProgress = ({ milestones }: { milestones: Milestone[] }) => {
     setUploads(() => file);
   };
 
+
   return (
     <div className="w-full bg-skbw rounded-xl overflow-hidden p-4 space-y-6">
       {milestones.map((milestone, index) => (

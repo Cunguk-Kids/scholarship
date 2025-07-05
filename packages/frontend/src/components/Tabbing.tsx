@@ -36,11 +36,13 @@ const TabButton = ({ label, isActive, color, onClick }: TabButtonProps) => {
 export const Tabbing = <T,>({
   programs,
   tabs,
-  type = 'program',
+  type = "program",
+  ...props
 }: {
   programs?: T[];
   tabs: Tab[];
   type?: string;
+  currentBalance?: string;
 }) => {
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? '');
 
@@ -92,13 +94,19 @@ export const Tabbing = <T,>({
                   informed.
                 </p>
                 <div className="flex py-2 px-6 flex-col justify-center items-end gap-1 self-stretch rounded-2xl bg-black">
-                  <p className="text-sm font-medium text-white">Current Balance</p>
-                  <h5 className="text-center font-bold text-white">45000 MON ≃ Rp2.000.000</h5>
+                  <p className="text-sm font-medium text-white">
+                    Current Balance
+                  </p>
+                  <h5 className="text-center font-bold text-white">
+                    {props.currentBalance}
+                  </h5>
                 </div>
               </div>
               <div className="border-t h-1 self-stretch"></div>
               <div className="flex w-full items-start self-stretch">
-                <MilestoneProgress milestones={programs as never} />
+                <MilestoneProgress
+                  milestones={programs as never}
+                />
               </div>
             </div>
           )}

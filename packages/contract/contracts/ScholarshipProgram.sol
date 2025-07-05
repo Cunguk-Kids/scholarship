@@ -196,5 +196,11 @@ contract ScholarshipProgram is
         return address(this).balance;
     }
 
+    function isCanWithdraw(
+        uint batch
+    ) external view returns (bool) {
+        return addressToApplicants[batch][msg.sender].voteCount > quorumVote[batch];
+    }
+
     receive() external payable {}
 }
