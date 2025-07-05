@@ -10,7 +10,7 @@ export default function MakeDonationProgram() {
 
   return (
     <div className="w-fit">
-      <Button onClick={() => id && write(BigInt(id))} label="Make Donation" />
+      <Button onClick={() => id && write(BigInt(id.current))} label="Make Donation" />
     </div>
   );
 }
