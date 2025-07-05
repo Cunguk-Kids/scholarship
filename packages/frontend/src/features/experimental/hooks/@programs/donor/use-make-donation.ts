@@ -14,7 +14,7 @@ export function useMakeDonation() {
     query.writeContract({
       abi: scholarshipProgramAbi,
       address: address || "0x",
-      functionName: "makeDonation",
+      functionName: "donateContract",
       args: [],
       value: BigInt(10 * 1e18)
     });

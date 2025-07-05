@@ -1240,7 +1240,7 @@ export const scholarshipProgramAbi = [
         type: "tuple[]",
       }
     ],
-    name: "applySomeProgram",
+    name: "applyProgramContract",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -1300,6 +1300,12 @@ export const scholarshipProgramAbi = [
     stateMutability: "payable",
     type: "function",
   }, {
+    inputs: [],
+    name: "donateContract",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  }, {
     inputs: [
       {
         internalType: "uint256",
@@ -1348,6 +1354,18 @@ export const scholarshipProgramAbi = [
         internalType: "struct MilestoneTemplate[]",
         name: "",
         type: "tuple[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "getAppBatch",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       }
     ],
     stateMutability: "view",
@@ -1611,12 +1629,6 @@ export const scholarshipProgramAbi = [
       }
     ],
     stateMutability: "view",
-    type: "function",
-  }, {
-    inputs: [],
-    name: "makeDonation",
-    outputs: [],
-    stateMutability: "payable",
     type: "function",
   }, {
     inputs: [

@@ -47,6 +47,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         MilestoneTemplate[] memory templates = new MilestoneTemplate[](count);
 
         for (uint i = 0; i < count; ) {
+            // nextMilestoneTemplate - i
             templates[i] = milestoneTemplates[appBatch][i];
             unchecked {
                 ++i;
