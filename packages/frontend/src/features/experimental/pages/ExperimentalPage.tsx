@@ -21,6 +21,7 @@ import GroupItem from '../components/GroupItem';
 import AddressGroup from '../components/AddressGroup';
 import { ExperimentalInjection } from '../context/experimental-context';
 import BalanceDisplay from '../components/BalanceDisplay';
+import MilestoneGroup from '../components/MilestoneGroup';
 
 const nodeTypes: NodeTypes = {
   nodeItem: NodeItem,
@@ -114,6 +115,7 @@ export function ExperimentalPage() {
         </div>
       </div>
       <AddressGroup />
+      <MilestoneGroup />
 
       <div
         ref={reactFlowWrapper}

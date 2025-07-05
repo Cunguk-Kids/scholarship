@@ -1,23 +1,25 @@
-import { useWriteContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { scholarshipProgramAbi } from "../../../../../repo/abi";
+import { appStateInjection } from "@/hooks/inject/app-state";
+import { ExperimentalInjection } from "@/features/experimental/context/experimental-context";
+import { useEffect } from "react";
 
 export function useGetMilestoneTemplate() {
-  const query = useWriteContract();
-  /**
-   * @function useStartApplication
-   * @description Starts a new application phase.
-   * @param {Object} props
-   * @param {BigInt} props.quorum The required number of votes for a milestone to be accepted.
-   * @param {BigInt} props.applicantTarget The required number of applicants for the milestone to be considered completed.
-   * @returns {Function} write - A function to start the application phase with the given quorum and applicant target.
-   */
-  const write = () =>
-    query.writeContract({
-      abi: scholarshipProgramAbi,
-      address: "0x-dummy",
-      functionName: "",
-      args: [],
-    });
+  const { data: { address } } = ExperimentalInjection.use();
 
-  return [write, query] as const;
+  const {
+    blockNumber: { data: blockNumber },
+  } = appStateInjection.use();
+  const { data: milestones, refetch } = useReadContract({
+    address: address || "0x",
+    abi: scholarshipProgramAbi,
+    functionName: "getAllMilestoneTemplates",
+  });
+
+  useEffect(() => {
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blockNumber]);
+
+  return { milestones };
 }

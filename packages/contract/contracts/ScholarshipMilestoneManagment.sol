@@ -38,14 +38,19 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
             revert OnlyValidMilestone();
     }
 
-    function _getAllMilestoneTemplates(
-        uint batchId
-    ) internal view returns (MilestoneTemplate[] memory) {
-        uint count = nextMilestoneTemplate[batchId];
+    function getAllMilestoneTemplates()
+        public
+        view
+        returns (MilestoneTemplate[] memory)
+    {
+        uint count = nextMilestoneTemplate[appBatch];
         MilestoneTemplate[] memory templates = new MilestoneTemplate[](count);
 
-        for (uint i = 0; i < count; i++) {
-            templates[i] = milestoneTemplates[batchId][i];
+        for (uint i = 0; i < count; ) {
+            templates[i] = milestoneTemplates[appBatch][i];
+            unchecked {
+                ++i;
+            }
         }
 
         return templates;

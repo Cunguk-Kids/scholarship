@@ -135,14 +135,6 @@ contract ScholarshipProgram is
         );
     }
 
-    function getAllMilestoneTemplates()
-        external
-        view
-        returns (MilestoneTemplate[] memory)
-    {
-        return _getAllMilestoneTemplates(appBatch);
-    }
-
     // exixting fc
     function startApplication(
         uint256 _applicantTarget
