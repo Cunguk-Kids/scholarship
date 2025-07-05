@@ -38,7 +38,7 @@ export function useApplyProgram(props: {
         args: [mut.milestones],
       });
       await waitForTransactionReceipt(config, { hash: tx });
-      await api.v1.applicant.post({
+      await api.v1.applicant.new.post({
         applicant: {
           id: `${props.programId}_${props.appBatch}_${props.applicantSize + 1n}`,
           batch: Number(props.appBatch),

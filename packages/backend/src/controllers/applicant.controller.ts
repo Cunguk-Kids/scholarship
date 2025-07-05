@@ -13,14 +13,14 @@ export const applicantController = new Elysia({ prefix: "/applicant" })
   .get("/all", () => {
     return getAllApplicant();
   })
-  .get("/:id/milestones", ({ params: { id } }) => {
+  .get("/milestones/:id", ({ params: { id } }) => {
     return db
       .select()
       .from(milestoneTable)
       .where(eq(milestoneTable.applicantId, id));
   })
   .post(
-    "/",
+    "/new",
     async ({ body }) => {
       db.transaction(async (tx) => {
         const applicant = (
@@ -52,7 +52,7 @@ export const applicantController = new Elysia({ prefix: "/applicant" })
     }
   )
   .patch(
-    "/:id",
+    "/milestones/:id",
     ({ body, params }) => {
       return db
         .update(milestoneTable)
