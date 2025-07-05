@@ -14,7 +14,7 @@ export function useApplyProgram() {
     query.writeContract({
       abi: scholarshipProgramAbi,
       address: address || "0x",
-      functionName: "applySomeProgram",
+      functionName: "applyProgramContract",
       args: [
         [
           {

@@ -64,6 +64,7 @@ contract ScholarshipProgram is
         quorumVote[appBatch] = (_targetApplicant + 1) / 2;
     }
 
+    // factory apply need to update scurity
     function applyProgram(
         address _applicant,
         MilestoneInput[] calldata milestoneIds
@@ -73,7 +74,8 @@ contract ScholarshipProgram is
         emit ApplicantApplied(_applicant, appBatch);
     }
 
-    function applySomeProgram(
+    // apply from this contract
+    function applyProgramContract(
         MilestoneInput[] calldata milestoneIds
     ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
         _addApplicant(msg.sender, milestoneIds);
@@ -81,12 +83,13 @@ contract ScholarshipProgram is
         emit ApplicantApplied(msg.sender, appBatch);
     }
 
-    // stop
+    // vote
     function vote(address voter, address applicant) external {
         _voteApplicant(voter, applicant);
         emit Voted(voter, applicant, appBatch);
     }
 
+    // factory donate need update scurity
     function donate(
         address donator
     ) external payable onlyInStatus(ScholarshipStatus.OpenForApplications) {
@@ -101,7 +104,8 @@ contract ScholarshipProgram is
         emit Donated(donator, appBatch, msg.value);
     }
 
-    function makeDonation()
+    // apply from this contract
+    function donateContract()
         external
         payable
         onlyInStatus(ScholarshipStatus.OpenForApplications)
@@ -123,6 +127,10 @@ contract ScholarshipProgram is
 
     function getAppStatus() external view returns (ScholarshipStatus) {
         return appStatus;
+    }
+
+    function getAppBatch() external view returns (uint256) {
+        return appBatch;
     }
 
     function createTemplateMilestone(

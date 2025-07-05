@@ -45,6 +45,11 @@ struct MilestoneTemplate {
     string metadata;
 }
 
+struct MilestoneTemplateWithId {
+    uint256 id;
+    MilestoneTemplate data;
+}
+
 struct MilestoneInput {
     MilestoneType mType;
     uint price;
