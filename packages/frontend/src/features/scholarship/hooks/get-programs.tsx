@@ -37,10 +37,30 @@ export function useGetProgramContract(address: `0x${string}`) {
         functionName: "stackedToken",
         args: [],
       },
+      {
+        abi: scholarshipProgramAbi,
+        address,
+        functionName: "appBatch",
+        args: [],
+      },
+      {
+        abi: scholarshipProgramAbi,
+        address,
+        functionName: "getNextMilestone",
+        args: [],
+      },
     ],
   });
 
-  const [applicantSize, appStatus, stackedToken] = data ?? [];
+  const [applicantSize, appStatus, stackedToken, appBatch, nextMilestone] =
+    data ?? [];
 
-  return { applicantSize, appStatus, stackedToken, queryStatus };
+  return {
+    applicantSize,
+    appStatus,
+    stackedToken,
+    queryStatus,
+    appBatch,
+    nextMilestone,
+  };
 }

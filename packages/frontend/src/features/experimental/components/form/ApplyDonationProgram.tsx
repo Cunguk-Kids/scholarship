@@ -9,11 +9,12 @@ export default function ApplyDonationProgram() {
   const [write] = useApplyProgram();
 
   const {
+    ref: { id},
     setter: { handleSelectMilestone },
-    data: { selectedMilestone, id },
+    data: { selectedMilestone },
   } = ExperimentalInjection.use();
 
-  const handleSubmit = () => id && write(BigInt(id), selectedMilestone);
+  const handleSubmit = () => id.current && write(BigInt(id.current), selectedMilestone);
   return (
     <div>
       <h1>Select Milestone</h1>

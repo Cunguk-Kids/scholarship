@@ -114,7 +114,7 @@ export const initialNodes: Node[] = [
   {
     id: 'C9',
     type: 'nodeItem',
-    data: { label: 'Withdraw Milestone', isExpanded: false, key: "applyDonation" },
+    data: { label: 'Withdraw Milestone', isExpanded: false, key: "withdrawMilestone" },
     position: { x: 50, y: 80 },
     parentId: 'G4',
     extent: 'parent',
