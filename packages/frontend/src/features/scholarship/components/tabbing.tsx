@@ -15,36 +15,33 @@ function CreateProgramForm() {
 
   const onSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
-    setLoading({ type: "proccessing" });
+    setLoading({ type: 'proccessing' });
 
     const formData = new FormData(event.currentTarget);
     mutate(
       {
-        title: formData.get("title") + "",
-        description: formData.get("description") + "",
-        end: new Date(formData.get("endDate") + "").getTime(),
-        start: new Date(formData.get("startDate") + "").getTime(),
-        target: +(formData.get("target") ?? 0),
+        title: formData.get('title') + '',
+        description: formData.get('description') + '',
+        end: new Date(formData.get('endDate') + '').getTime(),
+        start: new Date(formData.get('startDate') + '').getTime(),
+        target: +(formData.get('target') ?? 0),
       },
       {
         onSuccess: () => {
-          setLoading({ type: "success" });
+          setLoading({ type: 'success' });
         },
         onError: (error) => {
-          setLoading({ type: "error", message: "" + error });
+          setLoading({ type: 'error', message: '' + error });
         },
-      }
+      },
     );
   };
 
   return (
     <form
       onSubmit={onSubmit}
-      className="[&>*>*>button]:w-full flex flex-col gap-2 mt-6 [&>label]:flex [&>label]:flex-col [&>label]:font-nunito [&>label]:text-xl relative"
-    >
-      {isPending && (
-        <div className="absolute inset-0 bg-black rounded-2xl"></div>
-      )}
+      className="[&>*>*>button]:w-full flex flex-col gap-2 mt-6 [&>label]:flex [&>label]:flex-col [&>label]:font-nunito [&>label]:text-xl relative">
+      {isPending && <div className="absolute inset-0 bg-black rounded-2xl"></div>}
       <label>
         Title
         <input type="text" name="title" />
@@ -66,30 +63,30 @@ function CreateProgramForm() {
         <input type="number" name="target" className="mb-5" />
       </label>
 
-      <Button type={"submit" as never} label="Submit" />
+      <Button type={'submit' as never} label="Submit" />
     </form>
   );
 }
 export function Tabbing<T>({
   onClickTabbing,
 }: {
-  onClickTabbing?: (item: Record<string, T>) => void;
+  onClickTabbing?: (item: Record<string, T>, activeTab: string) => void;
 }) {
   const tabsData = [
     {
-      id: "active",
-      label: "Active Scholarships",
-      color: "bg-skpurple",
+      id: 'active',
+      label: 'Active Scholarships',
+      color: 'bg-skpurple',
     },
     {
-      id: "vote",
-      label: "On Voting",
-      color: "bg-skred",
+      id: 'vote',
+      label: 'On Voting',
+      color: 'bg-skred',
     },
     {
-      id: "soon",
-      label: "Coming Soon",
-      color: "bg-skgreen",
+      id: 'donate',
+      label: 'Donate',
+      color: 'bg-skgreen',
     },
   ];
 
@@ -97,8 +94,8 @@ export function Tabbing<T>({
   const [open, setOpen] = useState(false);
   const { programs } = useGetPrograms();
 
-  const handleTabbing = (item: Record<string, any>) => {
-    if (onClickTabbing) onClickTabbing(item);
+  const handleTabbing = (item: Record<string, any>, activeTab: string) => {
+    if (onClickTabbing) onClickTabbing(item, activeTab);
   };
 
   useClickOutside(ref, () => setOpen(!open));
@@ -113,7 +110,7 @@ export function Tabbing<T>({
             <h2 className="font-paytone text-7xl">CREATE PROGRAM</h2>
             <CreateProgramForm />
           </div>,
-          document.documentElement
+          document.documentElement,
         )}
       <div className="relative">
         <div className="absolute z-20 top-0 right-0 bg-black rounded-full size-max">
@@ -121,8 +118,7 @@ export function Tabbing<T>({
             onClick={() => {
               setOpen((x) => !x);
             }}
-            className="border-4 p-2 aspect-square rounded-full bg-skpink -translate-x-0.5 -translate-y-0.5"
-          >
+            className="border-4 p-2 aspect-square rounded-full bg-skpink -translate-x-0.5 -translate-y-0.5">
             ___
           </button>
         </div>
@@ -132,9 +128,9 @@ export function Tabbing<T>({
               // @ts-expect-error ytta
               x.programMetadataCID = x.title;
               // @ts-expect-error ytta
-              x.endDate = new Date(x.endDate ?? "").getTime();
+              x.endDate = new Date(x.endDate ?? '').getTime();
               // @ts-expect-error ytta
-              x.startDate = new Date(x.startDate ?? "").getTime();
+              x.startDate = new Date(x.startDate ?? '').getTime();
               // @ts-expect-error ytta
               x.programContractAddress = x.contractAddress;
               return x;
