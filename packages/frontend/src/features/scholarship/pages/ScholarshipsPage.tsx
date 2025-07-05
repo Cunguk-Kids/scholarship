@@ -10,18 +10,22 @@ import { createPortal } from 'react-dom';
 import ApplyForm from '../components/form/ApplyForm';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { RootInjection } from '@/context/app-context';
+import VotingForm from '../components/form/VotingForm';
+import DonationForm from '../components/form/DonationForm';
 export function ScholarshipsPage() {
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('active');
   const {
     setter: { setAddress },
     data: { address },
   } = RootInjection.use();
   const ref = useRef<HTMLDivElement>(null);
 
-  const handleTabClick = <T,>(item: Record<string, T>) => {
+  const handleTabClick = <T,>(item: Record<string, T>, activeTab: string) => {
+    // vote || active || donate
+    console.log(activeTab, 'activeTab');
+    setActiveTab(activeTab);
     if (item?.contractAddress) {
-      console.log(item?.contractAddress, '-----item?.contractAddress-----');
-
       setAddress(item?.contractAddress as '0x');
     }
     setOpen(!open);
@@ -44,8 +48,24 @@ export function ScholarshipsPage() {
           <div
             ref={ref}
             className="bg-skbw neo-shadow rounded-2xl border-2 fixed z-10 inset-0 m-auto w-max h-max p-6">
-            <h2 className="font-paytone text-7xl">Apply Program</h2>
-            <ApplyForm address={address as '0x'} />
+            {activeTab === 'active' && (
+              <div>
+                <h2 className="font-paytone text-7xl">Apply Program</h2>
+                <ApplyForm address={address as '0x'} />
+              </div>
+            )}
+            {activeTab === 'vote' && (
+              <div>
+                <h2 className="font-paytone text-7xl">Voting Program</h2>
+                <VotingForm />
+              </div>
+            )}
+            {activeTab === 'donate' && (
+              <div>
+                <h2 className="font-paytone text-7xl">Donation Program</h2>
+                <DonationForm address={address as string} />
+              </div>
+            )}
           </div>,
           document.documentElement,
         )}
