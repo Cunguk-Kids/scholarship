@@ -1,4 +1,4 @@
-import { createProgramDto, programInsertDto } from "@/db/dto";
+import { createProgramDto, programInsertDto } from "@back/db/dto";
 import Elysia from "elysia";
 import { addProgram, createProgramService, getAllProgram, getProgram } from "@back/services/program.service";
 

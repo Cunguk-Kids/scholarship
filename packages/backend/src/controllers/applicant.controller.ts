@@ -1,4 +1,4 @@
-import { applicantInsertDto } from "@/db/dto";
+import { applicantInsertDto } from "@back/db/dto";
 import {
   addApplicant,
   getAllApplicant,

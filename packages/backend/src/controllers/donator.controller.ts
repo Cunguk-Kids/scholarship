@@ -1,4 +1,4 @@
-import { donationInsertDto, milestoneInsertDto } from "@/db/dto";
+import { donationInsertDto, milestoneInsertDto } from "@back/db/dto";
 import {
   addDonator, getDonator, getAllDonator
 } from "../services/donator.service";

@@ -1,6 +1,6 @@
-import { db } from "@/db";
-import { applicantInsertDto } from "@/db/dto";
-import { applicantTable } from "@/db/schema";
+import { db } from "@back/db";
+import { applicantInsertDto } from "@back/db/dto";
+import { applicantTable } from "@back/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function getApplicant(id: string) {

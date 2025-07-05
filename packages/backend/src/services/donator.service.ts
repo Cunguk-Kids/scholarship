@@ -1,6 +1,6 @@
-import { db } from "@/db";
-import { donationInsertDto } from "@/db/dto";
-import { donationTable } from "@/db/schema";
+import { db } from "@back/db";
+import { donationInsertDto } from "@back/db/dto";
+import { donationTable } from "@back/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function getDonator(id: string) {
