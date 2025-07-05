@@ -5,12 +5,41 @@ import { Party } from '@/features/scholarship/components/party';
 import { IllustProvider } from '@/features/scholarship/components/illust-provider';
 import { IllustStudent } from '@/features/scholarship/components/illust-student';
 import { Bottom } from '../components/bottom';
+import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import ApplyForm from '../components/form/ApplyForm';
+import { useClickOutside } from '@/hooks/useClickOutside';
 export function ScholarshipsPage() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
   const handleTabClick = <T,>(item: Record<string, T>) => {
     console.log(item);
+    setOpen(!open);
+    // write.mutate({
+    //   milestones: selectedMilestone.map((item) => ({
+    //     ...item,
+    //     title: '',
+    //     description: '',
+    //   })),
+    //   name: 'IDK',
+    // });
   };
+
+  // hooks
+  useClickOutside(ref, () => setOpen(!open));
   return (
     <>
+      {open &&
+        createPortal(
+          <div
+            ref={ref}
+            className="bg-skbw neo-shadow rounded-2xl border-2 fixed z-10 inset-0 m-auto w-max h-max p-6">
+            <h2 className="font-paytone text-7xl">Apply Program</h2>
+            <ApplyForm />
+          </div>,
+          document.documentElement,
+        )}
       <div className="grid grow text-5xl relative h-[calc(100vh-162.4px)]">
         <Bottom />
         <Flower />
