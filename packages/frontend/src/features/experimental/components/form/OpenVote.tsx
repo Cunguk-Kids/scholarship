@@ -1,5 +1,5 @@
 import { Button } from '@/components/Button';
-import { useOpenVote } from '@/hooks/admin/use-open-vote';
+import { useOpenVote } from '@/hooks/@programs/admin/use-open-vote';
 
 function OpenVote() {
   const [write] = useOpenVote();
