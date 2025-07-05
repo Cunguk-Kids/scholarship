@@ -37,10 +37,12 @@ export const Tabbing = <T,>({
   programs,
   tabs,
   type = "program",
+  ...props
 }: {
   programs?: T[];
   tabs: Tab[];
   type?: string;
+  currentBalance?: string;
 }) => {
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? "");
 
@@ -83,7 +85,7 @@ export const Tabbing = <T,>({
                     Current Balance
                   </p>
                   <h5 className="text-center font-bold text-white">
-                    45000 MON ≃ Rp2.000.000
+                    {props.currentBalance}
                   </h5>
                 </div>
               </div>
