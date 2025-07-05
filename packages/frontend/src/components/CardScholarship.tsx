@@ -1,9 +1,18 @@
 import { formatEther } from "viem";
 import { Button } from "./Button";
 import { StatusBadge } from "./StatusBadge";
+import { useGetProgramContract } from "@/features/scholarship/hooks/get-programs";
 
 const getTextSize = (size: string, base: string, small: string) =>
   size === "small" ? small : base;
+
+const statuses = [
+  "soon",
+  "active", // applican and donator masuk
+  "soon",
+  "vote",
+  "soon",
+];
 
 const getImageSizeClass = (size: string) =>
   size === "small" ? "w-7 h-7 border" : "w-12 h-12 border-4";
@@ -14,10 +23,8 @@ export const CardScholarship = ({
   onClickButton = () => {},
   sizeButton = "large",
   size = "large",
-  status = "active",
   tokenValue = "0",
   tokenCcy = "MON",
-  totalApplicant = 0,
   program = {
     id: 0n,
     initiatorAddress: "Provider",
@@ -48,6 +55,9 @@ export const CardScholarship = ({
   };
 }) => {
   const timeLeft = getTimeLeft(program.endDate);
+  const data = useGetProgramContract(program.programContractAddress as never);
+
+  const status = statuses[data.appStatus?.result ?? 0];
 
   const getLocalValue = (amount: bigint) => {
     const token =
@@ -139,7 +149,7 @@ export const CardScholarship = ({
                   ))}
                 </div>
                 <p className="text-sm">
-                  + {totalApplicant} other students have applied
+                  + {data.applicantSize?.result} other students have applied
                 </p>
               </div>
             </div>
@@ -158,7 +168,7 @@ export const CardScholarship = ({
                       <span
                         className={`${getTextSize(size, "text-2xl", "text-base")} font-bold`}
                       >
-                        {tokenValue} {tokenCcy}
+                        {data.stackedToken?.result} {tokenCcy}
                       </span>
                       <p className={getTextSize(size, "text-sm", "text-xs")}>
                         /
