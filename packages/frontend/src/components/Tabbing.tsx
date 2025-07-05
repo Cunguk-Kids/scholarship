@@ -37,12 +37,18 @@ export const Tabbing = <T,>({
   programs,
   tabs,
   type = 'program',
+  onClickTabbing,
 }: {
   programs?: T[];
   tabs: Tab[];
   type?: string;
+  onClickTabbing?: (item: Record<string, T>) => void;
 }) => {
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? '');
+
+  const onClickAction = (item: Record<string, T>) => {
+    if (onClickTabbing) onClickTabbing(item);
+  };
 
   return (
     <div className="grow">
@@ -79,7 +85,7 @@ export const Tabbing = <T,>({
                       programContractAddress: item.contractAddress,
                     }}
                     status={activeTab}
-                    onClickButton={() => console.log('hello')}
+                    onClickButton={() => onClickAction(item)}
                   />
                 ))}
             </div>
