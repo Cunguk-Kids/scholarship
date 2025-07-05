@@ -58,31 +58,17 @@ function RouteComponent() {
     },
   });
 
-  const applicantData = useReadContract({
+  const { data: isCanWitdraw } = useReadContract({
     address: programs?.contractAddress as Address,
     abi: scholarshipProgramAbi,
-    functionName: "getApplicant",
-    args: [user?.applicants?.applicantAddress as Address],
+    functionName: "isCanWithdraw",
+    args: [BigInt(user?.milestone.id.split("_")[1] ?? 0)],
     query: {
       enabled:
         Boolean(programs?.contractAddress) &&
         Boolean(user?.applicants?.applicantAddress),
     },
   });
-
-  const quorumVote = useReadContract({
-    address: programs?.contractAddress as Address,
-    abi: scholarshipProgramAbi,
-    functionName: "",
-    args: [user?.applicants?.applicantAddress as Address],
-    query: {
-      enabled:
-        Boolean(programs?.contractAddress) &&
-        Boolean(user?.applicants?.applicantAddress),
-    },
-  })
-
-  console.log(applicantData.data?.voteCount);
 
   const milestones = useMemo(() => {
     let isUsedActive = false;
@@ -100,7 +86,9 @@ function RouteComponent() {
           title: milestone.title,
           amount: milestone.price,
           status: isActive
-            ? "pending"
+            ? isCanWitdraw
+              ? "pending"
+              : "locked"
             : // @ts-expect-error deep
               mlContracts.data?.[i]?.result.isWithdrawed
               ? "disbursed"
@@ -109,7 +97,7 @@ function RouteComponent() {
         };
       }) ?? []
     );
-  }, [data, mlContracts.data]);
+  }, [data, mlContracts.data, isCanWitdraw]);
 
   console.log(mlContracts.data);
 

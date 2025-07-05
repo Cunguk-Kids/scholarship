@@ -1634,6 +1634,24 @@ export const scholarshipProgramAbi = [
     inputs: [
       {
         internalType: "uint256",
+        name: "batch",
+        type: "uint256",
+      }
+    ],
+    name: "isCanWithdraw",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
         name: "batchId",
         type: "uint256",
       }, {
