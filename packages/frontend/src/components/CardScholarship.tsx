@@ -1,4 +1,4 @@
-import { formatEther } from "viem";
+import { formatGwei } from "viem";
 import { Button } from "./Button";
 import { StatusBadge } from "./StatusBadge";
 import { useGetProgramContract } from "@/features/scholarship/hooks/get-programs";
@@ -61,7 +61,7 @@ export const CardScholarship = ({
 
   const getLocalValue = (amount: bigint) => {
     const token =
-      typeof amount === "bigint" ? Number(formatEther(amount)) : amount;
+      typeof amount === "bigint" ? Number(formatGwei(amount)) : amount;
 
     const tokenToIDR = 0.0000000064;
     return (token * tokenToIDR).toLocaleString("id-ID", {
@@ -181,7 +181,8 @@ export const CardScholarship = ({
                       <img src="/icons/information-diamond.svg" alt="info" />
                       <span>worth around</span>
                       <span className="font-bold">
-                        {getLocalValue(tokenValue as bigint)} {"IDR"}
+                        {getLocalValue(data.stackedToken?.result as bigint)}{" "}
+                        {"IDR"}
                       </span>
                     </div>
                   </div>
