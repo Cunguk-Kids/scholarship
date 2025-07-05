@@ -1,6 +1,6 @@
 import { useWriteContract } from "wagmi";
 import { ExperimentalInjection } from "@/features/experimental/context/experimental-context";
-import { scholarshipProgramAbi } from "@/repo/abi";
+import { scholarshipAbi } from "@/repo/abi";
 
 export function useDonateToProgram() {
   const query = useWriteContract();
@@ -10,12 +10,12 @@ export function useDonateToProgram() {
    * @description Starts a new donation.
    * @returns {Function} make some donation to contract.
    */
-  const write = () =>
+  const write = (programId: bigint) =>
     query.writeContract({
-      abi: scholarshipProgramAbi,
+      abi: scholarshipAbi,
       address: address || "0x",
-      functionName: "donateContract",
-      args: [],
+      functionName: "donateToProgram",
+      args: [programId],
       value: BigInt(10 * 1e18)
     });
 

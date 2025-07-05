@@ -32,8 +32,8 @@ export const initialNodes: Node[] = [
   {
     id: 'C0',
     type: 'nodeItem',
-    data: { label: 'Donate From This App', isExpanded: false, key: "createContract" },
-    position: { x: 100, y: 500 },
+    data: { label: 'Donate From This App', isExpanded: false, key: "makeDonationProgram" },
+    position: { x: 100, y: 510 },
     parentId: 'G1',
     extent: 'parent',
     draggable: false
@@ -41,8 +41,8 @@ export const initialNodes: Node[] = [
   {
     id: 'C00',
     type: 'nodeItem',
-    data: { label: 'Apply From This App', isExpanded: false, key: "createContract" },
-    position: { x: 300, y: 500 },
+    data: { label: 'Apply From This App', isExpanded: false, key: "ApplyDonationProgram" },
+    position: { x: 300, y: 510 },
     parentId: 'G1',
     extent: 'parent',
     draggable: false
