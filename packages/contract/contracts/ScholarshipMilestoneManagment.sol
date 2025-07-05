@@ -127,9 +127,10 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     }
 
     function getMilestone(
+        uint batch,
         uint id
     ) public view returns (Milestone memory) {
-        return milestones[appBatch][id];
+        return milestones[batch][id];
     }
 
     function _onlyValidMilestone(uint batch, uint id) internal view {

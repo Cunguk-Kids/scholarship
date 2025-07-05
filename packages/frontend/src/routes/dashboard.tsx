@@ -1,13 +1,15 @@
 import { CardDashboard } from "@/components/CardDashboard";
 import { Tabbing } from "@/components/Tabbing";
 import { useGetMilestonesAddress } from "@/hooks/@programs/milestones/use-get-milestones";
-import {
-  useGetProgram,
-  useGetProgramContract,
-} from "@/features/scholarship/hooks/get-programs";
+import { useGetProgram } from "@/features/scholarship/hooks/get-programs";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useAccount, useBalance, useReadContracts } from "wagmi";
+import {
+  useAccount,
+  useBalance,
+  useReadContract,
+  useReadContracts,
+} from "wagmi";
 import { type Address } from "viem";
 import { scholarshipProgramAbi } from "@/repo/abi";
 
@@ -33,38 +35,6 @@ function RouteComponent() {
   ];
   const user = useMemo(() => data?.[0], [data]);
 
-  const milestones = useMemo(
-    () =>
-      data?.map(({ milestone }, i) => ({
-        id: milestone.id,
-        title: milestone.title,
-        amount: milestone.price,
-        status: "pending",
-        isActive: true,
-      })) ?? [],
-    // {
-    //   id: 2,
-    //   title: "Coursework Essentials",
-    //   amount: "Rp1.000.000",
-    //   status: "pending",
-    //   isActive: true,
-    // },
-    // {
-    //   id: 4,
-    //   title: "Coursework Essentials",
-    //   amount: "Rp1.000.000",
-    //   status: "pending",
-    //   isActive: true,
-    // },
-    // {
-    //   id: 3,
-    //   title: "Thesis Project",
-    //   amount: "Rp1.000.000",
-    //   status: "locked",
-    // },
-    [data]
-  );
-
   const totalFund = useMemo(
     () => data?.reduce((a, b) => a + +b.milestone.price, 0),
     [data]
@@ -73,22 +43,76 @@ function RouteComponent() {
   const { programs } = useGetProgram(user?.milestone?.programId);
 
   const mlContracts = useReadContracts({
-    contracts: data?.map(({ milestone }) => ({
-      address: programs?.contractAddress as Address,
-      abi: scholarshipProgramAbi,
-      functionName: "getMilestone",
-      args: [
-        BigInt(milestone.batch ?? 0),
-        BigInt(milestone.id.split("_")[2] ?? "0"),
-      ],
-    })),
+    contracts: data?.map(({ milestone }) => {
+      const [, batch, id] = milestone.id.split("_");
+      return {
+        address: programs?.contractAddress as Address,
+        abi: scholarshipProgramAbi,
+        functionName: "getMilestone",
+        args: [BigInt(batch), BigInt(id)],
+      };
+    }),
 
     query: {
       enabled: Boolean(programs?.contractAddress) && Boolean(data),
     },
   });
 
-  console.log(mlContracts);
+  const applicantData = useReadContract({
+    address: programs?.contractAddress as Address,
+    abi: scholarshipProgramAbi,
+    functionName: "getApplicant",
+    args: [user?.applicants?.applicantAddress as Address],
+    query: {
+      enabled:
+        Boolean(programs?.contractAddress) &&
+        Boolean(user?.applicants?.applicantAddress),
+    },
+  });
+
+  const quorumVote = useReadContract({
+    address: programs?.contractAddress as Address,
+    abi: scholarshipProgramAbi,
+    functionName: "",
+    args: [user?.applicants?.applicantAddress as Address],
+    query: {
+      enabled:
+        Boolean(programs?.contractAddress) &&
+        Boolean(user?.applicants?.applicantAddress),
+    },
+  })
+
+  console.log(applicantData.data?.voteCount);
+
+  const milestones = useMemo(() => {
+    let isUsedActive = false;
+    return (
+      data?.map(({ milestone }, i) => {
+        let isActive = false;
+        // @ts-expect-error deep
+        if (!mlContracts.data?.[i]?.result.isWithdrawed && !isUsedActive) {
+          isUsedActive = true;
+          isActive = true;
+        }
+
+        return {
+          id: milestone.id,
+          title: milestone.title,
+          amount: milestone.price,
+          status: isActive
+            ? "pending"
+            : // @ts-expect-error deep
+              mlContracts.data?.[i]?.result.isWithdrawed
+              ? "disbursed"
+              : "locked",
+          isActive,
+        };
+      }) ?? []
+    );
+  }, [data, mlContracts.data]);
+
+  console.log(mlContracts.data);
+
   return (
     <div className="w-full h-full flex flex-col">
       <div className="z-10 px-9">
