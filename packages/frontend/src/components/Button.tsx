@@ -4,19 +4,19 @@ interface ButtonProps {
   label?: string;
   type?: "" | "connect";
   size?: "small" | "large";
+  variant?: "primary" | "secondary";
   onClick?: () => void;
 }
 
 const getButtonClasses = (
   size: string = "small",
   bgColor: string = "bg-skpurple",
-  hover?: string
+  hover: string = "bg-skpurple-hover",
+  textColor: string = "text-white"
 ) => {
   const sizeClass =
     size === "small" ? "py-2 px-4 text-base" : "px-6 py-3 text-2xl";
-  return `flex relative -left-1 -top-1 font-nunito ${sizeClass} items-center gap-2.5 rounded-lg border-solid border-black ${bgColor} text-white ${
-    hover ? `hover:${hover}` : "hover:bg-skpurple-hover"
-  } active:inset-shadow-pressed transition-transform active:translate-x-1 active:translate-y-1 border-2 border-black`;
+  return `flex relative -left-1 -top-1 font-nunito ${sizeClass} items-center gap-2.5 rounded-lg border-solid border-black ${bgColor} ${textColor} hover:${hover} active:inset-shadow-pressed transition-transform active:translate-x-1 active:translate-y-1 border-2 border-black`;
 };
 
 const ButtonWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -29,6 +29,7 @@ export const Button = ({
   label = "buttonLabel",
   type = "",
   size = "small",
+  variant = "primary",
   onClick = () => {},
 }: ButtonProps) => {
   if (type !== "connect") {
@@ -38,7 +39,12 @@ export const Button = ({
           <button
             onClick={onClick}
             type={type as never}
-            className={getButtonClasses(size)}
+            className={getButtonClasses(
+              size,
+              variant === "secondary" ? "bg-skbw" : "bg-skpurple",
+              variant === "secondary" ? "bg-skbw-hover" : "bg-skpurple-hover",
+              variant === "secondary" ? "text-black" : "text-white"
+            )}
           >
             {label}
           </button>
