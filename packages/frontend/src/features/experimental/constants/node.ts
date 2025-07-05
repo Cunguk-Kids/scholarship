@@ -44,7 +44,7 @@ export const initialNodes: Node[] = [
   {
     id: 'C2',
     type: 'nodeItem',
-    data: { label: 'Vote', isExpanded: false },
+    data: { label: 'Vote', isExpanded: false, key: "voteForm" },
     parentId: 'G2',
     extent: 'parent',
     draggable: false,
