@@ -1,5 +1,5 @@
-import { db } from "@/db";
-import { programTable } from "@/db/schema";
+import { db } from "@back/db";
+import { programTable } from "@back/db/schema";
 import type { createProgramDto, programInsertDto } from "@back/db/dto";
 import { pinata } from "@back/lib/pinata";
 
