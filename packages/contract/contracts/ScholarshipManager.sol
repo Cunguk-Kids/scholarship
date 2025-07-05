@@ -17,6 +17,8 @@ contract ScholarshipManager is
     uint256 public nextProgramId;
     mapping(uint256 => ScholarshipProgramDetails) public programs;
     address public immutable programImplementation;
+    // contract program by user address
+    mapping(address => address[]) public createdContractsByUser;
 
     constructor(
         address _programImplementation,
@@ -33,7 +35,11 @@ contract ScholarshipManager is
     event ProgramCreated(
         uint256 indexed id,
         address programContract,
-        address indexed initiator
+        address indexed initiator,
+        string programMetadataCID,
+        uint256 targetApplicant,
+        uint256 startDate,
+        uint256 endDate
     );
     event Donated(
         uint256 indexed programId,
@@ -82,15 +88,30 @@ contract ScholarshipManager is
 
         programs[nextProgramId] = ScholarshipProgramDetails({
             id: nextProgramId,
+            programContractAddress: clone,
             initiatorAddress: msg.sender,
             programMetadataCID: cid,
             targetApplicant: target,
             startDate: start,
-            endDate: end,
-            programContractAddress: clone
+            endDate: end
         });
-        emit ProgramCreated(nextProgramId, clone, msg.sender);
+
+        createdContractsByUser[msg.sender].push(clone);
+
+        emit ProgramCreated(
+            nextProgramId,
+            clone,
+            msg.sender,
+            cid,
+            target,
+            start,
+            end
+        );
         ++nextProgramId;
+    }
+
+    function getProgramCreator() external view returns (address[] memory) {
+        return createdContractsByUser[msg.sender];
     }
 
     function getProgramDetails(
