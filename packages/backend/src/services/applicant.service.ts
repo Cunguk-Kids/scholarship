@@ -14,5 +14,5 @@ export async function getAllApplicant() {
 }
 
 export function addApplicant(dto: typeof applicantInsertDto.static) {
-  return db.insert(applicantTable).values(dto);
+  return db.insert(applicantTable).values(dto).returning();
 }

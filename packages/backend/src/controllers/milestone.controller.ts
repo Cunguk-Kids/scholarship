@@ -10,15 +10,6 @@ export const milestoneController = new Elysia({ prefix: "/milestone" })
   .get("/all", () => {
     return getAllMilestone();
   })
-  .post(
-    "/",
-    ({ body }) => {
-      return addMilestone(body);
-    },
-    {
-      body: milestoneInsertDto,
-    }
-  )
   .get("/id/:id", ({ params: { id } }) => {
     return getMilestone(id);
   });

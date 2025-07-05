@@ -13,7 +13,7 @@ import { milestoneType, scholarshipStatusEnum } from "./enum";
 export * from "./enum";
 
 export const applicantTable = pgTable("applicants", {
-  id: varchar("id").primaryKey(), // id must format batch_id
+  id: varchar("id").primaryKey(), // id must format program_batch_id
   programId: varchar("program_id")
     .notNull()
     .references(() => programTable.id, { onDelete: "cascade" }),
@@ -74,6 +74,9 @@ export const milestoneTable = pgTable("milestone", {
   price: numeric("price").notNull(),
   metadata: varchar("metadata").notNull(),
   type: milestoneType("type").notNull(),
+  title: varchar("title").notNull(),
+  proveMetadata: varchar("prove_metadata"),
+  review: varchar("prove_review"),
 });
 
 // RELATION

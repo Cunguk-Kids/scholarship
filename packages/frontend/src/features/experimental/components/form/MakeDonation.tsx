@@ -1,12 +1,26 @@
-import { Button } from '@/components/Button';
-import { useMakeDonation } from '../../hooks/@programs/donor/use-make-donation';
+import { Button } from "@/components/Button";
+import { useMakeDonation } from "../../hooks/@programs/donor/use-make-donation";
 
 export default function MakeDonation() {
   const [write] = useMakeDonation();
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
 
+    write(form.get("price") as string);
+  };
   return (
-    <div className="w-fit">
-      <Button onClick={write} label="Make Donation" />
-    </div>
+    <form
+      onSubmit={handleSubmit}
+      className="[&>*>*>button]:w-full flex flex-col gap-2 mt-6 [&>label]:flex [&>label]:flex-col [&>label]:font-nunito [&>label]:text-xl relative"
+    >
+      <label>
+        Price (ETH)
+        <input type="text" name="price" placeholder="e.g. 0.05" required />
+      </label>
+
+      <div className="w-full flex justify-center mt-2"></div>
+      <Button type={"submit" as never} label="Donate" />
+    </form>
   );
 }
