@@ -19,33 +19,41 @@ export const applicantController = new Elysia({ prefix: "/applicant" })
       .from(milestoneTable)
       .where(eq(milestoneTable.applicantId, id));
   })
+  .get("/milestones/address/:address", async ({ params: { address } }) => {
+    return await db
+      .select()
+      .from(milestoneTable)
+      .leftJoin(
+        applicantTable,
+        eq(milestoneTable.applicantId, applicantTable.id)
+      )
+      .where(eq(applicantTable.applicantAddress, address));
+  })
   .post(
     "/new",
     async ({ body }) => {
-      db.transaction(async (tx) => {
-        const applicant = (
-          await tx.insert(applicantTable).values(body.applicant).returning()
-        )[0];
+      const applicant = (
+        await db.insert(applicantTable).values(body.applicant).returning()
+      )[0];
 
-        if (!applicant) throw new Error("Failed to add applicant");
+      if (!applicant) throw new Error("Failed to add applicant");
 
-        await tx.insert(milestoneTable).values(
-          body.milestones.map((m, index) => ({
-            id:
-              `${body.contractId}_${applicant.batch}_` +
-              body.nextMilestoneId +
-              index +
-              "", // id must format batch_id
-            programId: applicant.programId,
-            applicantId: applicant.id,
-            batch: applicant.batch,
-            price: m.price,
-            metadata: m.metadata,
-            type: m.type,
-            title: m.title,
-          }))
-        );
-      });
+      await db.insert(milestoneTable).values(
+        body.milestones.map((m, index) => ({
+          id:
+            `${body.contractId}_${applicant.batch}_` +
+            body.nextMilestoneId +
+            index +
+            "", // id must format batch_id
+          programId: applicant.programId,
+          applicantId: applicant.id,
+          batch: applicant.batch,
+          price: m.price,
+          metadata: m.metadata,
+          type: m.type,
+          title: m.title,
+        }))
+      );
     },
     {
       body: applicantCreateDto,
