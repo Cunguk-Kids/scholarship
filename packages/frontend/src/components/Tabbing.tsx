@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { CardScholarship } from "./CardScholarship";
-import MilestoneProgress from "./MilestoneProgress";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from 'react';
+import { CardScholarship } from './CardScholarship';
+import MilestoneProgress from './MilestoneProgress';
 
 type Tab = {
   id: string;
@@ -18,16 +19,15 @@ type TabButtonProps = {
 
 const TabButton = ({ label, isActive, color, onClick }: TabButtonProps) => {
   const baseStyle =
-    "gap-[0.625rem] items-end rounded-t-3xl px-6 text-2xl font-normal border-l-4 border-t-4 border-r-4 border-black text-black font-paytone";
-  const activeStyle = "bg-skbw py-6";
+    'gap-[0.625rem] items-end rounded-t-3xl px-6 text-2xl font-normal border-l-4 border-t-4 border-r-4 border-black text-black font-paytone';
+  const activeStyle = 'bg-skbw py-6';
   const inactiveStyle = `${color} border-b-4 py-4`;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`${baseStyle} ${isActive ? activeStyle : inactiveStyle}`}
-    >
+      className={`${baseStyle} ${isActive ? activeStyle : inactiveStyle}`}>
       {label}
     </button>
   );
@@ -36,13 +36,13 @@ const TabButton = ({ label, isActive, color, onClick }: TabButtonProps) => {
 export const Tabbing = <T,>({
   programs,
   tabs,
-  type = "program",
+  type = 'program',
 }: {
   programs: T[];
   tabs: Tab[];
   type?: string;
 }) => {
-  const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? "");
+  const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? '');
 
   return (
     <div className="grow">
@@ -62,29 +62,38 @@ export const Tabbing = <T,>({
 
       <div className="shrink-0 bg-black rounded-3xl w-full">
         <div className="relative w-full bg-skbw rounded-e-3xl rounded-bl-3xl border-4 -left-2 -top-2">
-          {type.toLowerCase() === "program" && (
+          {type.toLowerCase() === 'program' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[3.75rem] p-20">
               {programs &&
                 programs.length > 0 &&
-                programs.map((item, i) => (
-                  <CardScholarship key={i} program={item} status={activeTab} />
+                programs.map((item: any, i) => (
+                  <CardScholarship
+                    key={i}
+                    program={{
+                      id: Number(item.id),
+                      initiatorAddress: item.initiatorAddress,
+                      endDate: new Date(item.endDate ?? '').getTime(),
+                      startDate: new Date(item.startDate ?? '').getTime(),
+                      targetApplicant: Number(item.targetApplicant),
+                      programMetadataCID: item.title,
+                      programContractAddress: item.contractAddress,
+                    }}
+                    status={activeTab}
+                    onClickButton={() => console.log('hello')}
+                  />
                 ))}
             </div>
           )}
-          {activeTab.toLowerCase() === "milestone" && (
+          {activeTab.toLowerCase() === 'milestone' && (
             <div className="flex px-4 pt-4 pb-8 flex-col items-start gap-2 shrink-0 rounded-b-2xl rounded-tr-2xl">
               <div className="flex items-start gap-2.5 self-stretch justify-between">
                 <p className="w-1/2 flex flex-col justify-center">
-                  Share your milestones! Every proof keeps your scholarship
-                  provider and public informed.
+                  Share your milestones! Every proof keeps your scholarship provider and public
+                  informed.
                 </p>
                 <div className="flex py-2 px-6 flex-col justify-center items-end gap-1 self-stretch rounded-2xl bg-black">
-                  <p className="text-sm font-medium text-white">
-                    Current Balance
-                  </p>
-                  <h5 className="text-center font-bold text-white">
-                    45000 MON ≃ Rp2.000.000
-                  </h5>
+                  <p className="text-sm font-medium text-white">Current Balance</p>
+                  <h5 className="text-center font-bold text-white">45000 MON ≃ Rp2.000.000</h5>
                 </div>
               </div>
               <div className="border-t h-1 self-stretch"></div>
@@ -93,22 +102,22 @@ export const Tabbing = <T,>({
                   milestones={[
                     {
                       id: 1,
-                      title: "Tuition Payment",
-                      amount: "Rp3.000.000",
-                      status: "disbursed",
+                      title: 'Tuition Payment',
+                      amount: 'Rp3.000.000',
+                      status: 'disbursed',
                     },
                     {
                       id: 2,
-                      title: "Coursework Essentials",
-                      amount: "Rp1.000.000",
-                      status: "pending",
+                      title: 'Coursework Essentials',
+                      amount: 'Rp1.000.000',
+                      status: 'pending',
                       isActive: true,
                     },
                     {
                       id: 3,
-                      title: "Thesis Project",
-                      amount: "Rp1.000.000",
-                      status: "locked",
+                      title: 'Thesis Project',
+                      amount: 'Rp1.000.000',
+                      status: 'locked',
                     },
                   ]}
                 />
