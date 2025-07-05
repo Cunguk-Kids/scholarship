@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Tabbing as TabbingPrimitive } from "@/components/Tabbing";
-import { useGetPrograms } from "../hooks/get-programs";
-import { useState } from "react";
-import { createPortal } from "react-dom";
-import { Button } from "@/components/Button";
-import { useCreateProgram } from "../hooks/create-program";
-import { appStateInjection } from "@/hooks/inject/app-state";
+import { Tabbing as TabbingPrimitive } from '@/components/Tabbing';
+import { useGetPrograms } from '../hooks/get-programs';
+import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Button } from '@/components/Button';
+import { useCreateProgram } from '../hooks/create-program';
+import { useClickOutside } from '@/hooks/useClickOutside';
+import { appStateInjection } from '@/hooks/inject/app-state';
 function CreateProgramForm() {
   const {
     loading: { setLoading },
   } = appStateInjection.use();
   const [{ mutate, isPending }] = useCreateProgram();
+
   const onSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
     setLoading({ type: "proccessing" });
@@ -91,6 +93,7 @@ export function Tabbing<T>({
     },
   ];
 
+  const ref = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const { programs } = useGetPrograms();
 
@@ -98,11 +101,15 @@ export function Tabbing<T>({
     if (onClickTabbing) onClickTabbing(item);
   };
 
+  useClickOutside(ref, () => setOpen(!open));
+
   return (
     <>
       {open &&
         createPortal(
-          <div className="bg-skbw neo-shadow rounded-2xl border-2 fixed z-10 inset-0 m-auto w-max h-max p-6">
+          <div
+            ref={ref}
+            className="bg-skbw neo-shadow rounded-2xl border-2 fixed z-10 inset-0 m-auto w-max h-max p-6">
             <h2 className="font-paytone text-7xl">CREATE PROGRAM</h2>
             <CreateProgramForm />
           </div>,

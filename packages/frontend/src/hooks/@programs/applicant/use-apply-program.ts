@@ -32,19 +32,37 @@ export function useApplyProgram(props: {
         description: string;
       }[];
     }) => {
+
+      const milestoneResults = await Promise.all(
+        mut.milestones.map(async (x) => {
+
+          let url = "";
+          if (x?.templateId !== BigInt(0)) {
+            const result = await api.v1.program.gen.post({
+              title: x.title,
+              description: x.description,
+            });
+            if (result.error) throw result.error;
+            url = result.data.url;
+          }
+
+          return {
+            mType: x.mType,
+            price: x.price,
+            templateId: x.templateId,
+            metadata: url,
+          };
+        })
+      );
+      console.log("contract", props.address);
+
       const tx = await queryWrite.writeContractAsync({
         abi: scholarshipProgramAbi,
         address: props.address || "0x",
         functionName: "applyProgramContract",
-        args: [
-          mut.milestones.map((x) => ({
-            mType: x.mType,
-            price: x.price,
-            templateId: x.templateId,
-            metadata: x.metadata,
-          })),
-        ],
+        args: [milestoneResults],
       });
+
       await waitForTransactionReceipt(config, { hash: tx });
       await api.v1.applicant.new.post({
         applicant: {
