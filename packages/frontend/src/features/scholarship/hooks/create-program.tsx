@@ -46,7 +46,6 @@ export function useCreateProgram() {
       );
       if (!hs) throw new Error("Logs hash not found");
       const log = skInterface.parseLog(hs);
-      console.log(log);
       if (!log?.args) throw new Error("Failed to create program");
       const [id, clonedAddress] = log.args;
       await api.v1.program.post({

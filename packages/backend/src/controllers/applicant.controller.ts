@@ -42,8 +42,7 @@ export const applicantController = new Elysia({ prefix: "/applicant" })
         body.milestones.map((m, index) => ({
           id:
             `${body.contractId}_${applicant.batch}_` +
-            body.nextMilestoneId +
-            index +
+            (body.nextMilestoneId + index + 1) +
             "", // id must format batch_id
           programId: applicant.programId,
           applicantId: applicant.id,
