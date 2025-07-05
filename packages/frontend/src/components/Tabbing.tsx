@@ -1,39 +1,22 @@
 import { useState } from "react";
 import { CardScholarship } from "./CardScholarship";
+import MilestoneProgress from "./MilestoneProgress";
 
-const tabs = [
-  {
-    id: "active",
-    label: "Active Scholarships",
-    color: "bg-skpurple",
-  },
-  {
-    id: "vote",
-    label: "On Voting",
-    color: "bg-skred",
-  },
-  {
-    id: "soon",
-    label: "Coming Soon",
-    color: "bg-skgreen",
-  },
-] as const;
+type Tab = {
+  id: string;
+  label: string;
+  color: string;
+};
 
-type TabStatus = (typeof tabs)[number]["id"];
-
-const TabButton = ({
-  //   id,
-  label,
-  isActive,
-  color,
-  onClick,
-}: {
-  id: TabStatus;
+type TabButtonProps = {
+  id: string;
   label: string;
   color: string;
   isActive: boolean;
   onClick: () => void;
-}) => {
+};
+
+const TabButton = ({ label, isActive, color, onClick }: TabButtonProps) => {
   const baseStyle =
     "gap-[0.625rem] items-end rounded-t-3xl px-6 text-2xl font-normal border-l-4 border-t-4 border-r-4 border-black text-black font-paytone";
   const activeStyle = "bg-skbw py-6";
@@ -50,8 +33,16 @@ const TabButton = ({
   );
 };
 
-export const Tabbing = () => {
-  const [activeTab, setActiveTab] = useState<TabStatus>("active");
+export const Tabbing = <T,>({
+  programs,
+  tabs,
+  type = "program",
+}: {
+  programs: T[];
+  tabs: Tab[];
+  type?: string;
+}) => {
+  const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? "");
 
   return (
     <div className="grow min-w-[70.5rem]">
@@ -69,14 +60,54 @@ export const Tabbing = () => {
         ))}
       </div>
 
-      {/* Cards */}
       <div className="shrink-0 bg-black rounded-3xl w-full">
-        <div className="relative w-full h-[35.875rem] bg-skbw rounded-e-3xl rounded-bl-3xl border-4 -left-2 -top-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-[3.75rem] p-20">
-            {[...Array(2)].map((_, i) => (
-              <CardScholarship key={i} status={activeTab} />
-            ))}
-          </div>
+        <div className="relative w-full bg-skbw rounded-e-3xl rounded-bl-3xl border-4 -left-2 -top-2">
+          {type.toLowerCase() === "program" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[3.75rem] p-20">
+              {programs &&
+                programs.length > 0 &&
+                programs.map((item, i) => (
+                  <CardScholarship key={i} program={item} status={activeTab} />
+                ))}
+            </div>
+          )}
+          {activeTab.toLowerCase() === "milestone" && (
+            <div className="flex px-4 pt-4 pb-8 flex-col items-start gap-2 shrink-0 rounded-b-2xl rounded-tr-2xl">
+              <div className="flex items-start gap-2.5 self-stretch">
+                <p className="w-1/2 flex flex-col justify-center">
+                  Share your milestones! Every proof keeps your scholarship
+                  provider and public informed.
+                </p>
+                <div className="flex py-2 px-6 flex-col justify-center items-end gap-1 self-stretch rounded-2xl bg-black">
+                  <p className="text-sm font-medium text-white">
+                    Current Balance
+                  </p>
+                  <h5 className="text-center font-bold text-white">
+                    45000 MON ≃ Rp2.000.000
+                  </h5>
+                </div>
+              </div>
+              <div className="border-t h-1 self-stretch"></div>
+              <div className="flex w-full items-start self-stretch">
+                <MilestoneProgress
+                  milestones={[
+                    {
+                      id: 1,
+                      title: "Tuition Payment",
+                      amount: "Rp3.000.000",
+                      status: "disbursed",
+                    },
+                    {
+                      id: 2,
+                      title: "Coursework Essentials",
+                      amount: "Rp1.000.000",
+                      status: "pending",
+                    },
+                  ]}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
