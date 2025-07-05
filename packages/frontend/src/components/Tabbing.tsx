@@ -36,15 +36,21 @@ const TabButton = ({ label, isActive, color, onClick }: TabButtonProps) => {
 export const Tabbing = <T,>({
   programs,
   tabs,
-  type = "program",
+  type = 'program',
+  onClickTabbing,
   ...props
 }: {
   programs?: T[];
   tabs: Tab[];
   type?: string;
+  onClickTabbing?: (item: Record<string, T>) => void;
   currentBalance?: string;
 }) => {
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? '');
+
+  const onClickAction = (item: Record<string, T>) => {
+    if (onClickTabbing) onClickTabbing(item);
+  };
 
   return (
     <div className="grow">
@@ -81,7 +87,7 @@ export const Tabbing = <T,>({
                       programContractAddress: item.contractAddress,
                     }}
                     status={activeTab}
-                    onClickButton={() => console.log('hello')}
+                    onClickButton={() => onClickAction(item)}
                   />
                 ))}
             </div>
@@ -94,19 +100,13 @@ export const Tabbing = <T,>({
                   informed.
                 </p>
                 <div className="flex py-2 px-6 flex-col justify-center items-end gap-1 self-stretch rounded-2xl bg-black">
-                  <p className="text-sm font-medium text-white">
-                    Current Balance
-                  </p>
-                  <h5 className="text-center font-bold text-white">
-                    {props.currentBalance}
-                  </h5>
+                  <p className="text-sm font-medium text-white">Current Balance</p>
+                  <h5 className="text-center font-bold text-white">{props.currentBalance}</h5>
                 </div>
               </div>
               <div className="border-t h-1 self-stretch"></div>
               <div className="flex w-full items-start self-stretch">
-                <MilestoneProgress
-                  milestones={programs as never}
-                />
+                <MilestoneProgress milestones={programs as never} />
               </div>
             </div>
           )}

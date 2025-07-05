@@ -72,27 +72,27 @@ export async function startIndexer() {
 function listenToChildContract(address: `0x${string}`) {
   console.log("child contract", address);
 
-  publicClient.watchEvent({
-    address,
-    event: voteCastedEvent,
-    onLogs: (logs) => {
-      for (const log of logs) {
-        const { voter, proposalId } = log.args as {
-          voter: string;
-          proposalId: bigint;
-        };
+  // publicClient.watchEvent({
+  //   address,
+  //   event: voteCastedEvent,
+  //   onLogs: (logs) => {
+  //     for (const log of logs) {
+  //       const { voter, proposalId } = log.args as {
+  //         voter: string;
+  //         proposalId: bigint;
+  //       };
 
-        const data = {
-          contract: address,
-          voter,
-          proposalId: Number(proposalId),
-          blockNumber: log.blockNumber!,
-        };
+  //       const data = {
+  //         contract: address,
+  //         voter,
+  //         proposalId: Number(proposalId),
+  //         blockNumber: log.blockNumber!,
+  //       };
 
-        console.log("📩 VoteCasted:", data);
-        eventCache.unshift(data);
-        if (eventCache.length > 200) eventCache.pop();
-      }
-    },
-  });
+  //       console.log("📩 VoteCasted:", data);
+  //       eventCache.unshift(data);
+  //       if (eventCache.length > 200) eventCache.pop();
+  //     }
+  //   },
+  // });
 }
