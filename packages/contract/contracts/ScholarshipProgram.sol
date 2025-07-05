@@ -74,7 +74,7 @@ contract ScholarshipProgram is
         emit ApplicantApplied(_applicant, appBatch);
     }
 
-    // apply from this contract
+    // apply for this contract
     function applyProgramContract(
         MilestoneInput[] calldata milestoneIds
     ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
@@ -88,7 +88,7 @@ contract ScholarshipProgram is
         _voteApplicant(voter, applicant);
         emit Voted(voter, applicant, appBatch);
     }
-    // factory vote contract
+    // vote this contract
     function voteContract(address applicant) external {
         _voteApplicant(msg.sender, applicant);
         emit Voted(msg.sender, applicant, appBatch);
@@ -109,7 +109,7 @@ contract ScholarshipProgram is
         emit Donated(donator, appBatch, msg.value);
     }
 
-    // apply from this contract
+    // donate this contract
     function donateContract()
         external
         payable
