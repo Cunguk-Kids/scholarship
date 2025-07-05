@@ -38,11 +38,13 @@ export const Tabbing = <T,>({
   tabs,
   type = 'program',
   onClickTabbing,
+  ...props
 }: {
   programs?: T[];
   tabs: Tab[];
   type?: string;
   onClickTabbing?: (item: Record<string, T>) => void;
+  currentBalance?: string;
 }) => {
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? '');
 
@@ -99,7 +101,7 @@ export const Tabbing = <T,>({
                 </p>
                 <div className="flex py-2 px-6 flex-col justify-center items-end gap-1 self-stretch rounded-2xl bg-black">
                   <p className="text-sm font-medium text-white">Current Balance</p>
-                  <h5 className="text-center font-bold text-white">45000 MON ≃ Rp2.000.000</h5>
+                  <h5 className="text-center font-bold text-white">{props.currentBalance}</h5>
                 </div>
               </div>
               <div className="border-t h-1 self-stretch"></div>
