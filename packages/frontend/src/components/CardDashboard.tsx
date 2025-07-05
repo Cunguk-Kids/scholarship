@@ -1,7 +1,12 @@
 import { Button } from "./Button";
 import { StatusBadge } from "./StatusBadge";
 
-export const CardDashboard = ({}) => {
+export const CardDashboard = (props: {
+  name: string;
+  activeScholarship: string;
+  programProvider: string;
+  totalFundReceived: string;
+}) => {
   return (
     <div className="bg-black rounded-2xl">
       <div className="relative -top-2 -left-2 flex w-96 flex-col items-start gap-3">
@@ -9,7 +14,7 @@ export const CardDashboard = ({}) => {
           <div className="flex flex-col justify-center items-center gap-2 self-stretch">
             <div className="flex flex-col items-start gap-2 self-stretch">
               <StatusBadge status="Student" />
-              <h1 className="font-paytone text-4xl">Hi, User!</h1>
+              <h1 className="font-paytone text-4xl">Hi, {props.name}!</h1>
               <p className="">Let's get you one step closer to your dreams.</p>
             </div>
             <img
@@ -21,10 +26,10 @@ export const CardDashboard = ({}) => {
 
           <div className="flex-col items-start gap-1 self-stretch">
             <p className="text-sm font-medium">Active Scholarship:</p>
-            <h3 className="text-xl font-bold">KampusKita Grant 2025</h3>
+            <h3 className="text-xl font-bold">{props.activeScholarship}</h3>
             <div className="flex items-center gap-2 self-stretch">
               <img src="/icons/provider-icon.svg" alt="provider-icon" />
-              <p className="text-center text-sm">KampusKita Foundation</p>
+              <p className="text-center text-sm">{props.programProvider}</p>
             </div>
           </div>
 
@@ -32,13 +37,13 @@ export const CardDashboard = ({}) => {
 
           <div className="flex flex-col items-start gap-1 self-stretch">
             <p className="text-sm">Total Fund Received:</p>
-            <h3 className="font-bold">45000 MON ≃ Rp5.000.000</h3>
+            <h3 className="font-bold">{props.totalFundReceived} MON</h3>
           </div>
 
           <div className="flex flex-col items-start gap-1 self-stretch">
-            <h5 className="text-sm">Disbursement:</h5>
+            {/* <h5 className="text-sm">Disbursement:</h5> */}
             <div className="flex flex-col items-start gap-2 self-stretch">
-              <div className="flex items-center gap-4 self-stretch">
+              {/* <div className="flex items-center gap-4 self-stretch">
                 <img src="" alt="" />
                 <h3 className="text-sm w-1/2">Tuition Payment</h3>
                 <StatusBadge status="Disbursed" />
@@ -51,8 +56,8 @@ export const CardDashboard = ({}) => {
               <div className="flex items-center gap-4 self-stretch">
                 <img src="" alt="" />
                 <h3 className="text-sm w-1/2">Thesis Project</h3>
-                {/* <StatusBadge status="Disbursed" /> */}
-              </div>
+                <StatusBadge status="Disbursed" />
+              </div> */}
             </div>
           </div>
         </div>
