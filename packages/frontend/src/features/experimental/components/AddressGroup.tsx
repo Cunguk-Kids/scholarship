@@ -15,10 +15,17 @@ function AddressGroup() {
           <div key={i} className="w-fit mb-4">
             <Button
               onClick={() => {
+<<<<<<< HEAD
                 ref.id.current = id;
                 setter.setAddress(contractAddress as `0x`);
               }}
               label={`${contractAddress.slice(0, 10)}.....`}
+=======
+                setter.setAddress(contractAddress as `0x`);
+                setter.setId(id);
+              }}
+              label={`${id}-${contractAddress.slice(0, 10)}.....`}
+>>>>>>> main
               size="small"
             />
           </div>

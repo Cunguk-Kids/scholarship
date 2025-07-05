@@ -1797,6 +1797,18 @@ export const scholarshipProgramAbi = [
   }, {
     inputs: [
       {
+        internalType: "address",
+        name: "applicant",
+        type: "address",
+      }
+    ],
+    name: "voteContract",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
         internalType: "uint256",
         name: "batch",
         type: "uint256",

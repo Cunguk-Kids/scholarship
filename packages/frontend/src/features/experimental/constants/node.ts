@@ -29,6 +29,24 @@ export const initialNodes: Node[] = [
     extent: 'parent',
     draggable: false
   },
+  {
+    id: 'C0',
+    type: 'nodeItem',
+    data: { label: 'Donate From This App', isExpanded: false, key: "makeDonationProgram" },
+    position: { x: 100, y: 510 },
+    parentId: 'G1',
+    extent: 'parent',
+    draggable: false
+  },
+  {
+    id: 'C00',
+    type: 'nodeItem',
+    data: { label: 'Apply From This App', isExpanded: false, key: "applyDonationProgram" },
+    position: { x: 300, y: 510 },
+    parentId: 'G1',
+    extent: 'parent',
+    draggable: false
+  },
 
   // voter
   {
@@ -44,7 +62,7 @@ export const initialNodes: Node[] = [
   {
     id: 'C2',
     type: 'nodeItem',
-    data: { label: 'Vote', isExpanded: false },
+    data: { label: 'Vote', isExpanded: false, key: "voteForm" },
     parentId: 'G2',
     extent: 'parent',
     draggable: false,
@@ -147,7 +165,7 @@ export const initialNodes: Node[] = [
   {
     id: 'C8',
     type: 'nodeItem',
-    data: { label: 'Close Vote/Batch', isExpanded: false, },
+    data: { label: 'Close Vote/Batch', isExpanded: false, key: "closeBatch" },
     position: { x: 10, y: 140 },
     parentId: 'G5',
     extent: 'parent',

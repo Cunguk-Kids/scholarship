@@ -9,6 +9,8 @@ function useExperimentalState() {
   const [selectedMilestone, setSelectedMilestone] = useState<MilestoneInput[]>(
     []
   );
+  const [selectedParticipant, setSelectedParticipant] =
+    useState<`0x${string}`>("0x");
 
   const handleSelectMilestone = (milestone: MilestoneInput) => {
     setSelectedMilestone((prev) => {
@@ -19,6 +21,13 @@ function useExperimentalState() {
       } else {
         return [...prev, milestone];
       }
+    });
+  };
+
+  const handleSelectParticipant = (participant: `0x${string}`) => {
+    setSelectedParticipant((prev) => {
+      if (participant === prev) return "0x";
+      return participant;
     });
   };
 
@@ -33,11 +42,14 @@ function useExperimentalState() {
     setter: {
       setAddress,
       handleSelectMilestone,
+      handleSelectParticipant,
     },
     data: {
       address,
       contractBalance,
       selectedMilestone,
+      selectedParticipant,
+      id,
     },
   };
 }
