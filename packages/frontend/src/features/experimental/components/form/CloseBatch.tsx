@@ -1,5 +1,5 @@
 import { Button } from '@/components/Button';
-import { useCloseBatch } from '@/hooks/admin/use-close-batch';
+import { useCloseBatch } from '@/hooks/@programs/admin/use-close-batch';
 
 function CloseBatch() {
   const [write] = useCloseBatch();
