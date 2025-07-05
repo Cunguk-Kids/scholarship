@@ -138,7 +138,7 @@ export const initialNodes: Node[] = [
   {
     id: 'C7',
     type: 'nodeItem',
-    data: { label: 'Open Vote', isExpanded: false, },
+    data: { label: 'Open Vote', isExpanded: false, key: "openVote" },
     position: { x: 10, y: 110 },
     parentId: 'G5',
     extent: 'parent',

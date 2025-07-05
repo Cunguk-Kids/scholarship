@@ -5,6 +5,7 @@ import OpenDonation from './form/OpenDonation';
 import MakeDonation from './form/MakeDonation';
 import CreateMilestoneTemplate from './form/CreateMilestoneTemplate';
 import ApplyDonation from './form/ApplyDonation';
+import OpenVote from './form/OpenVote';
 
 interface ProcessNodeProps {
   data: {
@@ -20,6 +21,7 @@ const componentMap: Record<string, React.ComponentType> = {
   makeDonation: MakeDonation,
   createMilestoneTemplate: CreateMilestoneTemplate,
   applyDonation: ApplyDonation,
+  openVote: OpenVote,
 };
 
 const NodeItem: FC<ProcessNodeProps> = ({ data }) => {
