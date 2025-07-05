@@ -1,22 +1,19 @@
 import { Button } from '@/components/Button';
 import { useGetMilestoneTemplate } from '../../hooks/@programs/admin/use-get-milestone-template';
 import { ExperimentalInjection } from '../../context/experimental-context';
-import { useApplyProgram } from '../../hooks/@programs/applicant/use-apply-program';
+import { useApplyProgram } from '../../hooks/@ParentProgram/use-apply-program';
 
-export default function ApplyDonation() {
+export default function ApplyDonationProgram() {
   const { milestones } = useGetMilestoneTemplate();
 
   const [write] = useApplyProgram();
 
   const {
     setter: { handleSelectMilestone },
-    data: { selectedMilestone },
+    data: { selectedMilestone, id },
   } = ExperimentalInjection.use();
 
-  const handleSubmit = () => {
-    write(selectedMilestone);
-  };
-
+  const handleSubmit = () => id && write(BigInt(id), selectedMilestone);
   return (
     <div>
       <h1>Select Milestone</h1>

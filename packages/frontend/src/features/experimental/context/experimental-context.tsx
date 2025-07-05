@@ -5,6 +5,7 @@ import type { MilestoneInput } from '../hooks/@programs/admin/use-add-milestone-
 
 function useExperimentalState() {
   const [address, setAddress] = useState<`0x` | null>(null);
+  const [id, setId] = useState<string | null>('');
   const [selectedMilestone, setSelectedMilestone] = useState<MilestoneInput[]>([]);
   const [selectedParticipant, setSelectedParticipant] = useState<`0x${string}`>('0x');
 
@@ -36,12 +37,14 @@ function useExperimentalState() {
       setAddress,
       handleSelectMilestone,
       handleSelectParticipant,
+      setId,
     },
     data: {
       address,
       contractBalance,
       selectedMilestone,
       selectedParticipant,
+      id,
     },
   };
 }

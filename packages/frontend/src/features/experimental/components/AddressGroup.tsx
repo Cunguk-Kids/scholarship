@@ -10,12 +10,15 @@ function AddressGroup() {
 
   return (
     <div className="flex flex-row gap-2">
-      {programs?.map(({ contractAddress }, i) => {
+      {programs?.map(({ contractAddress, id }, i) => {
         return (
           <div key={i} className="w-fit mb-4">
             <Button
-              onClick={() => setter.setAddress(contractAddress as `0x`)}
-              label={`${contractAddress.slice(0, 10)}.....`}
+              onClick={() => {
+                setter.setAddress(contractAddress as `0x`);
+                setter.setId(id);
+              }}
+              label={`${id}-${contractAddress.slice(0, 10)}.....`}
               size="small"
             />
           </div>
