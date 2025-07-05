@@ -4,7 +4,7 @@ import Elysia, { t } from "elysia";
 import type { IMetadata } from "@back/types/metadata.type";
 import { publicDir } from "@back/utils/publicDirectory";
 import fs from "fs";
-import { pinata } from "@back/lib/pinata";
+import { ipfs, ipfsHost } from "@back/lib/ipfs";
 
 export const studentNFTController = new Elysia({ prefix: "/student-nft" })
   .post("/generate", async ({ body, set }) => {
@@ -22,25 +22,25 @@ export const studentNFTController = new Elysia({ prefix: "/student-nft" })
 
     const imageBuffer = fs.readFileSync(outputPath);
     const base64String = imageBuffer.toString('base64');
-    const uploadedMedia = await pinata.upload.public.base64(base64String);
+    // const uploadedMedia = await pinata.upload.public.base64(base64String);
 
     // ipfs
-    // const result = await ipfs.add(imageBuffer);
-    // const imageUri = `${result.path}`;
+    const result = await ipfs.add(imageBuffer);
+    const imageUri = `${result.path}`;
 
     // delete file
     // fs.unlinkSync(outputPath);
 
     const finalProcess = {
       ...metadata,
-      imageCID: uploadedMedia.cid,
+      imageCID: imageUri,
     };
 
-    const jsonMetadata = await pinata.upload.public.json(finalProcess);
+    const jsonMetadata = await ipfs.add(JSON.stringify(finalProcess));
 
     const finalResult = {
-      metadataURL: `${process.env.IPFS_URL}/${jsonMetadata.cid}`,
-      imageURL: `${process.env.IPFS_URL}/${uploadedMedia.cid}`,
+      metadataURL: `${ipfsHost}/${jsonMetadata.cid}`,
+      imageURL: `${ipfsHost}/${imageUri}`,
       metadata: { ...finalProcess, cid: jsonMetadata.cid }
     };
 
