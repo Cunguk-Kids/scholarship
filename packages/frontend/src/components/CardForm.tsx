@@ -176,7 +176,11 @@ export const CardForm = ({
           <Arrow
             direction="right"
             onClick={handleClickForward}
-            disabled={type === 'applicant' && step === 2}
+            // disabled={
+            //   type === "applicant" &&
+            //   step === 2 &&
+            //   formData.milestones.length < 3
+            // }
           />
         </div>
 
