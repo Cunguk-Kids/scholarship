@@ -1,6 +1,5 @@
 import { useReadContract, useWriteContract } from "wagmi";
 import { scholarshipProgramAbi } from "@/repo/abi";
-import { skoolchainAddress } from "@/constants/contractAddress";
 import type { Address } from "viem";
 
 export function useWithdrawMilestone(address: Address) {
@@ -20,14 +19,24 @@ export function useWithdrawMilestone(address: Address) {
   });
 
   const write = (props: { id: bigint; metadataProve: string }) => {
-    if (!appBatch.data) return;
+    if (appBatch.data === undefined) return;
     query.writeContract({
       abi: scholarshipProgramAbi,
-      address: skoolchainAddress,
+      address: address,
       functionName: "withrawMilestone",
       args: [appBatch.data, props.id],
     });
   };
 
-  return [write, query] as const;
+  const writeAsync = (props: { id: bigint; metadataProve: string }) => {
+    if (appBatch.data === undefined) return;
+    return query.writeContractAsync({
+      abi: scholarshipProgramAbi,
+      address: address,
+      functionName: "withrawMilestone",
+      args: [appBatch.data, props.id],
+    });
+  };
+
+  return [write, query, writeAsync] as const;
 }

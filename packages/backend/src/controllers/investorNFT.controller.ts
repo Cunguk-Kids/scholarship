@@ -7,7 +7,7 @@ import fs from "fs";
 import { pinata } from "@back/lib/pinata";
 
 export const investorNFTController = new Elysia({ prefix: "/investor-nft" })
-  .post("/generate", async ({ body, set }) => {
+  .post("/generate", async ({ body }) => {
     const metadata = body as IMetadata;
 
     const outputPath = path.join(publicDir, 'output', `template-${Date.now()}.png`);
