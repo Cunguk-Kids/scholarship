@@ -5,6 +5,10 @@ export const initialEdges = [
   { id: 'e1-3', source: 'C5', target: 'C3', animated: true, type: "stright" },
   { id: 'e1-4', source: 'C3', target: 'C4', animated: true, type: "stright" },
   { id: 'e1-5', source: 'C5', target: 'C6', animated: true, type: "stright" },
+  { id: 'e1-6', source: 'C4', target: 'C7', animated: true, type: "stright" },
+  { id: 'e1-7', source: 'C7', target: 'C2', animated: true, type: "stright" },
+  { id: 'e1-8', source: 'C2', target: 'C8', animated: true, type: "stright" },
+  { id: 'e1-9', source: 'C8', target: 'C9', animated: true, type: "stright" },
 ];
 
 export const initialNodes: Node[] = [
@@ -40,7 +44,7 @@ export const initialNodes: Node[] = [
   {
     id: 'C2',
     type: 'nodeItem',
-    data: { label: 'child node 2', isExpanded: false },
+    data: { label: 'Vote', isExpanded: false },
     parentId: 'G2',
     extent: 'parent',
     draggable: false,
@@ -83,8 +87,17 @@ export const initialNodes: Node[] = [
   {
     id: 'C4',
     type: 'nodeItem',
-    data: { label: 'Apply Program', isExpanded: false },
+    data: { label: 'Apply Program', isExpanded: false, key: "applyDonation" },
     position: { x: 50, y: 50 },
+    parentId: 'G4',
+    extent: 'parent',
+    draggable: false
+  },
+  {
+    id: 'C9',
+    type: 'nodeItem',
+    data: { label: 'Withdraw Milestone', isExpanded: false, key: "applyDonation" },
+    position: { x: 50, y: 80 },
     parentId: 'G4',
     extent: 'parent',
     draggable: false
@@ -118,6 +131,24 @@ export const initialNodes: Node[] = [
     data: { label: 'Create Milestone Template', isExpanded: false, key: "createMilestoneTemplate" },
     position: { x: 10, y: 80 },
 
+    parentId: 'G5',
+    extent: 'parent',
+    draggable: false
+  },
+  {
+    id: 'C7',
+    type: 'nodeItem',
+    data: { label: 'Open Vote', isExpanded: false, },
+    position: { x: 10, y: 110 },
+    parentId: 'G5',
+    extent: 'parent',
+    draggable: false
+  },
+  {
+    id: 'C8',
+    type: 'nodeItem',
+    data: { label: 'Close Vote/Batch', isExpanded: false, },
+    position: { x: 10, y: 140 },
     parentId: 'G5',
     extent: 'parent',
     draggable: false
