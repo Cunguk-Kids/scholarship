@@ -21,6 +21,7 @@ export const applicantTable = pgTable("applicants", {
   bio: varchar("bio").notNull(),
   introducingVideo: varchar("introducing_video").notNull(),
   batch: bigint("batch", { mode: "number" }).notNull(),
+  applicantAddress: varchar("applicant_address").notNull(),
 });
 
 export const programTable = pgTable("program", {

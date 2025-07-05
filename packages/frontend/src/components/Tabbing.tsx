@@ -38,7 +38,7 @@ export const Tabbing = <T,>({
   tabs,
   type = "program",
 }: {
-  programs: T[];
+  programs?: T[];
   tabs: Tab[];
   type?: string;
 }) => {
@@ -90,27 +90,7 @@ export const Tabbing = <T,>({
               <div className="border-t h-1 self-stretch"></div>
               <div className="flex w-full items-start self-stretch">
                 <MilestoneProgress
-                  milestones={[
-                    {
-                      id: 1,
-                      title: "Tuition Payment",
-                      amount: "Rp3.000.000",
-                      status: "disbursed",
-                    },
-                    {
-                      id: 2,
-                      title: "Coursework Essentials",
-                      amount: "Rp1.000.000",
-                      status: "pending",
-                      isActive: true,
-                    },
-                    {
-                      id: 3,
-                      title: "Thesis Project",
-                      amount: "Rp1.000.000",
-                      status: "locked",
-                    },
-                  ]}
+                  milestones={programs as never}
                 />
               </div>
             </div>

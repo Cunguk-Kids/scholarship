@@ -1,4 +1,4 @@
-import { useConfig, useWriteContract } from "wagmi";
+import { useAccount, useConfig, useWriteContract } from "wagmi";
 import { scholarshipProgramAbi } from "../../../../../repo/abi";
 import { useMutation } from "@tanstack/react-query";
 import { type Address } from "viem";
@@ -13,6 +13,7 @@ export function useApplyProgram(props: {
   nextMilestoneId: bigint;
 }) {
   const queryWrite = useWriteContract();
+  const applicant = useAccount();
   const config = useConfig();
   /**
    * @function useMakeDonation
@@ -35,11 +36,19 @@ export function useApplyProgram(props: {
         abi: scholarshipProgramAbi,
         address: props.address || "0x",
         functionName: "applyProgramContract",
-        args: [mut.milestones],
+        args: [
+          mut.milestones.map((x) => ({
+            mType: x.mType,
+            price: x.price,
+            templateId: x.templateId,
+            metadata: x.metadata,
+          })),
+        ],
       });
       await waitForTransactionReceipt(config, { hash: tx });
       await api.v1.applicant.new.post({
         applicant: {
+          applicantAddress: applicant.address ?? "",
           id: `${props.programId}_${props.appBatch}_${props.applicantSize + 1n}`,
           batch: Number(props.appBatch),
           bio: "",
@@ -58,7 +67,15 @@ export function useApplyProgram(props: {
         nextMilestoneId: Number(props.nextMilestoneId),
       });
     },
-    mutationKey: ["applyProgram", props],
+    mutationKey: [
+      "applyProgram",
+      props.address,
+      props.appBatch + "",
+      props.applicantSize + "",
+      props.nextMilestoneId + "",
+      props.programId + "",
+      applicant.address,
+    ],
   });
 
   return [queryMut, queryWrite] as const;
