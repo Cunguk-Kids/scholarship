@@ -94,7 +94,22 @@ export function Tabbing() {
             ___
           </button>
         </div>
-        <TabbingPrimitive programs={programs as never} tabs={tabsData} />
+        <TabbingPrimitive
+          programs={
+            programs?.map((x) => {
+              // @ts-expect-error ytta
+              x.programMetadataCID = x.title;
+              // @ts-expect-error ytta
+              x.endDate = new Date(x.endDate ?? "").getTime();
+              // @ts-expect-error ytta
+              x.startDate = new Date(x.startDate ?? "").getTime();
+              // @ts-expect-error ytta
+              x.programContractAddress = x.contractAddress;
+              return x;
+            }) as never
+          }
+          tabs={tabsData}
+        />
       </div>
     </>
   );

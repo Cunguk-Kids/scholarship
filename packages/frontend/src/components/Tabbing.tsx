@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CardScholarship } from "./CardScholarship";
-import MilestoneProgress from "./MilestoneProgress";
+// import MilestoneProgress from "./MilestoneProgress";
 
 type Tab = {
   id: string;
@@ -89,7 +89,7 @@ export const Tabbing = <T,>({
               </div>
               <div className="border-t h-1 self-stretch"></div>
               <div className="flex w-full items-start self-stretch">
-                <MilestoneProgress
+                {/* <MilestoneProgress
                   milestones={[
                     {
                       id: 1,
@@ -104,7 +104,7 @@ export const Tabbing = <T,>({
                       status: "pending",
                     },
                   ]}
-                />
+                /> */}
               </div>
             </div>
           )}
