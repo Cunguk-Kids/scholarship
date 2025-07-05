@@ -6,6 +6,7 @@ import type { MilestoneInput } from '../hooks/@programs/admin/use-add-milestone-
 function useExperimentalState() {
   const [address, setAddress] = useState<`0x` | null>(null);
   const [selectedMilestone, setSelectedMilestone] = useState<MilestoneInput[]>([]);
+  const [selectedParticipant, setSelectedParticipant] = useState<`0x${string}`>('0x');
 
   const handleSelectMilestone = (milestone: MilestoneInput) => {
     setSelectedMilestone((prev) => {
@@ -19,6 +20,13 @@ function useExperimentalState() {
     });
   };
 
+  const handleSelectParticipant = (participant: `0x${string}`) => {
+    setSelectedParticipant((prev) => {
+      if (participant === prev) return '0x';
+      return participant;
+    });
+  };
+
   const contractBalance = useBalance({
     address: address || '0x',
   });
@@ -27,11 +35,13 @@ function useExperimentalState() {
     setter: {
       setAddress,
       handleSelectMilestone,
+      handleSelectParticipant,
     },
     data: {
       address,
       contractBalance,
       selectedMilestone,
+      selectedParticipant,
     },
   };
 }

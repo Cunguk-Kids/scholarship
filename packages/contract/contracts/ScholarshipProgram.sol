@@ -83,10 +83,15 @@ contract ScholarshipProgram is
         emit ApplicantApplied(msg.sender, appBatch);
     }
 
-    // vote
+    // factory vote need update scurity
     function vote(address voter, address applicant) external {
         _voteApplicant(voter, applicant);
         emit Voted(voter, applicant, appBatch);
+    }
+    // factory vote contract
+    function voteContract(address applicant) external {
+        _voteApplicant(msg.sender, applicant);
+        emit Voted(msg.sender, applicant, appBatch);
     }
 
     // factory donate need update scurity
