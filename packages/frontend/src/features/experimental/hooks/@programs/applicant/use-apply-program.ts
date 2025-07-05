@@ -10,20 +10,18 @@ export function useApplyProgram() {
    * @description Starts a new donation.
    * @returns {Function} make some donation to contract.
    */
-  const write = () =>
+  const write = (milestones: {
+    mType: number,
+    price: bigint,
+    templateId: bigint,
+    metadata: string;
+  }[]) =>
     query.writeContract({
       abi: scholarshipProgramAbi,
       address: address || "0x",
       functionName: "applyProgramContract",
       args: [
-        [
-          {
-            mType: 0,
-            price: BigInt(0),
-            templateId: BigInt(0),
-            metadata: "",
-          },
-        ],
+        milestones
       ],
     });
 

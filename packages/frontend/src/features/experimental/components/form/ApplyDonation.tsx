@@ -1,22 +1,73 @@
 import { Button } from '@/components/Button';
 import { useGetMilestoneTemplate } from '../../hooks/@programs/admin/use-get-milestone-template';
+import { ExperimentalInjection } from '../../context/experimental-context';
+import { useApplyProgram } from '../../hooks/@programs/applicant/use-apply-program';
 
 export default function ApplyDonation() {
   const { milestones } = useGetMilestoneTemplate();
+
+  const [write] = useApplyProgram();
+
+  const {
+    setter: { handleSelectMilestone },
+    data: { selectedMilestone },
+  } = ExperimentalInjection.use();
+
+  const handleSubmit = () => {
+    write(selectedMilestone);
+  };
 
   return (
     <div>
       <h1>Select Milestone</h1>
       <div className="flex flex-row gap-2">
-        {milestones?.map(({ price }) => {
+        {milestones?.map(({ price }, index) => {
+          const haveValue = selectedMilestone.find((item) => item.templateId === BigInt(index));
+
+          if (haveValue)
+            return <div className="text-gray-400 text-sm italic">No form available.</div>;
           return (
-            <div className="w-fit">
-              <Button label={String(price)} />
+            <div key={index} className="w-fit">
+              <Button
+                label={String(price)}
+                onClick={() => {
+                  handleSelectMilestone({
+                    metadata: '',
+                    mType: Number(0),
+                    price: BigInt(0),
+                    templateId: BigInt(index),
+                  });
+                }}
+              />
             </div>
           );
-        })}
+        }) || <div className="text-gray-400 text-sm italic">No form available.</div>}
       </div>
       <h1>Selected Milestone</h1>
+      {milestones?.map(({ price }, index) => {
+        const haveValue = selectedMilestone.find((item) => item.templateId === BigInt(index));
+
+        if (!haveValue)
+          return <div className="text-gray-400 text-sm italic">No form available.</div>;
+        return (
+          <div key={index} className="w-fit">
+            <Button
+              label={String(price)}
+              onClick={() => {
+                handleSelectMilestone({
+                  metadata: '',
+                  mType: Number(0),
+                  price: BigInt(0),
+                  templateId: BigInt(index),
+                });
+              }}
+            />
+          </div>
+        );
+      }) || <div className="text-gray-400 text-sm italic">No form available.</div>}
+      <div className="w-fit mt-5">
+        <Button onClick={handleSubmit} label="Apply" />
+      </div>
     </div>
   );
 }
