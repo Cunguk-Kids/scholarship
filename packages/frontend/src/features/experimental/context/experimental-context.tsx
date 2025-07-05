@@ -1,11 +1,14 @@
-import { createInjection } from '@/util/create-inject';
-import { useState } from 'react';
-import { useBalance } from 'wagmi';
-import type { MilestoneInput } from '../hooks/@programs/admin/use-add-milestone-template';
+import { createInjection } from "@/util/create-inject";
+import { useRef, useState } from "react";
+import { useBalance } from "wagmi";
+import type { MilestoneInput } from "../hooks/@programs/admin/use-add-milestone-template";
 
 function useExperimentalState() {
   const [address, setAddress] = useState<`0x` | null>(null);
-  const [selectedMilestone, setSelectedMilestone] = useState<MilestoneInput[]>([]);
+  const id = useRef("");
+  const [selectedMilestone, setSelectedMilestone] = useState<MilestoneInput[]>(
+    []
+  );
 
   const handleSelectMilestone = (milestone: MilestoneInput) => {
     setSelectedMilestone((prev) => {
@@ -20,10 +23,13 @@ function useExperimentalState() {
   };
 
   const contractBalance = useBalance({
-    address: address || '0x',
+    address: address || "0x",
   });
 
   return {
+    ref: {
+      id,
+    },
     setter: {
       setAddress,
       handleSelectMilestone,

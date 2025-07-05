@@ -1,11 +1,12 @@
-import { createElement, type FC } from 'react';
-import { Handle, Position } from '@xyflow/react';
-import CreateProgram from './form/CreateProgram';
-import OpenDonation from './form/OpenDonation';
-import MakeDonation from './form/MakeDonation';
-import CreateMilestoneTemplate from './form/CreateMilestoneTemplate';
-import ApplyDonation from './form/ApplyDonation';
-import OpenVote from './form/OpenVote';
+import { createElement, type FC } from "react";
+import { Handle, Position } from "@xyflow/react";
+import CreateProgram from "./form/CreateProgram";
+import OpenDonation from "./form/OpenDonation";
+import MakeDonation from "./form/MakeDonation";
+import CreateMilestoneTemplate from "./form/CreateMilestoneTemplate";
+import ApplyDonation from "./form/ApplyDonation";
+import OpenVote from "./form/OpenVote";
+import { WithdrawMilestoneForm } from "./form/WithdrawMilestoneForm";
 
 interface ProcessNodeProps {
   data: {
@@ -22,6 +23,7 @@ const componentMap: Record<string, React.ComponentType> = {
   createMilestoneTemplate: CreateMilestoneTemplate,
   applyDonation: ApplyDonation,
   openVote: OpenVote,
+  withdrawMilestone: WithdrawMilestoneForm,
 };
 
 const NodeItem: FC<ProcessNodeProps> = ({ data }) => {
@@ -30,7 +32,7 @@ const NodeItem: FC<ProcessNodeProps> = ({ data }) => {
       <div className="p-1 rounded-sm bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 cursor-pointer hover:shadow-lg transition-shadow duration-200">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-          <p style={{ fontSize: '8px' }}>{data.label}</p>
+          <p style={{ fontSize: "8px" }}>{data.label}</p>
         </div>
       </div>
 
@@ -41,7 +43,9 @@ const NodeItem: FC<ProcessNodeProps> = ({ data }) => {
             {data.key && componentMap[data.key] ? (
               createElement(componentMap[data.key])
             ) : (
-              <div className="text-gray-400 text-sm italic">No form available.</div>
+              <div className="text-gray-400 text-sm italic">
+                No form available.
+              </div>
             )}
           </div>
         </div>
