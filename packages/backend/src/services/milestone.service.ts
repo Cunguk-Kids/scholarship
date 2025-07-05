@@ -1,6 +1,6 @@
-import { db } from "@/db";
-import { milestoneInsertDto } from "@/db/dto";
-import { milestoneTable } from "@/db/schema";
+import { db } from "@back/db";
+import { milestoneInsertDto } from "@back/db/dto";
+import { milestoneTable } from "@back/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function getMilestone(id: string) {

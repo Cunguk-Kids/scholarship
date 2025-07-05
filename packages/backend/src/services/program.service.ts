@@ -1,6 +1,6 @@
-import { db } from "@/db";
-import { programTable } from "@/db/schema";
-import type { createProgramDto, programInsertDto } from "@back/db/dto";
+import { db } from "@back/db";
+import { programTable } from "@back/db/schema";
+import type { generateMetadataDto, programInsertDto } from "@back/db/dto";
 import { pinata } from "@back/lib/pinata";
 
 //  `${process.env.IPFS_URL}/${(await pinata.upload.public.json(metadata)).cid}`,
@@ -22,10 +22,10 @@ export function addProgram(dto: typeof programInsertDto.static) {
   return db.insert(programTable).values(dto);
 }
 
-export async function createProgramService({
+export async function generateMetadataService({
   description,
   title,
-}: typeof createProgramDto.static) {
+}: typeof generateMetadataDto.static) {
   const metadata = {
     title,
     description,

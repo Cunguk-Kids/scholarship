@@ -9,7 +9,7 @@ export const donationInsertDto = createInsertSchema(donationTable);
 export const programInsertDto = createInsertSchema(programTable);
 
 
-export const createProgramDto = t.Object({
+export const generateMetadataDto = t.Object({
   title: t.String(),
   description: t.String(),
 });

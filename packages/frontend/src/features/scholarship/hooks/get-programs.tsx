@@ -1,23 +1,46 @@
-import { skoolchainAddress } from "@/constants/contractAddress";
-import { appStateInjection } from "@/hooks/inject/app-state";
-import { scholarshipAbi } from "@/repo/abi";
-import { useEffect } from "react";
-import { useReadContract } from "wagmi";
+import { scholarshipProgramAbi } from "@/repo/abi";
+import { api } from "@/repo/api";
+import { useQuery } from "@tanstack/react-query";
+import { useReadContracts } from "wagmi";
 
 export function useGetPrograms() {
-  const {
-    blockNumber: { data: blockNumber },
-  } = appStateInjection.use();
-  const { data: programs, refetch } = useReadContract({
-    address: skoolchainAddress,
-    abi: scholarshipAbi,
-    functionName: "getAllPrograms",
+  const { data: programs } = useQuery({
+    queryKey: ["programs"],
+    queryFn: async () => {
+      const result = await api.v1.program.all.get();
+      if (result.error) throw result.error;
+      return result.data;
+    },
   });
 
-  useEffect(() => {
-    refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blockNumber]);
-
   return { programs };
+}
+
+export function useGetProgramContract(address: `0x${string}`) {
+  const { data, ...queryStatus } = useReadContracts({
+    contracts: [
+      {
+        abi: scholarshipProgramAbi,
+        address,
+        functionName: "getApplicantSize",
+        args: [],
+      },
+      {
+        abi: scholarshipProgramAbi,
+        address,
+        functionName: "getAppStatus",
+        args: [],
+      },
+      {
+        abi: scholarshipProgramAbi,
+        address,
+        functionName: "stackedToken",
+        args: [],
+      },
+    ],
+  });
+
+  const [applicantSize, appStatus, stackedToken] = data ?? [];
+
+  return { applicantSize, appStatus, stackedToken, queryStatus };
 }

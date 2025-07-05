@@ -1,8 +1,18 @@
+import { formatEther } from "viem";
 import { Button } from "./Button";
 import { StatusBadge } from "./StatusBadge";
+import { useGetProgramContract } from "@/features/scholarship/hooks/get-programs";
 
 const getTextSize = (size: string, base: string, small: string) =>
   size === "small" ? small : base;
+
+const statuses = [
+  "soon",
+  "active", // applican and donator masuk
+  "soon",
+  "vote",
+  "soon",
+];
 
 const getImageSizeClass = (size: string) =>
   size === "small" ? "w-7 h-7 border" : "w-12 h-12 border-4";
@@ -13,21 +23,17 @@ export const CardScholarship = ({
   onClickButton = () => {},
   sizeButton = "large",
   size = "large",
-  program = {
-    id: 0,
-    initiatorAddress: "",
-    programMetadataCID: "Untitled Program",
-    targetApplicant: 0,
-    startDate: 0,
-    endDate: 0,
-    programContractAddress: "",
-  },
-  status = "active",
   tokenValue = "0",
   tokenCcy = "MON",
-  totalApplicant = 0,
-  converter = "0",
-  converterCcy = "IDR",
+  program = {
+    id: 0n,
+    initiatorAddress: "Provider",
+    programMetadataCID: "Untitled Program",
+    targetApplicant: 0n,
+    startDate: 0n,
+    endDate: 0n,
+    programContractAddress: "",
+  },
 }: {
   size?: "large" | "small";
   withButton?: boolean;
@@ -35,22 +41,35 @@ export const CardScholarship = ({
   sizeButton?: "small" | "large";
   onClickButton?: () => void;
   status?: string;
-  tokenValue?: string;
+  tokenValue?: string | bigint;
   tokenCcy?: string;
   totalApplicant?: number;
-  converter?: string;
-  converterCcy?: string;
   program?: {
-    id: number;
+    id: number | bigint;
     initiatorAddress: string;
     programMetadataCID: string;
-    targetApplicant: number;
-    startDate: number;
-    endDate: number;
+    targetApplicant: number | bigint;
+    startDate: number | bigint;
+    endDate: number | bigint;
     programContractAddress: string;
   };
 }) => {
   const timeLeft = getTimeLeft(program.endDate);
+  const data = useGetProgramContract(program.programContractAddress as never);
+
+  const status = statuses[data.appStatus?.result ?? 0];
+
+  const getLocalValue = (amount: bigint) => {
+    const token =
+      typeof amount === "bigint" ? Number(formatEther(amount)) : amount;
+
+    const tokenToIDR = 0.0000000064;
+    return (token * tokenToIDR).toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    });
+  };
 
   return (
     <div className="flex flex-col items-center font-nunito">
@@ -61,7 +80,7 @@ export const CardScholarship = ({
               <div className="flex flex-col gap-4 self-stretch">
                 <div className="flex items-center gap-6 justify-between">
                   <h3
-                    className={`font-bold ${getTextSize(size, "text-2xl", "text-base")}`}
+                    className={`font-bold ${getTextSize(size, "text-2xl", "text-base")} w-40 truncate`}
                   >
                     {program.programMetadataCID || "Scholarship Title"}
                   </h3>
@@ -104,7 +123,7 @@ export const CardScholarship = ({
                         "text-[0.625rem]"
                       )}
                     >
-                      {program.targetApplicant} Uni Students*
+                      {Number(program.targetApplicant)} Uni Students*
                     </span>
                   </div>
                   <p
@@ -130,7 +149,7 @@ export const CardScholarship = ({
                   ))}
                 </div>
                 <p className="text-sm">
-                  + {totalApplicant} other students have applied
+                  + {data.applicantSize?.result} other students have applied
                 </p>
               </div>
             </div>
@@ -149,7 +168,7 @@ export const CardScholarship = ({
                       <span
                         className={`${getTextSize(size, "text-2xl", "text-base")} font-bold`}
                       >
-                        {tokenValue} {tokenCcy}
+                        {data.stackedToken?.result} {tokenCcy}
                       </span>
                       <p className={getTextSize(size, "text-sm", "text-xs")}>
                         /
@@ -162,7 +181,7 @@ export const CardScholarship = ({
                       <img src="/icons/information-diamond.svg" alt="info" />
                       <span>worth around</span>
                       <span className="font-bold">
-                        {converter} {converterCcy}
+                        {getLocalValue(tokenValue as bigint)} {"IDR"}
                       </span>
                     </div>
                   </div>
@@ -173,7 +192,7 @@ export const CardScholarship = ({
 
           {withButton && (
             <div
-              className={`absolute w-max ${size === "small" ? "top-[14rem] left-[15.5rem]" : "top-[16.5rem] left-[18rem]"}`}
+              className={`absolute w-max ${size === "small" ? "top-[14rem] left-[15.5rem]" : "top-[16.5rem] left-[20rem]"}`}
             >
               <Button
                 label={labelButton}
@@ -189,8 +208,12 @@ export const CardScholarship = ({
 };
 
 // Utility to calculate time left
-function getTimeLeft(endTimestamp?: number): string {
-  const secondsLeft = (endTimestamp ?? 0) - Math.floor(Date.now() / 1000);
+function getTimeLeft(endTimestamp?: number | bigint): string {
+  const end =
+    typeof endTimestamp === "bigint"
+      ? Number(endTimestamp)
+      : (endTimestamp ?? 0);
+  const secondsLeft = Math.floor(end / 1000) - Math.floor(Date.now() / 1000);
   if (secondsLeft <= 0) return "00 d: 00 hr: 00 min";
 
   const days = Math.floor(secondsLeft / 86400);

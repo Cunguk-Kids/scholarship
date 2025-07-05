@@ -20,3 +20,4 @@
 /coverage
 
 /ignition/deployments
+.vscode_hardhat_config_*

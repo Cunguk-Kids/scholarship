@@ -1,4 +1,4 @@
-import { milestoneInsertDto } from "@/db/dto";
+import { milestoneInsertDto } from "@back/db/dto";
 import {
   addMilestoneTemplate,
   getAllMilestoneTemplate,

@@ -1,5 +1,14 @@
 import { relations } from "drizzle-orm";
-import { uuid, bigint, date, pgTable, varchar, timestamp, numeric } from "drizzle-orm/pg-core";
+import {
+  uuid,
+  bigint,
+  date,
+  pgTable,
+  varchar,
+  timestamp,
+  numeric,
+  text,
+} from "drizzle-orm/pg-core";
 import { milestoneType, scholarshipStatusEnum } from "./enum";
 export * from "./enum";
 
@@ -25,6 +34,8 @@ export const programTable = pgTable("program", {
   endDate: date("end_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  title: varchar("name").notNull(),
+  description: text("description").notNull(),
 });
 
 export const donationTable = pgTable("donation", {
@@ -48,9 +59,8 @@ export const milestoneTemplateTable = pgTable("milestone_template", {
   batch: bigint("batch", { mode: "number" }).notNull(),
   price: numeric("price").notNull(),
   metadata: varchar("metadata").notNull(),
-  type: milestoneType("type").notNull().default("TEMPLATE")
+  type: milestoneType("type").notNull().default("TEMPLATE"),
 });
-
 
 export const milestoneTable = pgTable("milestone", {
   id: varchar("id").primaryKey(), // id must format batch_id
@@ -63,7 +73,7 @@ export const milestoneTable = pgTable("milestone", {
   batch: bigint("batch", { mode: "number" }).notNull(),
   price: numeric("price").notNull(),
   metadata: varchar("metadata").notNull(),
-  type: milestoneType("type").notNull()
+  type: milestoneType("type").notNull(),
 });
 
 // RELATION
@@ -71,7 +81,7 @@ export const programRelations = relations(programTable, ({ many }) => ({
   donations: many(donationTable),
   milestoneTemplates: many(milestoneTemplateTable),
   milestones: many(milestoneTable),
-  applicants: many(applicantTable)
+  applicants: many(applicantTable),
 }));
 
 export const donationRelations = relations(donationTable, ({ one }) => ({
@@ -81,12 +91,15 @@ export const donationRelations = relations(donationTable, ({ one }) => ({
   }),
 }));
 
-export const milestoneTemplateRelations = relations(milestoneTemplateTable, ({ one }) => ({
-  program: one(programTable, {
-    fields: [milestoneTemplateTable.programId],
-    references: [programTable.id],
-  }),
-}));
+export const milestoneTemplateRelations = relations(
+  milestoneTemplateTable,
+  ({ one }) => ({
+    program: one(programTable, {
+      fields: [milestoneTemplateTable.programId],
+      references: [programTable.id],
+    }),
+  })
+);
 
 export const milestoneRelations = relations(milestoneTable, ({ one }) => ({
   program: one(programTable, {
