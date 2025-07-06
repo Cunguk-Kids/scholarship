@@ -5,6 +5,7 @@
   "scripts": {
     "active-node": "hardhat node",
     "deploy": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network localhost",
+    "deploy-monad": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network monadTestnet",
     "deploy-ganache": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network ganache",
     "test": "hardhat test",
     "compile": "hardhat compile"
@@ -12,6 +13,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.0-next.20",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0-next.20",
+    "@nomiclabs/hardhat-etherscan": "^3.1.8",
     "@types/node": "^22.8.5",
     "forge-std": "foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.0.0-next.20",
