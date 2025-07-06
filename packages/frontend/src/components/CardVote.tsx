@@ -1,13 +1,19 @@
-import { Button } from "./Button";
-import { StatusBadge } from "./StatusBadge";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Button } from './Button';
+import { StatusBadge } from './StatusBadge';
 
 export const CardVote = ({
-  name = "Alma",
-  institution = "Universitas Indonesia",
+  name = 'Alma',
+  institution = 'Universitas Indonesia',
+  onSubmit = (a: any, b: any) => null,
+}: {
+  name?: string;
+  institution?: string;
+  onSubmit?: (a: any, b: any) => any;
 }) => {
   return (
     <div className="relative flex bg-black rounded-2xl py-4 px-6 justify-center items-center gap-2.5 flex-1">
-      <div className="absolute -left-3.5 -top-3.5 flex p-6 flex-col justify-center items-center gap-6 bg-white border rounded-2xl w-full h-full">
+      <div className=" -left-3.5 -top-3.5 flex p-6 flex-col justify-center items-center gap-6 bg-white border rounded-2xl w-full h-full">
         <div className="flex flex-col items-start gap-6 flex-1 self-stretch">
           <div className="flex items-center justify-center gap-2.5 self-stretch">
             <img
@@ -28,7 +34,7 @@ export const CardVote = ({
             </div>
           </div>
         </div>
-        <Button label="Vote" />
+        <Button label="Vote" onClick={onSubmit} />
       </div>
     </div>
   );

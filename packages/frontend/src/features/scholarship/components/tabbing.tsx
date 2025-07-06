@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { useCreateProgram } from '../hooks/create-program';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { appStateInjection } from '@/hooks/inject/app-state';
+import { useApplicant } from '@/hooks/@programs/applicant/use-list-applicant';
 function CreateProgramForm() {
   const {
     loading: { setLoading },
@@ -69,7 +70,9 @@ function CreateProgramForm() {
 }
 export function Tabbing<T>({
   onClickTabbing,
+  contractAddress,
 }: {
+  contractAddress?: string;
   onClickTabbing?: (item: Record<string, T>, activeTab: string) => void;
 }) {
   const tabsData = [
@@ -93,6 +96,7 @@ export function Tabbing<T>({
   const ref = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const { programs } = useGetPrograms();
+  const { applicants } = useApplicant(contractAddress);
 
   const handleTabbing = (item: Record<string, any>, activeTab: string) => {
     if (onClickTabbing) onClickTabbing(item, activeTab);
@@ -123,6 +127,11 @@ export function Tabbing<T>({
           </button>
         </div>
         <TabbingPrimitive
+          participants={
+            applicants?.[0]?.map((x) => {
+              return { participantAddress: x };
+            }) as never
+          }
           programs={
             programs?.map((x) => {
               // @ts-expect-error ytta
