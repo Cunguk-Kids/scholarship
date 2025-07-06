@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     // Environment setup & latest features
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
+    "outDir": "./dist",
+    "rootDir": "./src",
     "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
@@ -11,9 +11,8 @@
     "allowJs": true,
     // Bundler mode
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "noEmit": true,
+    "noEmit": false,
     // Best practices
     "strict": true,
     "skipLibCheck": true,
@@ -25,9 +24,8 @@
     "noPropertyAccessFromIndexSignature": false,
     "baseUrl": ".",
     "paths": {
-      "@back/*": [
-        "src/*"
-      ]
-    }
-  }
+      "@back/*": ["src/*"]
+    },
+  },
+    "include": ["src"]
 }
