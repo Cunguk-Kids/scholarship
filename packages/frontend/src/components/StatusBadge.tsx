@@ -7,10 +7,11 @@ interface StatusBadgeProps {
 
 const STATUS_STYLES: Record<StatusType, { bg: string; label: string }> = {
   active: { bg: "bg-black", label: "Active" },
+  pddikti: { bg: "bg-black", label: "PDDIKTI Verified" },
   vote: { bg: "bg-skred", label: "On Vote" },
   soon: { bg: "bg-skgreen", label: "Soon" },
   // @ts-expect-error ytta
-  disbursed: { bg: "bg-skgreen", label: "Disbursed" }
+  disbursed: { bg: "bg-skgreen", label: "Disbursed" },
 };
 
 export const StatusBadge = ({
@@ -35,7 +36,7 @@ export const StatusBadge = ({
 
   return (
     <div
-      className={`flex rounded-2xl ${style.bg} ${sizeClasses} justify-center items-center ${status === "active" ? "text-white" : "text-black"} font-bold`}
+      className={`flex rounded-2xl ${style.bg} ${sizeClasses} justify-center items-center ${status === "active" || status === "PDDIKTI" ? "text-white" : "text-black"} font-bold`}
     >
       {style.label}
     </div>
