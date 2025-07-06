@@ -2,7 +2,7 @@ import { useWriteContract } from "wagmi";
 import { scholarshipProgramAbi } from "@/repo/abi";
 import { ExperimentalInjection } from "@/features/experimental/context/experimental-context";
 
-export function useVoteApplicant() {
+export function useVoteApplicant(propsAddress?: string) {
   const query = useWriteContract();
   const { data: { address } } = ExperimentalInjection.use();
   /**
@@ -13,7 +13,7 @@ export function useVoteApplicant() {
   const write = (applicant: `0x${string}`) =>
     query.writeContract({
       abi: scholarshipProgramAbi,
-      address: address || "0x",
+      address: propsAddress as "0x" || address || "0x",
       functionName: "voteContract",
       args: [
         applicant

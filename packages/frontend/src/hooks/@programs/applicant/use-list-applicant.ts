@@ -4,14 +4,14 @@ import { appStateInjection } from "@/hooks/inject/app-state";
 import { ExperimentalInjection } from "@/features/experimental/context/experimental-context";
 import { useEffect } from "react";
 
-export function useApplicant() {
+export function useApplicant(propsAddress?: string) {
   const { data: { address } } = ExperimentalInjection.use();
 
   const {
     blockNumber: { data: blockNumber },
   } = appStateInjection.use();
   const { data: applicants, refetch } = useReadContract({
-    address: address || "0x",
+    address: propsAddress as "0x" || address || "0x",
     abi: scholarshipProgramAbi,
     functionName: "_getAllApplicantsWithVotes",
   });
