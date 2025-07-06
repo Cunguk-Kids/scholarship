@@ -15,6 +15,7 @@ import DonationForm from '../components/form/DonationForm';
 export function ScholarshipsPage() {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('active');
+  const [participantAddress, setParticipantAddress] = useState('');
   const {
     setter: { setAddress },
     data: { address },
@@ -23,10 +24,12 @@ export function ScholarshipsPage() {
 
   const handleTabClick = <T,>(item: Record<string, T>, activeTab: string) => {
     // vote || active || donate
-    console.log(activeTab, 'activeTab');
     setActiveTab(activeTab);
     if (item?.contractAddress) {
       setAddress(item?.contractAddress as '0x');
+    }
+    if (item?.participantAddress) {
+      setParticipantAddress(item?.participantAddress as '0x');
     }
     setOpen(!open);
     // write.mutate({
@@ -57,7 +60,7 @@ export function ScholarshipsPage() {
             {activeTab === 'vote' && (
               <div>
                 <h2 className="font-paytone text-7xl">Voting Program</h2>
-                <VotingForm />
+                <VotingForm addressParticipant={participantAddress} />
               </div>
             )}
             {activeTab === 'donate' && (
@@ -131,7 +134,7 @@ export function ScholarshipsPage() {
             <p className="text-2xl">Your Next Opportunity Starts Here</p>
           </div>
           <div className="w-max">
-            <Tabbing onClickTabbing={handleTabClick} />
+            <Tabbing onClickTabbing={handleTabClick} contractAddress={address as string} />
           </div>
         </div>
       </div>

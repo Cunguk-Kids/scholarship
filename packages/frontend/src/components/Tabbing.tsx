@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { CardScholarship } from './CardScholarship';
 import MilestoneProgress from './MilestoneProgress';
+import { CardVote } from './CardVote';
 
 type Tab = {
   id: string;
@@ -45,6 +46,7 @@ export const Tabbing = <T,>({
   type?: string;
   onClickTabbing?: (item: Record<string, T>, activeTab: string) => void;
   currentBalance?: string;
+  participants?: any[];
 }) => {
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? '');
 
@@ -72,7 +74,23 @@ export const Tabbing = <T,>({
         <div className="relative w-full bg-skbw rounded-e-3xl rounded-bl-3xl border-4 -left-2 -top-2">
           {type.toLowerCase() === 'program' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[3.75rem] p-20">
-              {programs &&
+              {/* <CardVote
+                onSubmit={() => {
+                  if (onClickTabbing) onClickTabbing({ participantAddress: 'aa' }, activeTab);
+                }}
+              /> */}
+              {activeTab === 'vote' &&
+                props?.participants?.map((item) => (
+                  <div className="h-full w-full relative">
+                    <CardVote
+                      onSubmit={() => {
+                        if (onClickTabbing) onClickTabbing(item, activeTab);
+                      }}
+                    />
+                  </div>
+                ))}
+              {activeTab !== 'vote' &&
+                programs &&
                 programs.length > 0 &&
                 programs.map((item: any, i) => (
                   <CardScholarship
