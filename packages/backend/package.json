@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "build": "bun run tsc -b . && cp public ./dist/public"
+    "build": "bun run tsc -b . && cp -r public ./dist/public"
   },
   "devDependencies": {
     "@types/bun": "latest",
