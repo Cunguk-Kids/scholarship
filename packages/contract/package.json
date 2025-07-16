@@ -5,24 +5,25 @@
   "scripts": {
     "active-node": "hardhat node",
     "deploy": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network localhost",
-    "deploy-monad": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network monadTestnet",
+    "deploy-lisk": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network liskSepolia --verify",
     "deploy-ganache": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network ganache",
     "test": "hardhat test",
     "compile": "hardhat compile"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-ignition": "^3.0.0-next.20",
-    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0-next.20",
-    "@nomiclabs/hardhat-etherscan": "^3.1.8",
     "@types/node": "^22.8.5",
     "forge-std": "foundry-rs/forge-std#v1.9.4",
-    "hardhat": "^3.0.0-next.20",
     "typescript": "~5.8.0",
     "viem": "^2.30.0"
   },
   "dependencies": {
+    "@nomicfoundation/hardhat-ignition": "^0.15.12",
+    "@nomicfoundation/hardhat-toolbox-viem": "^4.0.0",
+    "@nomiclabs/hardhat-etherscan": "^3.1.8",
     "@openzeppelin/contracts": "^5.3.0",
     "@openzeppelin/contracts-upgradeable": "^5.3.0",
-    "dotenv": "^17.0.1"
+    "dotenv": "^17.0.1",
+    "hardhat": "^2.25.0",
+    "hardhat-verify": "^1.0.0"
   }
 }

@@ -1,4 +1,4 @@
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectButton } from "@xellar/kit";
 
 interface ButtonProps {
   label?: string;
@@ -56,20 +56,15 @@ export const Button = ({
   return (
     <ConnectButton.Custom>
       {({
+        isConnected,
+        openProfileModal,
         account,
         chain,
-        openAccountModal,
         openChainModal,
         openConnectModal,
-        authenticationStatus,
-        mounted,
       }) => {
-        const ready = mounted && authenticationStatus !== "loading";
-        const connected =
-          ready &&
-          account &&
-          chain &&
-          (!authenticationStatus || authenticationStatus === "authenticated");
+        const ready = true;
+        const connected = ready && account && isConnected;
 
         if (!ready) {
           return (
@@ -84,6 +79,7 @@ export const Button = ({
           );
         }
 
+        const address = `${account?.address?.slice(0, 6)}...${account?.address?.slice(-4)}`;
         return (
           <div className="flex flex-col items-start gap-2">
             {!connected ? (
@@ -96,7 +92,7 @@ export const Button = ({
                   {label}
                 </button>
               </ButtonWrapper>
-            ) : chain.unsupported ? (
+            ) : !chain ? (
               <ButtonWrapper>
                 <button
                   onClick={openChainModal}
@@ -114,7 +110,7 @@ export const Button = ({
                     type="button"
                     className={getButtonClasses(size)}
                   >
-                    {chain.hasIcon && chain.iconUrl && (
+                    {/* {chain.hasIcon && chain.iconUrl && (
                       <div
                         style={{
                           background: chain.iconBackground,
@@ -131,19 +127,19 @@ export const Button = ({
                           style={{ width: 12, height: 12 }}
                         />
                       </div>
-                    )}
+                    )} */}
                     {chain.name}
                   </button>
                 </ButtonWrapper>
 
                 <ButtonWrapper>
                   <button
-                    onClick={openAccountModal}
+                    onClick={openProfileModal}
                     type="button"
                     className={getButtonClasses(size)}
                   >
-                    {account.displayName}
-                    {account.displayBalance && ` (${account.displayBalance})`}
+                    {address}
+                    {account.address && ` (${account.balanceFormatted?.slice(0,5)})`}
                   </button>
                 </ButtonWrapper>
               </div>
