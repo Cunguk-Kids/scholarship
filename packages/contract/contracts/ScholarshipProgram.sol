@@ -7,6 +7,7 @@ import {ScholarshipStorageManagement} from "./ScholarshipStorageManagement.sol";
 import {ScholarshipManagerAccessControl} from "./ScholarshipManagerAccessControl.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {MilestoneInput, Milestone, MilestoneTemplate} from "./ScholarshipStruct.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ScholarshipProgram is
     Initializable,
@@ -22,23 +23,24 @@ contract ScholarshipProgram is
 
     address[] public donators;
 
-    event Donated(address indexed donater, uint256 batchId, uint256 amount);
-    event ApplicantApplied(address indexed applicant, uint256 batchId);
-    event Voted(address voter, address applicant, uint256 batchId);
+    event Donated(address indexed donater, uint256 amount);
+    event ApplicantApplied(address indexed applicant);
+    event Voted(address voter, address applicant);
     event MilestoneWithdrawed(
         uint256 indexed id,
-        uint256 indexed batch,
         address user
     );
-    event BatchStarted(uint256 batchId, uint256 applicantTarget);
-    event VotingStarted(uint256 batchId);
-    event VotingCompleted(uint256 batchId);
+    event BatchStarted(uint256 applicantTarget);
+    event VotingStarted();
+    event VotingCompleted();
     event DebugDonateCalled(address caller, uint256 value);
 
     error CannotWithdrawNotInQuorum();
     error ApplicantNotEnough();
     error NotInMinimalAmount();
     error OnlyDonateOnce();
+    error InsufficientAllowance();
+    error InsufficientTokenBalance();
 
     constructor() {
         _disableInitializers();
@@ -49,7 +51,9 @@ contract ScholarshipProgram is
         address _initiatorAddress,
         uint256 _targetApplicant,
         uint256 _startDate,
-        uint256 _endDate
+        uint256 _endDate,
+        address _tokenAddress,
+        uint8 _tokenDecimals
     ) external initializer {
         __ScholarshipManagerAccessControl_init(_initiatorAddress);
 
@@ -58,20 +62,20 @@ contract ScholarshipProgram is
         startDate = _startDate;
         endDate = _endDate;
         targetApplicant = _targetApplicant;
-        appBatch = 0;
-
-        applicantTarget[appBatch] = _targetApplicant;
-        quorumVote[appBatch] = (_targetApplicant + 1) / 2;
+        applicantTarget = _targetApplicant;
+        quorumVote = (_targetApplicant + 1) / 2;
+        
+        // Initialize ERC20 token
+        _initializeToken(_tokenAddress, _tokenDecimals);
     }
 
-    // factory apply need to update scurity
+    // factory apply need to update security
     function applyProgram(
         address _applicant,
         MilestoneInput[] calldata milestoneIds
     ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
         _addApplicant(_applicant, milestoneIds);
-        // _mintForStudent();
-        emit ApplicantApplied(_applicant, appBatch);
+        emit ApplicantApplied(_applicant);
     }
 
     // apply for this contract
@@ -79,51 +83,84 @@ contract ScholarshipProgram is
         MilestoneInput[] calldata milestoneIds
     ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
         _addApplicant(msg.sender, milestoneIds);
-        // _mintForStudent();
-        emit ApplicantApplied(msg.sender, appBatch);
+        emit ApplicantApplied(msg.sender);
     }
 
-    // factory vote need update scurity
+    // factory vote need update security
     function vote(address voter, address applicant) external {
         _voteApplicant(voter, applicant);
-        emit Voted(voter, applicant, appBatch);
+        emit Voted(voter, applicant);
     }
+    
     // vote this contract
     function voteContract(address applicant) external {
         _voteApplicant(msg.sender, applicant);
-        emit Voted(msg.sender, applicant, appBatch);
+        emit Voted(msg.sender, applicant);
     }
 
-    // factory donate need update scurity
+    // factory donate need update security
     function donate(
-        address donator
-    ) external payable onlyInStatus(ScholarshipStatus.OpenForApplications) {
-        emit DebugDonateCalled(donator, msg.value);
-        if (msg.value < MINIMAL_DONATION) revert NotInMinimalAmount();
-        if (alreadyDonate[appBatch][donator]) revert OnlyDonateOnce();
+        address donator,
+        uint256 amount
+    ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
+        emit DebugDonateCalled(donator, amount);
+        
+        if (amount < MINIMAL_DONATION) revert NotInMinimalAmount();
+        if (alreadyDonate[donator]) revert OnlyDonateOnce();
+        
+        // Check if donator has enough tokens
+        if (donationToken.balanceOf(donator) < amount) {
+            revert InsufficientTokenBalance();
+        }
+        
+        // Check if contract has enough allowance
+        if (donationToken.allowance(donator, address(this)) < amount) {
+            revert InsufficientAllowance();
+        }
+        
+        // Transfer tokens from donator to this contract
+        bool success = donationToken.transferFrom(donator, address(this), amount);
+        if (!success) {
+            revert TokenTransferFailed();
+        }
 
-        stackedToken += msg.value - TRANSACTION_FEE;
-        alreadyDonate[appBatch][donator] = true;
+        stackedToken += amount - TRANSACTION_FEE;
+        alreadyDonate[donator] = true;
         donators.push(donator);
 
-        emit Donated(donator, appBatch, msg.value);
+        emit Donated(donator, amount);
     }
 
     // donate this contract
-    function donateContract()
-        external
-        payable
-        onlyInStatus(ScholarshipStatus.OpenForApplications)
-    {
-        emit DebugDonateCalled(msg.sender, msg.value);
-        if (msg.value < MINIMAL_DONATION) revert NotInMinimalAmount();
-        if (alreadyDonate[appBatch][msg.sender]) revert OnlyDonateOnce();
+    function donateContract(
+        uint256 amount
+    ) external onlyInStatus(ScholarshipStatus.OpenForApplications) {
+        emit DebugDonateCalled(msg.sender, amount);
+        
+        if (amount < MINIMAL_DONATION) revert NotInMinimalAmount();
+        if (alreadyDonate[msg.sender]) revert OnlyDonateOnce();
+        
+        // Check if sender has enough tokens
+        if (donationToken.balanceOf(msg.sender) < amount) {
+            revert InsufficientTokenBalance();
+        }
+        
+        // Check if contract has enough allowance
+        if (donationToken.allowance(msg.sender, address(this)) < amount) {
+            revert InsufficientAllowance();
+        }
+        
+        // Transfer tokens from sender to this contract
+        bool success = donationToken.transferFrom(msg.sender, address(this), amount);
+        if (!success) {
+            revert TokenTransferFailed();
+        }
 
-        stackedToken += msg.value - TRANSACTION_FEE;
-        alreadyDonate[appBatch][msg.sender] = true;
+        stackedToken += amount - TRANSACTION_FEE;
+        alreadyDonate[msg.sender] = true;
         donators.push(msg.sender);
 
-        emit Donated(msg.sender, appBatch, msg.value);
+        emit Donated(msg.sender, amount);
     }
 
     function getDonators() external view returns (address[] memory) {
@@ -134,40 +171,35 @@ contract ScholarshipProgram is
         return appStatus;
     }
 
-    function getAppBatch() external view returns (uint256) {
-        return appBatch;
-    }
-
     function createTemplateMilestone(
         MilestoneInput calldata milestoneInput
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _addMilestoneTemplate(
-            appBatch,
             milestoneInput.price,
             milestoneInput.metadata
         );
     }
 
-    // exixting fc
+    // existing functions
     function startApplication(
         uint256 _applicantTarget
     ) external onlyRole(OPEN_ROLE) {
         _openBatch();
-        applicantTarget[appBatch] = _applicantTarget;
+        applicantTarget = _applicantTarget;
         targetApplicant = _applicantTarget;
-        emit BatchStarted(appBatch, _applicantTarget);
+        emit BatchStarted(_applicantTarget);
     }
 
     function openVote() external onlyRole(OPEN_VOTE_ROLE) {
-        if (applicantSize[appBatch] < applicantTarget[appBatch])
+        if (applicantSize < applicantTarget)
             revert ApplicantNotEnough();
         _openVote();
-        emit VotingStarted(appBatch);
+        emit VotingStarted();
     }
 
     function closeBatch() external onlyRole(CLOSE_ROLE) {
         _closeBatch();
-        emit VotingCompleted(appBatch);
+        emit VotingCompleted();
     }
 
     function openDonation() external onlyRole(OPEN_DONATION_ROLE) {
@@ -178,29 +210,25 @@ contract ScholarshipProgram is
         _closeDonation();
     }
 
-    function withrawMilestone(uint256 batch, uint256 id) external nonReentrant {
-        Milestone storage _mile = milestones[batch][id];
+    function withrawMilestone(uint256 id) external nonReentrant {
+        Milestone storage _mile = milestones[id];
         if (
-            addressToApplicants[batch][_mile.applicant].voteCount <
-            quorumVote[batch]
+            addressToApplicants[_mile.applicant].voteCount <
+            quorumVote
         ) revert CannotWithdrawNotInQuorum();
-        _withDrawMilestone(batch, id);
-        emit MilestoneWithdrawed(id, batch, msg.sender);
+        _withDrawMilestone(id);
+        emit MilestoneWithdrawed(id, msg.sender);
     }
 
     function getApplicants() external view returns (address[] memory) {
-        return batchApplicants[appBatch];
+        return batchApplicants;
     }
 
     function getBalance() external view returns (uint256) {
-        return address(this).balance;
+        return donationToken.balanceOf(address(this));
     }
 
-    function isCanWithdraw(
-        uint batch
-    ) external view returns (bool) {
-        return addressToApplicants[batch][msg.sender].voteCount > quorumVote[batch];
+    function isCanWithdraw() external view returns (bool) {
+        return addressToApplicants[msg.sender].voteCount >= quorumVote;
     }
-
-    receive() external payable {}
 }

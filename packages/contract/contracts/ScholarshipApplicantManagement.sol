@@ -6,21 +6,21 @@ import {ScholarshipMilestoneManagement} from "./ScholarshipMilestoneManagment.so
 import {MilestoneInput} from "./ScholarshipStruct.sol";
 
 contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
-    mapping(uint => mapping(address => Applicant)) addressToApplicants;
-    mapping(uint => address[]) internal batchApplicants;
-    mapping(uint => mapping(address => bool)) isAlreadyVote;
-    mapping(uint => uint) public applicantSize;
+    mapping(address => Applicant) addressToApplicants;
+    address[] internal batchApplicants;
+    mapping(address => bool) isAlreadyVote;
+    uint public applicantSize;
 
     error AlreadyApply();
     error OnlyValidApplicant();
     error AlreadyVote();
 
     function getIsAlreadyVote(address voter_) public view returns (bool) {
-        return isAlreadyVote[appBatch][voter_];
+        return isAlreadyVote[voter_];
     }
 
     function getApplicantSize() public view returns (uint) {
-        return applicantSize[appBatch];
+        return applicantSize;
     }
 
     function _addApplicant(
@@ -29,13 +29,13 @@ contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
     ) internal {
         if (getApplicant(_applicantAddress).applicantAddress != address(0x0))
             revert AlreadyApply();
-        addressToApplicants[appBatch][_applicantAddress] = Applicant({
+        addressToApplicants[_applicantAddress] = Applicant({
             applicantAddress: _applicantAddress,
             voteCount: 0
         });
 
-        batchApplicants[appBatch].push(_applicantAddress);
-        applicantSize[appBatch]++;
+        batchApplicants.push(_applicantAddress);
+        applicantSize++;
         _addMilestones(_applicantAddress, milestones_);
     }
 
@@ -44,14 +44,14 @@ contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
         address _applicant
     ) internal onlyValidApplicant(_applicant) {
         if (getIsAlreadyVote(_voter)) revert AlreadyVote();
-        addressToApplicants[appBatch][_applicant].voteCount++;
-        isAlreadyVote[appBatch][_voter] = true;
+        addressToApplicants[_applicant].voteCount++;
+        isAlreadyVote[_voter] = true;
     }
 
     function getApplicant(
         address _applicantAddress
     ) public view returns (Applicant memory) {
-        return addressToApplicants[appBatch][_applicantAddress];
+        return addressToApplicants[_applicantAddress];
     }
 
     function _onlyValidApplicant(address _applicantAddress) internal view {
@@ -69,14 +69,14 @@ contract ScholarshipApplicantManagement is ScholarshipMilestoneManagement {
         view
         returns (address[] memory, uint[] memory)
     {
-        uint size = batchApplicants[appBatch].length;
+        uint size = batchApplicants.length;
         address[] memory addresses = new address[](size);
         uint[] memory votes = new uint[](size);
 
         for (uint i = 0; i < size; i++) {
-            address applicant = batchApplicants[appBatch][i];
+            address applicant = batchApplicants[i];
             addresses[i] = applicant;
-            votes[i] = addressToApplicants[appBatch][applicant].voteCount;
+            votes[i] = addressToApplicants[applicant].voteCount;
         }
 
         return (addresses, votes);

@@ -3,16 +3,19 @@ pragma solidity ^0.8.20;
 
 import {ScholarshipBatchManagement} from "./ScholarshipBatchManagement.sol";
 import {Milestone, MilestoneTemplate, MilestoneType, MilestoneInput} from "./ScholarshipStruct.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
-    mapping(uint => mapping(uint => Milestone)) milestones;
-    mapping(uint => uint) nextMilestone;
-    mapping(uint batchId => uint) nextMilestoneTemplate;
-    mapping(uint batchId => mapping(uint templateId => MilestoneTemplate))
-        public milestoneTemplates;
+    mapping(uint => Milestone) milestones;
+    uint nextMilestone;
+    uint nextMilestoneTemplate;
+    mapping(uint templateId => MilestoneTemplate) public milestoneTemplates;
+    
+    // ERC20 token reference
+    IERC20 public donationToken;
 
     event AddMilestone(uint indexed id, uint price, address applicant);
     event MilestoneTemplateAdded(
-        uint indexed batchId,
         uint indexed templateId,
         uint price,
         string metadata
@@ -23,13 +26,14 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     error DonationIsNotEnough();
     error ArrayCannotEmpty();
     error WithdrawMilestoneOnlyOnce();
+    error TokenTransferFailed();
 
     function getNextMilestone() public view returns (uint) {
-        return nextMilestone[appBatch];
+        return nextMilestone;
     }
 
     function _addNextMilestone() private {
-        nextMilestone[appBatch]++;
+        nextMilestone++;
     }
 
     function _onlyValidMilestone(uint id) internal view {
@@ -43,12 +47,11 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         view
         returns (MilestoneTemplate[] memory)
     {
-        uint count = nextMilestoneTemplate[appBatch];
+        uint count = nextMilestoneTemplate;
         MilestoneTemplate[] memory templates = new MilestoneTemplate[](count);
 
         for (uint i = 0; i < count; ) {
-            // nextMilestoneTemplate - i
-            templates[i] = milestoneTemplates[appBatch][i];
+            templates[i] = milestoneTemplates[i];
             unchecked {
                 ++i;
             }
@@ -63,19 +66,18 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     }
 
     function _addMilestoneTemplate(
-        uint batchId,
         uint price,
         string calldata metadataCID
     ) internal {
-        uint currentId = nextMilestoneTemplate[batchId];
-        milestoneTemplates[batchId][currentId] = MilestoneTemplate({
+        uint currentId = nextMilestoneTemplate;
+        milestoneTemplates[currentId] = MilestoneTemplate({
             price: price,
             metadata: metadataCID
         });
 
-        nextMilestoneTemplate[batchId]++;
+        nextMilestoneTemplate++;
 
-        emit MilestoneTemplateAdded(batchId, currentId, price, metadataCID);
+        emit MilestoneTemplateAdded(currentId, price, metadataCID);
     }
 
     function _addMilestones(
@@ -89,7 +91,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
             string memory metadata;
 
             if (inputData.mType == MilestoneType.TEMPLATE) {
-                MilestoneTemplate memory tmpl = milestoneTemplates[appBatch][
+                MilestoneTemplate memory tmpl = milestoneTemplates[
                     inputData.templateId
                 ];
                 price = tmpl.price;
@@ -100,7 +102,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
             }
             _addNextMilestone();
             uint currentMilestoneId = getNextMilestone();
-            milestones[appBatch][currentMilestoneId] = Milestone({
+            milestones[currentMilestoneId] = Milestone({
                 price: price,
                 metadata: metadata,
                 applicant: applicant_,
@@ -111,31 +113,35 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         }
     }
 
-    function _withDrawMilestone(uint batch, uint _id) internal {
-        if (batch == 0 || batch > appBatch) revert OnlyValidMilestone();
-        if (nextMilestone[batch] == 0 || _id > nextMilestone[batch])
+    function _withDrawMilestone(uint _id) internal {
+        if (nextMilestone == 0 || _id > nextMilestone)
             revert OnlyValidMilestone();
-        Milestone memory milestone = milestones[batch][_id];
+        Milestone storage milestone = milestones[_id];
         if (milestone.applicant != msg.sender)
             revert OnlyApplicantCanWithdraw();
         if (milestone.isWithdrawed) revert WithdrawMilestoneOnlyOnce();
-        milestones[batch][_id].isWithdrawed = true;
-        (bool isSuccess, ) = milestone.applicant.call{value: milestone.price}(
-            ""
-        );
-        if (!isSuccess) revert DonationIsNotEnough();
+
+        milestone.isWithdrawed = true;
+        uint amount = milestone.price;
+        address recipient = milestone.applicant;
+
+        // Check if contract has enough tokens
+        if (donationToken.balanceOf(address(this)) < amount) {
+            milestone.isWithdrawed = false;
+            revert DonationIsNotEnough();
+        }
+
+        // Transfer ERC20 tokens 
+        bool success = donationToken.transfer(recipient, amount);
+        if (!success) {
+            milestone.isWithdrawed = false;
+            revert TokenTransferFailed();
+        }
     }
 
     function getMilestone(
-        uint batch,
         uint id
     ) public view returns (Milestone memory) {
-        return milestones[batch][id];
-    }
-
-    function _onlyValidMilestone(uint batch, uint id) internal view {
-        if (batch == 0 || batch > appBatch) revert OnlyValidMilestone();
-        if (nextMilestone[batch] == 0 || id >= nextMilestone[batch])
-            revert OnlyValidMilestone();
+        return milestones[id];
     }
 }

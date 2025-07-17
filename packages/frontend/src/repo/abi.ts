@@ -13,6 +13,14 @@ export const scholarshipAbi = [
         internalType: "address",
         name: "_studentNFTAddress",
         type: "address",
+      }, {
+        internalType: "address",
+        name: "_donationTokenAddress",
+        type: "address",
+      }, {
+        internalType: "uint8",
+        name: "_tokenDecimals",
+        type: "uint8",
       }
     ],
     stateMutability: "nonpayable",
@@ -30,6 +38,10 @@ export const scholarshipAbi = [
     name: "FailedDeployment",
     type: "error",
   }, {
+    inputs: [],
+    name: "InsufficientAllowance",
+    type: "error",
+  }, {
     inputs: [
       {
         internalType: "uint256",
@@ -42,6 +54,10 @@ export const scholarshipAbi = [
       }
     ],
     name: "InsufficientBalance",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "InsufficientTokenBalance",
     type: "error",
   }, {
     inputs: [],
@@ -86,6 +102,10 @@ export const scholarshipAbi = [
   }, {
     inputs: [],
     name: "ReentrancyGuardReentrantCall",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "TokenTransferFailed",
     type: "error",
   }, {
     anonymous: false,
@@ -222,6 +242,28 @@ export const scholarshipAbi = [
   }, {
     inputs: [
       {
+        internalType: "address",
+        name: "",
+        type: "address",
+      }, {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    name: "appliedContractsByUser",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
         internalType: "uint256",
         name: "id",
         type: "uint256",
@@ -259,10 +301,6 @@ export const scholarshipAbi = [
       {
         internalType: "uint256",
         name: "id",
-        type: "uint256",
-      }, {
-        internalType: "uint256",
-        name: "batch",
         type: "uint256",
       }, {
         internalType: "uint256",
@@ -326,11 +364,27 @@ export const scholarshipAbi = [
         internalType: "uint256",
         name: "id",
         type: "uint256",
+      }, {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       }
     ],
     name: "donateToProgram",
     outputs: [],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [],
+    name: "donationToken",
+    outputs: [
+      {
+        internalType: "contract IERC20",
+        name: "",
+        type: "address",
+      }
+    ],
+    stateMutability: "view",
     type: "function",
   }, {
     inputs: [],
@@ -389,6 +443,24 @@ export const scholarshipAbi = [
         internalType: "address[]",
         name: "",
         type: "address[]",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      }
+    ],
+    name: "getAppliedPrograms",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
       }
     ],
     stateMutability: "view",
@@ -568,15 +640,27 @@ export const scholarshipAbi = [
     stateMutability: "view",
     type: "function",
   }, {
+    inputs: [],
+    name: "getTokenInfo",
+    outputs: [
+      {
+        internalType: "address",
+        name: "tokenAddress",
+        type: "address",
+      }, {
+        internalType: "uint8",
+        name: "decimals",
+        type: "uint8",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
     inputs: [
       {
         internalType: "string",
         name: "uri",
         type: "string",
-      }, {
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
       }
     ],
     name: "mintDonaterNFT",
@@ -589,10 +673,6 @@ export const scholarshipAbi = [
         internalType: "string",
         name: "uri",
         type: "string",
-      }, {
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
       }
     ],
     name: "mintStudentNFT",
@@ -684,6 +764,18 @@ export const scholarshipAbi = [
     stateMutability: "nonpayable",
     type: "function",
   }, {
+    inputs: [],
+    name: "tokenDecimals",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
     inputs: [
       {
         internalType: "address",
@@ -762,6 +854,14 @@ export const scholarshipProgramAbi = [
     type: "error",
   }, {
     inputs: [],
+    name: "InsufficientAllowance",
+    type: "error",
+  }, {
+    inputs: [],
+    name: "InsufficientTokenBalance",
+    type: "error",
+  }, {
+    inputs: [],
     name: "InvalidInitialization",
     type: "error",
   }, {
@@ -820,6 +920,10 @@ export const scholarshipProgramAbi = [
     type: "error",
   }, {
     inputs: [],
+    name: "TokenTransferFailed",
+    type: "error",
+  }, {
+    inputs: [],
     name: "WithdrawMilestoneOnlyOnce",
     type: "error",
   }, {
@@ -852,11 +956,6 @@ export const scholarshipProgramAbi = [
         internalType: "address",
         name: "applicant",
         type: "address",
-      }, {
-        indexed: false,
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
       }
     ],
     name: "ApplicantApplied",
@@ -865,11 +964,6 @@ export const scholarshipProgramAbi = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
-      }, {
         indexed: false,
         internalType: "uint256",
         name: "applicantTarget",
@@ -906,11 +1000,6 @@ export const scholarshipProgramAbi = [
       }, {
         indexed: false,
         internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
-      }, {
-        indexed: false,
-        internalType: "uint256",
         name: "amount",
         type: "uint256",
       }
@@ -933,11 +1022,6 @@ export const scholarshipProgramAbi = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
-      }, {
         indexed: true,
         internalType: "uint256",
         name: "templateId",
@@ -963,11 +1047,6 @@ export const scholarshipProgramAbi = [
         indexed: true,
         internalType: "uint256",
         name: "id",
-        type: "uint256",
-      }, {
-        indexed: true,
-        internalType: "uint256",
-        name: "batch",
         type: "uint256",
       }, {
         indexed: false,
@@ -1057,37 +1136,18 @@ export const scholarshipProgramAbi = [
         internalType: "address",
         name: "applicant",
         type: "address",
-      }, {
-        indexed: false,
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
       }
     ],
     name: "Voted",
     type: "event",
   }, {
     anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
-      }
-    ],
+    inputs: [],
     name: "VotingCompleted",
     type: "event",
   }, {
     anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
-      }
-    ],
+    inputs: [],
     name: "VotingStarted",
     type: "event",
   }, {
@@ -1192,18 +1252,6 @@ export const scholarshipProgramAbi = [
     type: "function",
   }, {
     inputs: [],
-    name: "appBatch",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      }
-    ],
-    stateMutability: "view",
-    type: "function",
-  }, {
-    inputs: [],
     name: "appStatus",
     outputs: [
       {
@@ -1215,13 +1263,7 @@ export const scholarshipProgramAbi = [
     stateMutability: "view",
     type: "function",
   }, {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      }
-    ],
+    inputs: [],
     name: "applicantSize",
     outputs: [
       {
@@ -1347,17 +1389,39 @@ export const scholarshipProgramAbi = [
         internalType: "address",
         name: "donator",
         type: "address",
+      }, {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       }
     ],
     name: "donate",
     outputs: [],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
+    type: "function",
+  }, {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      }
+    ],
+    name: "donateContract",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   }, {
     inputs: [],
-    name: "donateContract",
-    outputs: [],
-    stateMutability: "payable",
+    name: "donationToken",
+    outputs: [
+      {
+        internalType: "contract IERC20",
+        name: "",
+        type: "address",
+      }
+    ],
+    stateMutability: "view",
     type: "function",
   }, {
     inputs: [
@@ -1408,18 +1472,6 @@ export const scholarshipProgramAbi = [
         internalType: "struct MilestoneTemplate[]",
         name: "",
         type: "tuple[]",
-      }
-    ],
-    stateMutability: "view",
-    type: "function",
-  }, {
-    inputs: [],
-    name: "getAppBatch",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
       }
     ],
     stateMutability: "view",
@@ -1535,10 +1587,6 @@ export const scholarshipProgramAbi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "batch",
-        type: "uint256",
-      }, {
-        internalType: "uint256",
         name: "id",
         type: "uint256",
       }
@@ -1607,6 +1655,18 @@ export const scholarshipProgramAbi = [
     stateMutability: "view",
     type: "function",
   }, {
+    inputs: [],
+    name: "getTokenBalance",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
     inputs: [
       {
         internalType: "bytes32",
@@ -1666,6 +1726,14 @@ export const scholarshipProgramAbi = [
         internalType: "uint256",
         name: "_endDate",
         type: "uint256",
+      }, {
+        internalType: "address",
+        name: "_tokenAddress",
+        type: "address",
+      }, {
+        internalType: "uint8",
+        name: "_tokenDecimals",
+        type: "uint8",
       }
     ],
     name: "initialize",
@@ -1685,13 +1753,7 @@ export const scholarshipProgramAbi = [
     stateMutability: "view",
     type: "function",
   }, {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "batch",
-        type: "uint256",
-      }
-    ],
+    inputs: [],
     name: "isCanWithdraw",
     outputs: [
       {
@@ -1705,10 +1767,6 @@ export const scholarshipProgramAbi = [
   }, {
     inputs: [
       {
-        internalType: "uint256",
-        name: "batchId",
-        type: "uint256",
-      }, {
         internalType: "uint256",
         name: "templateId",
         type: "uint256",
@@ -1851,6 +1909,18 @@ export const scholarshipProgramAbi = [
     stateMutability: "view",
     type: "function",
   }, {
+    inputs: [],
+    name: "tokenDecimals",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      }
+    ],
+    stateMutability: "view",
+    type: "function",
+  }, {
     inputs: [
       {
         internalType: "address",
@@ -1882,10 +1952,6 @@ export const scholarshipProgramAbi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "batch",
-        type: "uint256",
-      }, {
-        internalType: "uint256",
         name: "id",
         type: "uint256",
       }
@@ -1894,8 +1960,5 @@ export const scholarshipProgramAbi = [
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
-  }, {
-    stateMutability: "payable",
-    type: "receive",
   }
 ] as const

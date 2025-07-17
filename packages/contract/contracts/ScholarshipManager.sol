@@ -8,6 +8,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {MilestoneInput, ProgramSummary} from "./ScholarshipStruct.sol";
 import {ScholarshipNFTMintingManager} from "./ScholarshipNFTMintingManager.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ScholarshipManager is
     ReentrancyGuard,
@@ -19,18 +20,30 @@ contract ScholarshipManager is
     address public immutable programImplementation;
     // contract program by user address
     mapping(address => address[]) public createdContractsByUser;
+    mapping(address => uint[]) public appliedContractsByUser;
+    
+    // ERC20 token configuration
+    IERC20 public donationToken;
+    uint8 public tokenDecimals;
 
     constructor(
         address _programImplementation,
         address _donaterNFTAddress,
-        address _studentNFTAddress
+        address _studentNFTAddress,
+        address _donationTokenAddress,
+        uint8 _tokenDecimals
     ) ScholarshipNFTMintingManager(_donaterNFTAddress, _studentNFTAddress) {
         programImplementation = _programImplementation;
+        donationToken = IERC20(_donationTokenAddress);
+        tokenDecimals = _tokenDecimals;
     }
 
     error ProgramNotFound();
     error NotAcceptingDonations();
     error DonationFailed();
+    error TokenTransferFailed();
+    error InsufficientTokenBalance();
+    error InsufficientAllowance();
 
     event ProgramCreated(
         uint256 indexed id,
@@ -83,7 +96,9 @@ contract ScholarshipManager is
             msg.sender,
             target,
             start,
-            end
+            end,
+            address(donationToken),
+            tokenDecimals
         );
 
         programs[nextProgramId] = ScholarshipProgramDetails({
@@ -120,13 +135,36 @@ contract ScholarshipManager is
         return programs[id];
     }
 
-    function donateToProgram(uint256 id) external payable {
+    function donateToProgram(uint256 id, uint256 amount) external {
         ScholarshipProgram program = _getProgram(id);
         if (program.appStatus() != ScholarshipStatus.OpenForApplications)
             revert NotAcceptingDonations();
-        try program.donate{value: msg.value}(msg.sender) {
-            _setAllowedDonaterToMint(msg.sender, program.appBatch());
-            emit Donated(id, msg.sender, msg.value);
+            
+        // Check if sender has enough tokens
+        if (donationToken.balanceOf(msg.sender) < amount) {
+            revert InsufficientTokenBalance();
+        }
+        
+        // Check if contract has enough allowance
+        if (donationToken.allowance(msg.sender, address(this)) < amount) {
+            revert InsufficientAllowance();
+        }
+        
+        // Transfer tokens from sender to this contract temporarily
+        bool success = donationToken.transferFrom(msg.sender, address(this), amount);
+        if (!success) {
+            revert TokenTransferFailed();
+        }
+        
+        // Approve the program contract to spend tokens
+        success = donationToken.approve(address(program), amount);
+        if (!success) {
+            revert TokenTransferFailed();
+        }
+        
+        try program.donate(msg.sender, amount) {
+            _setAllowedDonaterToMint(msg.sender);
+            emit Donated(id, msg.sender, amount);
         } catch {
             revert DonationFailed();
         }
@@ -136,9 +174,9 @@ contract ScholarshipManager is
         uint256 id,
         MilestoneInput[] calldata milestone
     ) external {
-        ScholarshipProgram program = _getProgram(id);
         _getProgram(id).applyProgram(msg.sender, milestone);
-        _setAllowedStudentToMint(msg.sender, program.appBatch());
+        _setAllowedStudentToMint(msg.sender);
+        appliedContractsByUser[msg.sender].push(id);
         emit Applied(id, msg.sender);
     }
 
@@ -148,7 +186,7 @@ contract ScholarshipManager is
 
     function getContractBalance(uint256 id) external view returns (uint256) {
         ScholarshipProgram program = _getProgram(id);
-        return address(program).balance;
+        return program.getBalance();
     }
 
     function getAllPrograms()
@@ -167,10 +205,9 @@ contract ScholarshipManager is
 
     function claimMilestone(
         uint256 id,
-        uint256 batch,
         uint256 milestone
     ) external {
-        _getProgram(id).withrawMilestone(batch, milestone);
+        _getProgram(id).withrawMilestone(milestone);
         emit MilestoneClaimed(id, milestone, msg.sender);
     }
 
@@ -190,7 +227,6 @@ contract ScholarshipManager is
         return _getProgram(id).getAppStatus();
     }
 
-    // jangan dipakai
     function getOpenProgramsSummaryPaged(
         uint256 offset,
         uint256 limit
@@ -221,5 +257,14 @@ contract ScholarshipManager is
             result[j] = temp[j];
         }
         return result;
+    }
+    
+    // Utility function to get token info
+    function getTokenInfo() external view returns (address tokenAddress, uint8 decimals) {
+        return (address(donationToken), tokenDecimals);
+    }
+
+    function getAppliedPrograms(address user) external view returns (uint256[] memory) {
+        return appliedContractsByUser[user];
     }
 }
