@@ -125,7 +125,7 @@ contract ScholarshipManager is
         if (program.appStatus() != ScholarshipStatus.OpenForApplications)
             revert NotAcceptingDonations();
         try program.donate{value: msg.value}(msg.sender) {
-            _setAllowedDonaterToMint(msg.sender, program.appBatch());
+            _setAllowedDonaterToMint(msg.sender);
             emit Donated(id, msg.sender, msg.value);
         } catch {
             revert DonationFailed();
@@ -136,9 +136,8 @@ contract ScholarshipManager is
         uint256 id,
         MilestoneInput[] calldata milestone
     ) external {
-        ScholarshipProgram program = _getProgram(id);
         _getProgram(id).applyProgram(msg.sender, milestone);
-        _setAllowedStudentToMint(msg.sender, program.appBatch());
+        _setAllowedStudentToMint(msg.sender);
         emit Applied(id, msg.sender);
     }
 
@@ -167,10 +166,9 @@ contract ScholarshipManager is
 
     function claimMilestone(
         uint256 id,
-        uint256 batch,
         uint256 milestone
     ) external {
-        _getProgram(id).withrawMilestone(batch, milestone);
+        _getProgram(id).withrawMilestone(milestone);
         emit MilestoneClaimed(id, milestone, msg.sender);
     }
 

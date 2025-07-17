@@ -7,7 +7,7 @@ contract ScholarshipStorageManagement is ScholarshipApplicantManagement {
     uint public constant TRANSACTION_FEE = 0.01 ether;
     uint public constant MINIMAL_DONATION = 0.03 ether;
     uint public stackedToken;
-    mapping(uint => uint) applicantTarget;
-    mapping(uint => uint) quorumVote;
-    mapping(uint => mapping(address => bool)) alreadyDonate;
+    uint applicantTarget;
+    uint quorumVote;
+    mapping(address => bool) alreadyDonate;
 }

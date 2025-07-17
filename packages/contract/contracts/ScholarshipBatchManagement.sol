@@ -5,12 +5,10 @@ import {ScholarshipStatus} from "./ScholarshipStruct.sol";
 
 contract ScholarshipBatchManagement {
     ScholarshipStatus public appStatus;
-    uint public appBatch;
 
     error OnlyInStatus(ScholarshipStatus status);
 
     function _openBatch() internal onlyInStatus(ScholarshipStatus.Pending) {
-        appBatch += 1;
         _changeStatus(ScholarshipStatus.OpenForApplications);
     }
 
