@@ -3,11 +3,16 @@ pragma solidity ^0.8.20;
 
 import {ScholarshipBatchManagement} from "./ScholarshipBatchManagement.sol";
 import {Milestone, MilestoneTemplate, MilestoneType, MilestoneInput} from "./ScholarshipStruct.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     mapping(uint => Milestone) milestones;
     uint nextMilestone;
     uint nextMilestoneTemplate;
     mapping(uint templateId => MilestoneTemplate) public milestoneTemplates;
+    
+    // ERC20 token reference
+    IERC20 public donationToken;
 
     event AddMilestone(uint indexed id, uint price, address applicant);
     event MilestoneTemplateAdded(
@@ -21,6 +26,7 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     error DonationIsNotEnough();
     error ArrayCannotEmpty();
     error WithdrawMilestoneOnlyOnce();
+    error TokenTransferFailed();
 
     function getNextMilestone() public view returns (uint) {
         return nextMilestone;
@@ -45,7 +51,6 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
         MilestoneTemplate[] memory templates = new MilestoneTemplate[](count);
 
         for (uint i = 0; i < count; ) {
-            // nextMilestoneTemplate - i
             templates[i] = milestoneTemplates[i];
             unchecked {
                 ++i;
@@ -111,15 +116,27 @@ contract ScholarshipMilestoneManagement is ScholarshipBatchManagement {
     function _withDrawMilestone(uint _id) internal {
         if (nextMilestone == 0 || _id > nextMilestone)
             revert OnlyValidMilestone();
-        Milestone memory milestone = milestones[_id];
+        Milestone storage milestone = milestones[_id];
         if (milestone.applicant != msg.sender)
             revert OnlyApplicantCanWithdraw();
         if (milestone.isWithdrawed) revert WithdrawMilestoneOnlyOnce();
-        milestones[_id].isWithdrawed = true;
-        (bool isSuccess, ) = milestone.applicant.call{value: milestone.price}(
-            ""
-        );
-        if (!isSuccess) revert DonationIsNotEnough();
+
+        milestone.isWithdrawed = true;
+        uint amount = milestone.price;
+        address recipient = milestone.applicant;
+
+        // Check if contract has enough tokens
+        if (donationToken.balanceOf(address(this)) < amount) {
+            milestone.isWithdrawed = false;
+            revert DonationIsNotEnough();
+        }
+
+        // Transfer ERC20 tokens 
+        bool success = donationToken.transfer(recipient, amount);
+        if (!success) {
+            milestone.isWithdrawed = false;
+            revert TokenTransferFailed();
+        }
     }
 
     function getMilestone(

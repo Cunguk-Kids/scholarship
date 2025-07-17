@@ -4,6 +4,7 @@ import { keccak256, toHex } from "viem";
 export default buildModule("ScholarshipManagerModule", (m) => {
   const donaterNFT = m.contract("ScholarshipDonaterNFT");
   const studentNFT = m.contract("ScholarshipStudentNFT");
+  const mockUSDC = m.contract("MockUSDC");
 
   const programImplementation = m.contract("ScholarshipProgram");
 
@@ -11,6 +12,8 @@ export default buildModule("ScholarshipManagerModule", (m) => {
     programImplementation,
     donaterNFT,
     studentNFT,
+    mockUSDC,
+    6,
   ]);
 
   const minterRole = keccak256(toHex("MINTER_ROLE"));
@@ -18,5 +21,5 @@ export default buildModule("ScholarshipManagerModule", (m) => {
   m.call(donaterNFT, "grantRole", [minterRole, manager]);
   m.call(studentNFT, "grantRole", [minterRole, manager]);
 
-  return { donaterNFT, studentNFT, manager };
+  return { donaterNFT, studentNFT, manager, mockUSDC, programImplementation };
 });
