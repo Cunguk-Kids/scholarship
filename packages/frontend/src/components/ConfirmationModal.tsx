@@ -4,9 +4,21 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: () => void;
+  title: string;
+  desc: string;
+  primaryLabel: string;
+  secondaryLabel: string;
 };
 
-export const ConfirmationModal = ({ isOpen, onClose, onSubmit }: Props) => {
+export const ConfirmationModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  title = "You're Ready to Submit!",
+  desc = "By submitting, you agree that your data will be stored securely and transparently for the purpose of DAO voting and milestone tracking.",
+  primaryLabel,
+  secondaryLabel,
+}: Props) => {
   if (!isOpen) return null;
 
   return (
@@ -15,22 +27,24 @@ export const ConfirmationModal = ({ isOpen, onClose, onSubmit }: Props) => {
         <div className="flex flex-col items-start gap-5 self-stretch">
           <img src="/icons/warning-icon.svg" alt="warning" />
           <div className="flex flex-col items-start gap-2 self-stretch">
-            <h3 className="text-xl font-paytone">You're Ready to Submit!</h3>
-            <p className="text-sm">
-              By submitting, you agree that your data will be stored securely
-              and transparently for the purpose of DAO voting and milestone
-              tracking.
-            </p>
+            <h3 className="text-xl font-paytone">{title}</h3>
+            <p className="text-sm">{desc}</p>
           </div>
         </div>
-        <div className="flex justify-center items-center gap-6 self-stretch">
+        <div className="flex justify-between items-center gap-6 self-stretch w-full">
           <Button
-            label="Review Again"
+            label={secondaryLabel}
             onClick={onClose}
             size="small"
             variant="secondary"
+            className="w-full"
           />
-          <Button label="Submit" onClick={onSubmit} size="small" />
+          <Button
+            label={primaryLabel}
+            onClick={onSubmit}
+            size="small"
+            className="w-full"
+          />
         </div>
       </div>
     </div>
