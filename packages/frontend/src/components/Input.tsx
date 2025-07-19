@@ -12,6 +12,8 @@ type InputProps = {
     | "upload"
     | "text"
     | "input"
+    | "date-simple"
+    | "date"
     | "dropdown"
     | "slider-token"
     | "radio-group";
@@ -96,6 +98,28 @@ export const Input: React.FC<InputProps> = ({
       {type === "input" && (
         <input
           type="text"
+          className={inputClass}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+        />
+      )}
+
+      {/* DATE SIMPLE */}
+      {type === "date-simple" && (
+        <input
+          type="text"
+          className={inputClass}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+        />
+      )}
+
+      {/* DATE */}
+      {type === "date" && (
+        <input
+          type="date"
           className={inputClass}
           placeholder={placeholder}
           value={value}

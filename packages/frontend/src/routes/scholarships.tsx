@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 // import { Button } from "../components/Button";
 // import { Tabbing } from "../components/Tabbing";
 // import { useGetPrograms } from "@/features/scholarship/hooks/get-programs";
-import { ScholarshipsPage } from "@/features/scholarship/pages/ScholarshipsPage";
+// import { ScholarshipsPage } from "@/features/scholarship/pages/ScholarshipsPage";
+import { ScholarshipsPage } from "@/features/v2/scholarship/pages/index";
 
 export const Route = createFileRoute("/scholarships")({
   component: ScholarshipsPage,
