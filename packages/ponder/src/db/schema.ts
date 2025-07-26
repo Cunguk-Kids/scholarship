@@ -90,6 +90,6 @@ export const votes = pgTable("votes", {
 export const indexedBlocks = pgTable("indexed_blocks", {
   id: uuid('id').defaultRandom().primaryKey(),
   eventName: varchar("event_name", { length: 255 }),
-  blockNumber: integer("block_number"),
+  blockNumber: integer("block_number").unique(),
   timestamp: timestamp("timestamp", { withTimezone: true }),
 });
