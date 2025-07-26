@@ -3,10 +3,12 @@ import { Arrow } from "./Arrow";
 import { Input } from "./Input";
 import { ConfirmationModal } from "./ConfirmationModal";
 
-interface CardFormProps {
+interface CardFormProps<T extends "applicant" | "provider"> {
   totalStep: number;
-  type: "provider" | "applicant";
-  onSubmit: (formData?: FormData | FormDataProvider) => void;
+  type: T;
+  onSubmit: (
+    formData: T extends "applicant" ? FormData : FormDataProvider
+  ) => void;
   onClose?: () => void;
 }
 
@@ -30,7 +32,7 @@ export type FormDataProvider = {
   recipientCount: number;
   totalFund: string;
   distributionMethod: string;
-  selectionMethod: string;
+  selectionMethod: "dao" | "jury" | "hybrid";
 };
 
 const createEmptyMilestone = (): MilestoneData => ({
@@ -39,12 +41,12 @@ const createEmptyMilestone = (): MilestoneData => ({
   amount: "",
 });
 
-export const CardForm = ({
+export const CardForm = <T extends "applicant" | "provider">({
   totalStep = 2,
-  onSubmit = (formData?: FormData | FormDataProvider) => {},
+  onSubmit,
   onClose = () => {},
-  type = "applicant",
-}: CardFormProps) => {
+  type,
+}: CardFormProps<T>) => {
   const [step, setStep] = useState(1);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -404,6 +406,7 @@ export const CardForm = ({
         onClose={() => setShowSubmitModal(false)}
         onSubmit={() => {
           setShowSubmitModal(false);
+          // @ts-expect-error we know what we're doing
           onSubmit(type === "applicant" ? formData : formDataProvider);
           console.log(
             "submit",

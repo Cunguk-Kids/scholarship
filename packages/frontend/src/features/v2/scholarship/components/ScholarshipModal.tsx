@@ -1,6 +1,6 @@
 import { CardForm, type FormDataProvider } from "@/components/CardForm";
-import { useCreateProgram } from "@/features/scholarship/hooks/create-program";
 import { appStateInjection } from "@/hooks/inject/app-state";
+import { useCreateProgramV2 } from "../hooks/create-program";
 
 type Props = {
   isOpen: boolean;
@@ -11,29 +11,20 @@ export const ScholarshipModal = ({ isOpen, onClose }: Props) => {
   const {
     loading: { setLoading },
   } = appStateInjection.use();
-  const [{ mutate, isPending }] = useCreateProgram();
+  const { mutate } = useCreateProgramV2();
 
   if (!isOpen) return null;
 
-  const handleSubmit = (formData?: FormDataProvider) => {
+  const handleSubmit = (formData: FormDataProvider) => {
     // setLoading({ type: "proccessing" });
-    mutate(
-      {
-        title: formData.scholarshipName,
-        description: formData.description,
-        start: new Date().getTime(),
-        end: new Date(formData?.deadline).getTime(),
-        target: formData.recipientCount,
+    mutate(formData, {
+      onSuccess: () => {
+        setLoading({ type: "success" });
       },
-      {
-        onSuccess: () => {
-          setLoading({ type: "success" });
-        },
-        onError: (error) => {
-          setLoading({ type: "error", message: "" + error });
-        },
-      }
-    );
+      onError: (error) => {
+        setLoading({ type: "error", message: "" + error.shortMessage });
+      },
+    });
   };
 
   return (
