@@ -9,7 +9,7 @@ export const programs = pgTable("programs", {
   programId: integer("program_id").unique(),
   name: varchar("name", { length: 255 }),
   creator: varchar("creator", { length: 255 }),
-  metadataCID: varchar("metadataCID", { length: 255 }),
+  metadataCID: varchar("metadata_cid", { length: 255 }),
   description: text("description"),
   startAt: timestamp("start_at", { mode: "string" }),
   endAt: timestamp("end_at", { mode: "string" }),
@@ -58,10 +58,15 @@ export const milestones = pgTable("milestones", {
   studentId: integer("student_id")
     .references(() => students.studentId)
   ,
+  programId: integer("program_id")
+    .references(() => programs.programId)
+  ,
   type: MilestoneTypeEnum("type"),
   description: text("description"),
   estimation: integer("estimation"),
   amount: integer("amount"),
+  metadataCID: varchar("metadata_cid", { length: 255 }),
+  proveCID: varchar("prove_cid", { length: 255 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 });

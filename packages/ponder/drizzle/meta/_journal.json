@@ -50,6 +50,13 @@
       "when": 1753553069788,
       "tag": "0006_green_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1753554371224,
+      "tag": "0007_moaning_wrecking_crew",
+      "breakpoints": true
     }
   ]
 }
