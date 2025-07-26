@@ -21,7 +21,7 @@ export const insertBlock = async ({ eventName, event }: InsertBlockArgs) => {
     blockNumber,
     timestamp,
   }).onConflictDoUpdate({
-    target: [indexedBlocks.eventName],
+    target: [indexedBlocks.blockNumber],
     set: {
       blockNumber,
       timestamp,

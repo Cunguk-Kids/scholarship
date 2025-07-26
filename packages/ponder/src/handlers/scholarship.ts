@@ -26,16 +26,13 @@ export const scholarship = () => {
   ponder.on("scholarship:ApplicantRegistered", async ({ event }) => {
     const { applicantAddress, programId, id } = event.args;
 
-    const exists = await db
-      .select()
-      .from(students)
-      .where(eq(students.studentId, Number(id)));
-
     await db.insert(students).values({
       programId: Number(programId),
       studentId: Number(id),
       studentAddress: String(applicantAddress),
     }).onConflictDoNothing();
+
+    await insertBlock({ event, eventName: "scholarship:ApplicantRegistered" });
 
     logger.info({ id }, " Student Created");
   });
@@ -59,6 +56,9 @@ export const scholarship = () => {
       studentId: student.studentId,
     }).onConflictDoNothing();
 
+    await insertBlock({ event, eventName: "scholarship:OnVoted" });
+
+
     logger.info({ voter }, " Voter Created");
   });
 
@@ -75,7 +75,6 @@ export const scholarship = () => {
       return;
     }
 
-
     await db.insert(milestones).values({
       amount: Number(amount),
       milestoneId: Number(id),
@@ -83,6 +82,11 @@ export const scholarship = () => {
       programId: Number(programId),
       metadataCID: metadataCID
     }).onConflictDoNothing();
+
+    await insertBlock({ event, eventName: "scholarship:MilestoneAdded" });
+
+    logger.info({ id }, " Milestones Created");
+
   });
 
   ponder.on("scholarship:WithdrawMilestone", async ({ event }) => {
@@ -98,6 +102,10 @@ export const scholarship = () => {
           eq(milestones.studentId, Number(applicantId))
         )
       );
+
+    await insertBlock({ event, eventName: "scholarship:WithdrawMilestone" });
+
+    logger.info({ applicantId, programId }, " Milestones Withdraw");
   });
 
   ponder.on("scholarship:SubmitMilestone", async ({ event }) => {
@@ -109,6 +117,10 @@ export const scholarship = () => {
         updatedAt: new Date(),
       })
       .where(eq(milestones.milestoneId, Number(milestoneId)));
+
+    await insertBlock({ event, eventName: "scholarship:SubmitMilestone" });
+
+    logger.info({ milestoneId, proveCID }, " Milestones Submited");
   });
 
 };
