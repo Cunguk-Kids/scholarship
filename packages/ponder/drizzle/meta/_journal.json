@@ -29,6 +29,27 @@
       "when": 1753548468507,
       "tag": "0003_black_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1753550574769,
+      "tag": "0004_plain_mesmero",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1753550639410,
+      "tag": "0005_lethal_mother_askani",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1753553069788,
+      "tag": "0006_green_black_tarantula",
+      "breakpoints": true
     }
   ]
 }

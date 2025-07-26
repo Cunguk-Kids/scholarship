@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, integer, numeric, timestamp, uuid, } from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, integer, numeric, timestamp, uuid, boolean, } from "drizzle-orm/pg-core";
 import { MilestoneAllocationEnum, MilestoneTypeEnum } from "./enums";
 
 export * from "./enums";
@@ -18,12 +18,15 @@ export const programs = pgTable("programs", {
   totalRecipients: varchar("total_recipients", { length: 255 }),
   totalFund: integer("total_fund"),
   milestoneType: MilestoneAllocationEnum("milestone_type_enum"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 });
 
 // Table Students
 export const students = pgTable("students", {
   id: uuid('id').defaultRandom().primaryKey(),
-  studentID: varchar("student_id").unique(),
+  studentId: integer("student_id").unique(),
+  studentAddress: varchar("student_address"),
   fullName: varchar("full_name", { length: 255 }),
   email: varchar("email", { length: 255 }),
   financialSituation: text("financial_situation"),
@@ -31,28 +34,36 @@ export const students = pgTable("students", {
   programId: integer("program_id")
     .references(() => programs.programId)
   ,
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 });
 
 // Table Achievements
 export const achievements = pgTable("achievements", {
   id: uuid('id').defaultRandom().primaryKey(),
-  studentID: varchar("student_id", { length: 50 })
-    .references(() => students.studentID)
+  studentId: integer("student_id")
+    .references(() => students.studentId)
   ,
   name: varchar("name", { length: 255 }),
   file: varchar("file", { length: 255 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 });
 
 // Table Milestones
 export const milestones = pgTable("milestones", {
   id: uuid('id').defaultRandom().primaryKey(),
-  studentID: varchar("student_id", { length: 50 })
-    .references(() => students.studentID)
+  milestoneId: integer("milestone_id").unique(),
+  isCollected: boolean("is_collected"),
+  studentId: integer("student_id")
+    .references(() => students.studentId)
   ,
   type: MilestoneTypeEnum("type"),
   description: text("description"),
   estimation: integer("estimation"),
   amount: integer("amount"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 });
 
 // Table Votes
@@ -62,8 +73,18 @@ export const votes = pgTable("votes", {
   programId: integer("program_id")
     .references(() => programs.programId)
   ,
-  studentID: varchar("student_id", { length: 50 })
-    .references(() => students.studentID)
+  studentId: integer("student_id")
+    .references(() => students.studentId)
   ,
   ipAddress: varchar("ip_address", { length: 45 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
+});
+
+// Blocknumber
+export const indexedBlocks = pgTable("indexed_blocks", {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventName: varchar("event_name", { length: 255 }),
+  blockNumber: integer("block_number"),
+  timestamp: timestamp("timestamp", { withTimezone: true }),
 });
