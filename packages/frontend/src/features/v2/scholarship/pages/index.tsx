@@ -6,6 +6,8 @@ import { useGetPrograms } from "@/features/scholarship/hooks/get-programs";
 import { useApplicant } from "@/hooks/@programs/applicant/use-list-applicant";
 import { Tabbing } from "@/components/Tabbing";
 import { tabbingData } from "../constants/ScholarshipConstants";
+import SplitText from "@/components/ui/split-text";
+import { ApproachableWrapper } from "@/components/ornaments/approachable-wrapper";
 
 export const ScholarshipsPage = () => {
   const { programs } = useGetPrograms();
@@ -42,12 +44,60 @@ export const ScholarshipsPage = () => {
         <div className="">
           <div className="flex flex-col m-16 items-center gap-6 font-paytone text-[3.5rem] text-center">
             <div className="lg:w-2xl">
-              <h1>Empower the Future.</h1>
-              <h1>or Be Empowered.</h1>
+              <h1>
+                <SplitText
+                  text="Empower the Future."
+                  delay={200}
+                  duration={0.6}
+                  ease="power3.out"
+                  splitType="words"
+                  from={{ opacity: 0, y: 40 }}
+                  to={{ opacity: 1, y: 0 }}
+                  threshold={0.1}
+                  rootMargin="-100px"
+                  textAlign="center"
+                />
+              </h1>
+              <h1>
+                <SplitText
+                  text="or Be Empowered."
+                  delay={200}
+                  duration={0.6}
+                  ease="power3.out"
+                  splitType="words"
+                  from={{ opacity: 0, y: 40 }}
+                  to={{ opacity: 1, y: 0 }}
+                  threshold={0.1}
+                  rootMargin="-99px"
+                  textAlign="center"
+                />
+              </h1>
               <p className="font-nunito text-2xl">
-                All scholarships are powered by smart contracts.
+                <SplitText
+                  text="All scholarships are powered by smart contracts. "
+                  delay={50}
+                  duration={0.6}
+                  ease="power3.out"
+                  splitType="words"
+                  from={{ opacity: 0, y: 40 }}
+                  to={{ opacity: 1, y: 0 }}
+                  threshold={0.1}
+                  rootMargin="-100px"
+                  textAlign="center"
+                />
                 <br />
-                Funds go directly to students, no middlemen.
+                <SplitText
+                  text="Funds go directly to students, no middlemen."
+                  delay={50}
+                  duration={0.6}
+                  ease="power3.out"
+                  splitType="words"
+                  from={{ opacity: 0, y: 40 }}
+                  to={{ opacity: 1, y: 0 }}
+                  threshold={0.1}
+                  rootMargin="-100px"
+                  textAlign="center"
+                />
               </p>
             </div>
           </div>
@@ -55,29 +105,31 @@ export const ScholarshipsPage = () => {
         <div className="h-0">
           <div className="relative z-10 -top-80">
             <div className="flex justify-between">
-              <img
-                src="/img/Flower.svg"
-                alt="flower"
-                className="relative -left-8 w-[8.625rem] h-40"
-              />
+              <ApproachableWrapper className="relative -left-8 w-[8.625rem] h-40">
+                <img
+                  src="/img/Flower.svg"
+                  alt="flower"
+                  className="w-full h-full"
+                />
+              </ApproachableWrapper>
 
-              <img
-                src="/img/Party.svg"
-                alt="party"
-                className="relative -right-1"
-              />
+              <ApproachableWrapper className="relative -right-1">
+                <img src="/img/Party.svg" alt="party" />
+              </ApproachableWrapper>
             </div>
             <div className="relative -top-36 flex w-full justify-between">
-              <img
-                src="/img/Illustration Provider.svg"
-                alt="Illustration Provider"
-                className="relative -left-1"
-              />
-              <img
-                src="/img/Illustration Student.svg"
-                alt="Illustration Student"
-                className="relative -right-1"
-              />
+              <ApproachableWrapper className="relative -left-1">
+                <img
+                  src="/img/Illustration Provider.svg"
+                  alt="Illustration Provider"
+                />
+              </ApproachableWrapper>
+              <ApproachableWrapper className="relative -right-1">
+                <img
+                  src="/img/Illustration Student.svg"
+                  alt="Illustration Student"
+                />
+              </ApproachableWrapper>
             </div>
           </div>
           <div className="relative z-1 -top-150">
