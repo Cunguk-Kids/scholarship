@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -61,7 +61,7 @@ contract ApplicantNFT is BaseNFT("ScholarshipApplicant", "SCAP") {}
 
 contract ProgramCreatorNFT is BaseNFT("ProgramCreator", "PGCT") {}
 
-contract ScholarshipManager is ScholarshipAccessControl, ReentrancyGuard {
+contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
     uint256 constant MILESTONE_APPROVE_DEADLINE = 2 days;
     uint256 constant MINIMAL_FUND = 100 * 10 ** 6; // 10 coin we assume using usdc;
 

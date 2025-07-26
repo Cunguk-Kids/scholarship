@@ -5,6 +5,7 @@ interface ButtonProps {
   type?: "" | "connect";
   size?: "small" | "large";
   variant?: "primary" | "secondary";
+  bgShadow?: string;
   onClick?: () => void;
   className?: string;
 }
@@ -21,8 +22,16 @@ const getButtonClasses = (
   return `flex relative -left-1 -top-1 font-nunito ${sizeClass} items-center gap-2.5 rounded-lg border-solid border-black ${bgColor} ${textColor} hover:${hover} active:inset-shadow-pressed transition-transform active:translate-x-1 active:translate-y-1 border-2 border-black ${className}`;
 };
 
-const ButtonWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-center gap-2.5 self-stretch rounded-lg bg-black">
+const ButtonWrapper = ({
+  bgShadow = "bg-black",
+  children,
+}: {
+  bgShadow?: string;
+  children: React.ReactNode;
+}) => (
+  <div
+    className={`flex items-center gap-2.5 self-stretch rounded-lg ${bgShadow}`}
+  >
     {children}
   </div>
 );
@@ -32,13 +41,14 @@ export const Button = ({
   type = "",
   size = "small",
   variant = "primary",
+  bgShadow = "bg-black",
   onClick = () => {},
   className,
 }: ButtonProps) => {
   if (type !== "connect") {
     return (
       <div className="flex flex-col items-start">
-        <ButtonWrapper>
+        <ButtonWrapper bgShadow={bgShadow}>
           <button
             onClick={onClick}
             type={"button"}
@@ -143,7 +153,8 @@ export const Button = ({
                     className={getButtonClasses(size)}
                   >
                     {address}
-                    {account.address && ` (${account.balanceFormatted?.slice(0,5)})`}
+                    {account.address &&
+                      ` (${account.balanceFormatted?.slice(0, 5)})`}
                   </button>
                 </ButtonWrapper>
               </div>

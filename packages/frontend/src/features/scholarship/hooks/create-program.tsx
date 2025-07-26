@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { waitForTransactionReceipt } from '@wagmi/core';
 import { useAccount, useConfig, useWriteContract } from 'wagmi';
 import { ethers } from 'ethers';
+
 const skInterface = new ethers.Interface(scholarshipAbi);
 const programCreated = skInterface.getEvent('ProgramCreated');
 
