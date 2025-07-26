@@ -24,7 +24,7 @@ export const CardScholarship = ({
   sizeButton = "large",
   size = "large",
   tokenValue = "0",
-  tokenCcy = "MON",
+  tokenCcy = "LSK",
   program = {
     id: 0n,
     initiatorAddress: "Provider",
@@ -59,12 +59,26 @@ export const CardScholarship = ({
 
   const status = statuses[data.appStatus?.result ?? 0];
 
-  const getLocalValue = (amount: bigint) => {
-    const token =
-      typeof amount === "bigint" ? Number(formatGwei(amount)) : amount;
+  const getLocalValue = (amount: bigint | number | string) => {
+    const liskToIDR = 8020.62;
 
-    const tokenToIDR = 0.0000000064;
-    return (token * tokenToIDR).toLocaleString("id-ID", {
+    let token: number;
+
+    try {
+      token =
+        typeof amount === "bigint"
+          ? Number(formatGwei(amount))
+          : typeof amount === "string"
+            ? parseFloat(amount)
+            : amount;
+    } catch {
+      token = 0;
+    }
+
+    const converted = token * liskToIDR;
+    const safeValue = isNaN(converted) || !isFinite(converted) ? 0 : converted;
+
+    return safeValue.toLocaleString("id-ID", {
       style: "currency",
       currency: "IDR",
       maximumFractionDigits: 0,
@@ -72,7 +86,7 @@ export const CardScholarship = ({
   };
 
   return (
-    <div className="flex flex-col items-center font-nunito">
+    <div className="flex flex-col items-center">
       <div className="bg-black rounded-3xl">
         <div className="relative -left-2 -top-2">
           <div className="inline-flex flex-col items-start rounded-3xl border bg-white">
@@ -80,22 +94,24 @@ export const CardScholarship = ({
               <div className="flex flex-col gap-4 self-stretch">
                 <div className="flex items-center gap-6 justify-between">
                   <h3
-                    className={`font-bold ${getTextSize(size, "text-2xl", "text-base")} w-40 truncate`}
+                    className={`font-bold ${getTextSize(size, "text-2xl", "text-base")} max-w-72 truncate`}
                   >
                     {program.programMetadataCID || "Scholarship Title"}
                   </h3>
                   <StatusBadge status={status} size={size} />
                 </div>
-                <div className="flex items-center gap-2 font-bold text-sm">
+                <div className="flex items-center gap-2 font-bold text-sm max-w-90">
                   <img src="/icons/provider-icon.svg" alt="provider-icon" />
-                  <p className={getTextSize(size, "text-base", "text-xs")}>
+                  <p
+                    className={`${getTextSize(size, "text-base", "text-xs")} truncate`}
+                  >
                     {program.initiatorAddress}
                   </p>
                 </div>
               </div>
 
               {/* Info: Time & Quota */}
-              <div className="flex items-start gap-4 self-stretch">
+              <div className="flex items-start gap-4 self-stretch justify-between">
                 <div className="flex flex-col gap-1">
                   <p className={getTextSize(size, "text-sm", "text-xs")}>
                     Registration close in...
@@ -143,13 +159,14 @@ export const CardScholarship = ({
                       src={`/icons/applicant${n}.png`}
                       alt={`applicant-${n}`}
                       className={`${getImageSizeClass(size)} aspect-square rounded-full ${
-                        i === 1 ? "-mx-3 z-1" : "z-2"
+                        i === 1 ? "-mx-3 z-2" : i === 0 ? `z-5` : `-z-${i + 1}`
                       }`}
                     />
                   ))}
                 </div>
                 <p className="text-sm">
-                  + {data.applicantSize?.result} other students have applied
+                  + {data.applicantSize?.result || 0} other students have
+                  applied
                 </p>
               </div>
             </div>
@@ -168,9 +185,11 @@ export const CardScholarship = ({
                       <span
                         className={`${getTextSize(size, "text-2xl", "text-base")} font-bold`}
                       >
-                        {data.stackedToken?.result} {tokenCcy}
+                        {data.stackedToken?.result || 0} {tokenCcy}
                       </span>
-                      <p className={getTextSize(size, "text-sm", "text-xs")}>
+                      <p
+                        className={`${getTextSize(size, "text-sm", "text-xs")} mx-0.5`}
+                      >
                         /
                       </p>
                       <img src="/icons/student.svg" alt="student-icon" />
