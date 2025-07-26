@@ -57,6 +57,13 @@
       "when": 1753554371224,
       "tag": "0007_moaning_wrecking_crew",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1753554586242,
+      "tag": "0008_handy_tigra",
+      "breakpoints": true
     }
   ]
 }
