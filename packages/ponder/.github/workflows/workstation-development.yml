@@ -1,22 +1,28 @@
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+    paths:
+      - 'packages/ponder/**'
+      - '.github/workflows/workstation-development.yml'
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, raihanard]
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set Up Bun
+      - name: Set up Bun
         uses: oven-sh/setup-bun@v1
 
-      - name: Install Dependencies
+      - name: Install Dependencies (monorepo)
         run: bun install
 
+      - name: Change directory to packages/ponder
+        working-directory: ./packages/ponder
+        run: echo "Changed to Ponder"
+
       - name: Start or Reload Ponder via PM2
-        run: |
-          pm2 startOrReload ecosystem.config.ts --interpreter bun
+        working-directory: ./packages/ponder
+        run: pm2 startOrReload ecosystem.config.ts --interpreter bun
