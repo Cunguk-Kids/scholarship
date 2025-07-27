@@ -10,47 +10,52 @@ import { isEmpty } from "lodash";
 export const scholarship = () => {
 
   ponder.on("scholarship:ProgramCreated", async ({ event }) => {
-    const { allocation, creator, id, metadataCID, totalFund } = event.args;
+    try {
+      const { allocation, creator, id, metadataCID, totalFund } = event.args;
 
 
-    const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
-    let baseData: InferInsertModel<typeof programs> = {
-      milestoneType: Number(allocation) === 0 ? "FIXED" : "USER_DEFINED",
-      creator: String(creator),
-      programId: Number(id),
-      totalFund: Number(totalFund),
-      metadataCID: String(trimmedCID) || null,
-      name: '',
-      description: '',
-      totalRecipients: 1,
-      endAt: moment().format("YYYY-MM-DD"),
-      startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
-      rules: "",
-      votingAt: moment().add(2, 'days').format("YYYY-MM-DD"),
-    };
-    if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
-      const ipfsData = await fetchFromIPFS(trimmedCID);
-
-      baseData = {
-        ...baseData,
-        name: ipfsData.attributes?.[0]?.scholarshipName as string || '',
-        description: ipfsData.attributes?.[0]?.description as string || '',
-        totalRecipients: ipfsData.attributes?.[0]?.recipientCount as number || 1,
-        endAt: moment(ipfsData.attributes?.[0]?.deadline as string || '').format("YYYY-MM-DD").toString(),
+      const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
+      let baseData: InferInsertModel<typeof programs> = {
+        milestoneType: Number(allocation) === 0 ? "FIXED" : "USER_DEFINED",
+        creator: String(creator),
+        programId: Number(id),
+        totalFund: Number(totalFund),
+        metadataCID: String(trimmedCID) || null,
+        name: '',
+        description: '',
+        totalRecipients: 1,
+        endAt: moment().format("YYYY-MM-DD"),
         startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
+        rules: "",
+        votingAt: moment().add(2, 'days').format("YYYY-MM-DD"),
       };
+      if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
+        const ipfsData = await fetchFromIPFS(trimmedCID);
+
+        baseData = {
+          ...baseData,
+          name: ipfsData.attributes?.[0]?.scholarshipName as string || '',
+          description: ipfsData.attributes?.[0]?.description as string || '',
+          totalRecipients: ipfsData.attributes?.[0]?.recipientCount as number || 1,
+          endAt: moment(ipfsData.attributes?.[0]?.deadline as string || '').format("YYYY-MM-DD").toString(),
+          startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
+        };
+      }
+      logger.info({ baseData }, "Program Created");
+
+      const cleanedData = Object.fromEntries(
+        Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+      );
+
+      await db.insert(programs).values(cleanedData).onConflictDoNothing();
+
+      await insertBlock({ event, eventName: "scholarship:ProgramCreated" });
+
+      logger.info({ id }, "Program Created");
+    } catch (error) {
+
+      logger.error({ error }, "Program Created");
     }
-    logger.info({ baseData }, "Program Created");
-
-    const cleanedData = Object.fromEntries(
-      Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
-    );
-
-    await db.insert(programs).values(cleanedData).onConflictDoNothing();
-
-    await insertBlock({ event, eventName: "scholarship:ProgramCreated" });
-
-    logger.info({ id }, "Program Created");
   });
 
   ponder.on("scholarship:ApplicantRegistered", async ({ event }) => {
