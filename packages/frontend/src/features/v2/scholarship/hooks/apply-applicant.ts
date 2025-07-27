@@ -1,4 +1,4 @@
-import { usdcAddress } from "@/constants/contractAddress";
+import { skoolchainV2Address } from "@/constants/contractAddress";
 import { skoolchainV2Abi } from "@/repo/abi";
 import { uploadToIPFS } from "@/services/api/ipfs.service";
 import { cleanCID } from "@/util/cleanCID";
@@ -52,7 +52,7 @@ export function useApplyApplicantV2(programId: string) {
 
       const hash = await writeContractAsync({
         abi: skoolchainV2Abi,
-        address: usdcAddress,
+        address: skoolchainV2Address,
         functionName: "applyAppplicant",
         args: [BigInt(programId), milestones, cid],
       });
