@@ -20,6 +20,7 @@
     "dagre": "^0.8.5",
     "graphql-mobius": "^0.1.13",
     "gsap": "^3.13.0",
+    "hono": "^4.8.9",
     "lodash": "^4.17.21",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -42,6 +43,7 @@
     "typescript-eslint": "^8.34.1",
     "vite": "^7.0.0",
     "~backend": "workspace:*",
+    "~ponder": "workspace:*",
     "@tanstack/router-plugin": "^1.123.2"
   }
 }

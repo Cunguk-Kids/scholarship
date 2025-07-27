@@ -15,3 +15,4 @@ app.use("/graphql", graphql({ db: db as unknown as ReadonlyDrizzle<typeof schema
 app.route('/ipfs', ipfsRoute);
 
 export default app;
+export type AppType = typeof app;

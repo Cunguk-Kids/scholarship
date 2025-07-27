@@ -1,32 +1,20 @@
 import { Context } from "hono";
 import { uploadToIPFS } from "../service/ipfs.service";
+import { isArray, isObject } from "lodash";
 
 export const uploadController = async (c: Context) => {
   const body = await c.req.parseBody();
   const file = body.file as File;
 
-  if (!file) {
-    return c.json({ error: 'No file uploaded' }, 400);
-  }
-
-  const rawAttributes = body.attributes;
+  const rawAttributes = body;
   let parsedAttributes: Record<string, any>[] = [];
 
-  if (typeof rawAttributes === 'string') {
-    try {
-      const temp = JSON.parse(rawAttributes);
-
-      if (Array.isArray(temp) && temp.every((item) => typeof item === 'object' && item !== null)) {
-        parsedAttributes = [...temp];
-      } else if (typeof temp === 'object' && temp !== null) {
-        parsedAttributes = [temp];
-      } else {
-        return c.json({ error: 'Attributes must be object or array of objects' }, 400);
-      }
-
-    } catch {
-      return c.json({ error: 'Invalid JSON in attributes' }, 400);
-    }
+  if (isArray(rawAttributes) && rawAttributes.every((item) => typeof item === 'object' && item !== null)) {
+    parsedAttributes = [...rawAttributes];
+  } else if (isObject(rawAttributes) && rawAttributes !== null) {
+    parsedAttributes = [rawAttributes];
+  } else {
+    return c.json({ error: 'Attributes must be object or array of objects' }, 400);
   }
 
   const metadata = {

@@ -11,22 +11,33 @@
     "resolveJsonModule": true,
     // Language and environment
     "moduleResolution": "bundler",
+    "moduleDetection": "force",
     "module": "ESNext",
     "noEmit": true,
     "lib": [
       "ES2022"
     ],
     "target": "ES2022",
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "~ponder/*": [
+        "../ponder/src/*"
+      ],
+      "@back/*": [
+        "src/*"
       ]
     },
-    // Skip type checking for node modules
     "skipLibCheck": true
   },
   "include": [
-    "./**/*.ts"
+    "./**/*.ts",
+    "src",
+    "../ponder/src"
   ],
   "exclude": [
     "node_modules"
