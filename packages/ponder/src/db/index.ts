@@ -5,10 +5,10 @@ import * as schema from "./schema";
 import { ReadonlyDrizzle } from "ponder";
 
 const pool = new Pool({
-  host: 'ep-purple-pond-admrht0o-pooler.c-2.us-east-1.aws.neon.tech',
-  user: 'neondb_owner',
-  password: 'npg_J9NPIGmL6BSd',
-  database: 'neondb',
+  host: process.env.DB_HOST!,
+  user: process.env.DB_USER!,
+  password: process.env.DB_PASSWORD!,
+  database: process.env.DB_NAME,
   port: 5432,
   ssl: {
     rejectUnauthorized: false
