@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { mobius } from "@/gql/schema";
+import { mobius } from "@/services/gql/schema";
 import { useProgramsEventWatcher } from "./useWatchEvent";
 import { toNullable } from "@/util/toNullData";
 

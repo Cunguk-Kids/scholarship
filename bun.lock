@@ -65,6 +65,7 @@
         "@types/dagre": "^0.7.53",
         "@xellar/kit": "^2.4.0",
         "@xyflow/react": "^12.8.1",
+        "axios": "^1.11.0",
         "dagre": "^0.8.5",
         "graphql-mobius": "^0.1.13",
         "gsap": "^3.13.0",
