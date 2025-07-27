@@ -20,6 +20,11 @@ export const scholarship = () => {
       programId: Number(id),
       totalFund: Number(totalFund),
       metadataCID: String(trimmedCID) || null,
+      name: '',
+      description: '',
+      totalRecipients: 1,
+      endAt: moment().format("YYYY-MM-DD"),
+      startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
     };
     if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
       const ipfsData = await fetchFromIPFS(trimmedCID);
