@@ -121,7 +121,7 @@ export const Tabbing = <T,>({
                           : 'Donate Now'
                     }
                     status={activeTab}
-                    onClickButton={() => handleClickItemButton(item.id)}
+                    onClickButton={() => handleClickItemButton(item.programId)}
                   />
                 ))}
             </div>

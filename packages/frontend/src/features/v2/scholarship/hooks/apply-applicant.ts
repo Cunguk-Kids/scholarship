@@ -1,5 +1,7 @@
 import { usdcAddress } from "@/constants/contractAddress";
 import { skoolchainV2Abi } from "@/repo/abi";
+import { uploadToIPFS } from "@/services/api/ipfs.service";
+import { cleanCID } from "@/util/cleanCID";
 import { useMutation } from "@tanstack/react-query";
 import { ContractFunctionExecutionError } from "viem";
 import { useConfig, useWriteContract } from "wagmi";
@@ -35,18 +37,24 @@ export function useApplyApplicantV2(programId: string) {
     },
     mutationKey: [mutationKey, programId],
     mutationFn: async (data: ApplicantFormData) => {
-      const milestones = data.milestones.map((mile) => ({
-        amount: BigInt(mile.amount),
+      const milestones = await Promise.all(
+        data.milestones.map(async (mile) => {
+          const ipfs = await uploadToIPFS({ meta: mile });
+          return {
+            amount: BigInt(mile.amount),
+            metadataCID: cleanCID(ipfs?.metaCID),
+          };
+        })
+      );
 
-        // must replace with actual cid
-        metadataCID: "",
-      }));
+      const ipfs = await uploadToIPFS({ meta: data });
+      const cid = cleanCID(ipfs?.metaCID);
 
       const hash = await writeContractAsync({
         abi: skoolchainV2Abi,
         address: usdcAddress,
         functionName: "applyAppplicant",
-        args: [BigInt(programId), milestones, ""],
+        args: [BigInt(programId), milestones, cid],
       });
 
       await waitForTransactionReceipt(config, { hash });
