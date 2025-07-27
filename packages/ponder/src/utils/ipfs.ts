@@ -1,10 +1,12 @@
 import { IPFSMetadata } from "@/types/meta";
-const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 7000);
+
 
 export const fetchFromIPFS = async (
   cid: string,
 ): Promise<IPFSMetadata | null> => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7000);
+
   try {
     const res = await fetch(`${process.env.IPFS_HOST_REQUEST}/ipfs/${cid}`, {
       signal: controller.signal,
