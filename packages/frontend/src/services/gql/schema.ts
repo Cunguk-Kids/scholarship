@@ -20,6 +20,6 @@ const typeDefs = `
 ` as const;
 
 export const mobius = new Mobius<typeof typeDefs>({
-  url: 'http://localhost:42069/graphql',
+  url: `${import.meta.env.VITE_BACKEND_HOST}/graphql`,
   typeDefs,
 });
