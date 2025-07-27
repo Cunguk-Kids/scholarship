@@ -17,8 +17,8 @@ export const fetchFromIPFS = async <T = unknown>(
   const raw = await res.json();
 
   if (schema) {
-    return schema.parse(raw); // with validation
+    return schema.parse(raw);
   }
 
-  return raw as T; // no validation
+  return raw as T;
 };
