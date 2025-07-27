@@ -2,6 +2,8 @@ import { Context } from "hono";
 import os from 'os';
 import { execSync } from "child_process";
 import checkDiskSpace from "check-disk-space";
+import { db } from "@/db";
+import { sql } from "drizzle-orm";
 
 export const serverHealthController = async (c: Context) => {
   const cpuLoad = os.loadavg();
@@ -30,6 +32,14 @@ export const serverHealthController = async (c: Context) => {
     }
   }
 
+  let dbStatus = 'unknown';
+  try {
+    await db.execute(sql`SELECT 1`);
+    dbStatus = 'connected';
+  } catch (e) {
+    dbStatus = 'error';
+  }
+
   return c.json({
     cpuLoadAvg: {
       '1min': cpuLoad[0],
@@ -44,6 +54,8 @@ export const serverHealthController = async (c: Context) => {
     },
     disk,
     portStatus,
+    database: dbStatus,
     status: 'ok',
   });
+
 };
