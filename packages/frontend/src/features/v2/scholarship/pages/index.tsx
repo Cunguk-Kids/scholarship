@@ -13,8 +13,6 @@ export const ScholarshipsPage = () => {
   const { applicants } = useApplicant('');
   const { data } = usePrograms();
 
-  console.log(data);
-
   const [openScholarshipModal, setOpenScholarshipModal] = useState(false);
   const [openApplicantModal, setOpenApplicantModal] = useState(false);
 
