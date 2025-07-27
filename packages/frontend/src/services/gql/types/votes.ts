@@ -1,9 +1,10 @@
 export const voteSchema = `
   type votes {
     id: ID!
-    voter: String
-    proposalId: String
-    choice: String
+    address: String
+    programId: Int
+    studentId: Int
+    ipAddress: String
     createdAt: String
     updatedAt: String
   }

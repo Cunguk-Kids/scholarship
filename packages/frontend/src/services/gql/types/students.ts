@@ -1,8 +1,15 @@
 export const studentSchema = `
   type students {
     id: ID!
-    name: String
+    studentId: Int
+    studentAddress: String
+    fullName: String
     email: String
+    financialSituation: String
+    scholarshipMotivation: String
+    programId: Int
+    createdAt: String
+    updatedAt: String
   }
 
   input studentsFilter {

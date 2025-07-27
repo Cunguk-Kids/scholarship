@@ -1,9 +1,16 @@
 export const milestoneSchema = `
   type milestones {
     id: ID!
-    title: String
+    milestoneId: Int
+    isCollected: Boolean
+    studentId: Int
+    programId: Int
+    type: String
     description: String
-    dueDate: String
+    estimation: Int
+    amount: Int
+    metadataCID: String
+    proveCID: String
     createdAt: String
     updatedAt: String
   }
