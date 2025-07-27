@@ -4,6 +4,7 @@ import { execSync } from "child_process";
 import checkDiskSpace from "check-disk-space";
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
+import { logger } from "@/utils/logger";
 
 export const serverHealthController = async (c: Context) => {
   const cpuLoad = os.loadavg();
@@ -37,6 +38,7 @@ export const serverHealthController = async (c: Context) => {
     await db.execute(sql`SELECT 1`);
     dbStatus = 'connected';
   } catch (e) {
+    logger.error({ e }, "database error");
     dbStatus = 'error';
   }
 
