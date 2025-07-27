@@ -25,6 +25,8 @@ export const scholarship = () => {
       totalRecipients: 1,
       endAt: moment().format("YYYY-MM-DD"),
       startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
+      rules: "",
+      votingAt: moment().add(2, 'days').format("YYYY-MM-DD"),
     };
     if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
       const ipfsData = await fetchFromIPFS(trimmedCID);
