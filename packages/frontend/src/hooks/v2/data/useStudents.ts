@@ -19,6 +19,7 @@ export function useStudents(initialFilter?: Filter) {
           items: {
             id: true,
             name: true,
+
           },
         },
       },
