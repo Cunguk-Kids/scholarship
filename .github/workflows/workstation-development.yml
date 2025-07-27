@@ -20,7 +20,7 @@ jobs:
 
       - name: Print .env contents (debug)
         working-directory: ./packages/ponder
-        run: cp /skolchein/actions-runner/.env .env
+        run: cp ../../../../../.env .env
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
