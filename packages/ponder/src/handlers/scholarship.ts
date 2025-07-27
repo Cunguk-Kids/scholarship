@@ -30,31 +30,37 @@ export const scholarship = () => {
         votingAt: moment().add(2, 'days').format("YYYY-MM-DD"),
       };
       if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
+        logger.info({ trimmedCID }, "CID Data Program");
         const ipfsData = await fetchFromIPFS(trimmedCID);
+        logger.info({ ipfsData }, "IPFS Data Program");
 
-        baseData = {
-          ...baseData,
-          name: ipfsData.attributes?.[0]?.scholarshipName as string || '',
-          description: ipfsData.attributes?.[0]?.description as string || '',
-          totalRecipients: ipfsData.attributes?.[0]?.recipientCount as number || 1,
-          endAt: moment(ipfsData.attributes?.[0]?.deadline as string || '').format("YYYY-MM-DD").toString(),
-          startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
-        };
+        if (!isEmpty(ipfsData)) {
+          baseData = {
+            ...baseData,
+            name: ipfsData?.attributes?.[0]?.scholarshipName as string || '',
+            description: ipfsData?.attributes?.[0]?.description as string || '',
+            totalRecipients: ipfsData?.attributes?.[0]?.recipientCount as number || 1,
+            endAt: moment(ipfsData?.attributes?.[0]?.deadline as string || '').format("YYYY-MM-DD").toString(),
+            startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
+          };
+        }
       }
-      logger.info({ baseData }, "Program Created");
-
       const cleanedData = Object.fromEntries(
         Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
       );
 
-      await db.insert(programs).values(cleanedData).onConflictDoNothing();
+      logger.info({ cleanedData }, "Cleaned Data Program");
+
+      const result = await db.insert(programs).values(cleanedData).onConflictDoNothing();
+
+      logger.info({ result }, "Result Insert Data Program");
 
       await insertBlock({ event, eventName: "scholarship:ProgramCreated" });
 
       logger.info({ id }, "Program Created");
     } catch (error) {
 
-      logger.error({ error }, "Program Created");
+      logger.error({ error }, "Create Program Error");
     }
   });
 
