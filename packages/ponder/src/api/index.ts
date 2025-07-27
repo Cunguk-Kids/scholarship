@@ -14,7 +14,7 @@ app.use("/graphql", graphql({ db: db as unknown as ReadonlyDrizzle<typeof schema
 
 // rest api
 app.route('/ipfs', ipfsRoute);
-app.route('/health', serverHealthRoute);
+app.route('/health-server-indexer', serverHealthRoute);
 
 export default app;
 export type AppType = typeof app;
