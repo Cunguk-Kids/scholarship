@@ -16,12 +16,17 @@ jobs:
       - name: Generate .env file
         working-directory: ./packages/ponder
         run: |
-          echo DATABASE_URL="${{ secrets.DATABASE_URL }}" >> .env
-          echo PONDER_RPC_URL_LISK="${{ secrets.PONDER_RPC_URL_LISK }}" >> .env
+          cat .env >> $GITHUB_ENV
 
-      - name: Print .env contents (debug)
-        working-directory: ./packages/ponder
-        run: cat .env
+      # - name: Generate .env file
+      #   working-directory: ./packages/ponder
+      #   run: |
+      #     echo DATABASE_URL="${{ secrets.DATABASE_URL }}" >> .env
+      #     echo PONDER_RPC_URL_LISK="${{ secrets.PONDER_RPC_URL_LISK }}" >> .env
+
+      # - name: Print .env contents (debug)
+      #   working-directory: ./packages/ponder
+      #   run: cat .env
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
