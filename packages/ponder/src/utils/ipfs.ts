@@ -1,14 +1,32 @@
 import { IPFSMetadata } from "@/types/meta";
+const controller = new AbortController();
+const timeout = setTimeout(() => controller.abort(), 7000);
 
 export const fetchFromIPFS = async (
   cid: string,
-): Promise<IPFSMetadata> => {
-  const res = await fetch(`${process.env.IPFS_HOST_REQUEST}/ipfs/${cid}`);
-  if (!res.ok) throw new Error(`Failed to fetch IPFS: ${cid}`);
+): Promise<IPFSMetadata | null> => {
+  try {
+    const res = await fetch(`${process.env.IPFS_HOST_REQUEST}/ipfs/${cid}`, {
+      signal: controller.signal,
+    });
 
-  const raw = await res.json();
+    clearTimeout(timeout);
 
-  return raw as IPFSMetadata;
+    if (!res.ok) return null;
+
+    const raw = await res.json();
+    return raw as IPFSMetadata;
+  } catch (err) {
+    clearTimeout(timeout); // pastikan selalu dibersihkan
+
+    if (err instanceof Error && err.name === "AbortError") {
+      console.error("Fetch timeout: IPFS CID mungkin tidak tersedia.");
+    } else {
+      console.error("Fetch error:", err);
+    }
+
+    return null;
+  }
 };
 
 const cidRegex = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[afkz][1-9a-zA-Z]{48,})$/;
