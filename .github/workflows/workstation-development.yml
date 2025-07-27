@@ -16,8 +16,9 @@ jobs:
       - name: Generate .env file
         working-directory: ./packages/ponder
         run: |
-          echo DATABASE_URL="${{ secrets.DATABASE_URL }}" >> .env
-          echo PONDER_RPC_URL_LISK="${{ secrets.PONDER_RPC_URL_LISK }}" >> .env
+          touch .env
+          grep -q '^DATABASE_URL=' .env && sed -i 's|^DATABASE_URL=.*|DATABASE_URL=${{ secrets.DATABASE_URL }}|' .env || echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+          grep -q '^PONDER_RPC_URL_LISK=' .env && sed -i 's|^PONDER_RPC_URL_LISK=.*|PONDER_RPC_URL_LISK=${{ secrets.PONDER_RPC_URL_LISK }}|' .env || echo PONDER_RPC_URL_LISK=${{ secrets.PONDER_RPC_URL_LISK }} >> .env
 
       - name: Print .env contents (debug)
         working-directory: ./packages/ponder
