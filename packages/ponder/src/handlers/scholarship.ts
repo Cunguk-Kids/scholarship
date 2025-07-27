@@ -1,22 +1,40 @@
 import { ponder } from "ponder:registry";
 import { db } from "@/db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, InferInsertModel } from "drizzle-orm";
 import { milestones, programs, students, votes } from "@/db/schema";
-import { fetchFromIPFS } from "../utils/ipfs";
+import { fetchFromIPFS, isValidCID } from "../utils/ipfs";
 import { logger } from "@/utils/logger";
 import { insertBlock } from "@/services/block.log.service";
+import moment from "moment";
+import { isEmpty } from "lodash";
 export const scholarship = () => {
 
   ponder.on("scholarship:ProgramCreated", async ({ event }) => {
     const { allocation, creator, id, metadataCID, totalFund } = event.args;
 
-    await db.insert(programs).values({
+    let baseData: InferInsertModel<typeof programs> = {
       milestoneType: Number(allocation) === 0 ? "FIXED" : "USER_DEFINED",
       creator: String(creator),
       programId: Number(id),
       totalFund: Number(totalFund),
       metadataCID: metadataCID,
-    }).onConflictDoNothing();
+    };
+
+    const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
+    if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
+      const ipfsData = await fetchFromIPFS(trimmedCID);
+
+      baseData = {
+        ...baseData,
+        name: ipfsData.attributes?.[0]?.scholarshipName as string || '',
+        description: ipfsData.attributes?.[0]?.description as string || '',
+        totalRecipients: ipfsData.attributes?.[0]?.recipientCount as number || 1,
+        endAt: moment(ipfsData.attributes?.[0]?.deadline as string || '').format("YYYY-MM-DD").toString(),
+        startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
+      };
+    }
+
+    await db.insert(programs).values(baseData).onConflictDoNothing();
 
     await insertBlock({ event, eventName: "scholarship:ProgramCreated" });
 

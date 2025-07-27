@@ -2,6 +2,7 @@ import type { FormDataProvider } from '@/components/CardForm';
 import { skoolchainV2Address, usdcAddress } from '@/constants/contractAddress';
 import { skoolchainV2Abi } from '@/repo/abi';
 import { uploadToIPFS } from '@/services/api/ipfs.service';
+import { cleanCID } from '@/util/cleanCID';
 import { useMutation } from '@tanstack/react-query';
 import { ContractFunctionExecutionError, erc20Abi } from 'viem';
 import { useConfig, useWriteContract } from 'wagmi';
@@ -43,16 +44,15 @@ export function useCreateProgramV2() {
         functionName: 'approve',
         args: [skoolchainV2Address, totalFund],
       });
+      const ipfs = await uploadToIPFS({ meta: data });
 
       await waitForTransactionReceipt(config, { hash: approveHash });
-      const ipfs = await uploadToIPFS({ meta: data });
-      console.log(ipfs, '-----ipfs-----');
 
       const programCreationHash = await writeContractAsync({
         abi: skoolchainV2Abi,
         address: skoolchainV2Address,
         functionName: 'createProgram',
-        args: [totalFund, dates, ipfs.metaCID ? ipfs.metaCID : '', 0],
+        args: [totalFund, dates, cleanCID(ipfs?.metaCID), 0],
       });
 
       await waitForTransactionReceipt(config, { hash: programCreationHash });

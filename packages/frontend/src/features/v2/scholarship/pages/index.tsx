@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/Button';
 import { ScholarshipModal } from '../components/ScholarshipModal';
 import { ApplicantModal } from '../components/ApplicantModal';
-import { useGetPrograms } from '@/features/scholarship/hooks/get-programs';
 import { useApplicant } from '@/hooks/@programs/applicant/use-list-applicant';
 import { Tabbing } from '@/components/Tabbing';
 import { tabbingData } from '../constants/ScholarshipConstants';
@@ -11,9 +10,10 @@ import { ApproachableWrapper } from '@/components/ornaments/approachable-wrapper
 import { usePrograms } from '@/hooks/v2/data/usePrograms';
 
 export const ScholarshipsPage = () => {
-  const { programs } = useGetPrograms();
   const { applicants } = useApplicant('');
   const { data } = usePrograms();
+
+  console.log(data);
 
   const [openScholarshipModal, setOpenScholarshipModal] = useState(false);
   const [openApplicantModal, setOpenApplicantModal] = useState(false);
@@ -25,7 +25,7 @@ export const ScholarshipsPage = () => {
   const [messagesIndex, setMessagesIndex] = useState(0);
   const [prevMessagesIndex, setPrevMessagesIndex] = useState<number | null>(null);
 
-  const handleApplyNow = (id: String) => {
+  const handleApplyNow = () => {
     setOpenApplicantModal(true);
   };
 
@@ -37,10 +37,6 @@ export const ScholarshipsPage = () => {
 
     return () => clearInterval(interval);
   }, [messagesIndex]);
-
-  useEffect(() => {
-    console.log(data, '-----data-----');
-  }, [data]);
 
   return (
     <>
@@ -181,15 +177,13 @@ export const ScholarshipsPage = () => {
                 }) as never
               }
               programs={
-                programs?.map((x) => {
+                data?.map((x) => {
                   // @ts-expect-error ytta
-                  x.programMetadataCID = x.title;
+                  x.endDate = new Date(x.endAt ?? '').getTime();
                   // @ts-expect-error ytta
-                  x.endDate = new Date(x.endDate ?? '').getTime();
+                  x.startDate = new Date(x.startAt ?? '').getTime();
                   // @ts-expect-error ytta
-                  x.startDate = new Date(x.startDate ?? '').getTime();
-                  // @ts-expect-error ytta
-                  x.programContractAddress = x.contractAddress;
+                  x.initiatorAddress = x.creator;
                   return x;
                 }) as never
               }

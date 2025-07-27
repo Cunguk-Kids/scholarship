@@ -373,7 +373,6 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
           setShowSubmitModal(false);
           // @ts-expect-error we know what we're doing
           onSubmit(type === 'applicant' ? formData : formDataProvider);
-          console.log('-----submit----', type === 'applicant' ? formData : formDataProvider);
         }}
         title={type === 'provider' ? 'DAO Smart Contract Notice' : "You're Ready to Submit!"}
         desc={

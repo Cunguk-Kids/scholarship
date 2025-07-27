@@ -19,6 +19,12 @@ export function usePrograms(initialFilter?: Filter) {
           items: {
             id: true,
             name: true,
+            description: true,
+            creator: true,
+            endAt: true,
+            startAt: true,
+            totalRecipients: true,
+            totalFund: true
           },
         },
       },

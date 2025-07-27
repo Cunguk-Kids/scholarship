@@ -1,24 +1,24 @@
-import { ZodSchema } from "zod";
+import { IPFSMetadata } from "@/types/meta";
 
-/**
- * Fetch JSON from IPFS and optionally validate it with a Zod schema.
- *
- * @param cid - IPFS content ID (CID)
- * @param schema - Optional Zod schema for validation
- * @returns Parsed data (typed if schema is provided)
- */
-export const fetchFromIPFS = async <T = unknown>(
+export const fetchFromIPFS = async (
   cid: string,
-  schema?: ZodSchema<T>
-): Promise<T> => {
-  const res = await fetch(`https://ipfs.io/ipfs/${cid}`);
+): Promise<IPFSMetadata> => {
+  const res = await fetch(`https://camping-programmes-annex-gorgeous.trycloudflare.com/ipfs/${cid}`);
   if (!res.ok) throw new Error(`Failed to fetch IPFS: ${cid}`);
 
   const raw = await res.json();
 
-  if (schema) {
-    return schema.parse(raw);
-  }
-
-  return raw as T;
+  return raw as IPFSMetadata;
 };
+
+const cidRegex = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[afkz][1-9a-zA-Z]{48,})$/;
+
+export function cleanCID(raw: string | undefined | null): string {
+  if (!raw) return '';
+  return raw.trim().replace(/^'+|'+$/g, '');
+}
+
+export function isValidCID(cid: string | undefined | null): boolean {
+  const clean = cleanCID(cid);
+  return cidRegex.test(clean);
+}

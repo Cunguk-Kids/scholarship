@@ -2,10 +2,10 @@ import { ipfsHost, ipfs } from '@/utils/lib/ipfs';
 import { IMetadata } from '../types/metadata.type';
 
 export async function uploadToIPFS(file: File, metadata: IMetadata) {
-  const buffer = await file.arrayBuffer();
   let imageCID;
 
   if (file) {
+    const buffer = await file?.arrayBuffer();
     const imageResult = await ipfs.add(Buffer.from(buffer));
     imageCID = imageResult.cid.toString();
   }
@@ -20,7 +20,7 @@ export async function uploadToIPFS(file: File, metadata: IMetadata) {
 
   return {
     imageCID,
-    metadataCID: finalMeta,
+    metaCID,
     metadataURL: `${ipfsHost}/${metaCID}`,
     imageURL: `${ipfsHost}/${imageCID}`,
   };

@@ -1,11 +1,22 @@
 export const programSchema = `
   type programs {
     id: ID!
+    programId: Int
     name: String
+    creator: String
+    metadataCID: String
     description: String
+    startAt: String
+    endAt: String
+    votingAt: String
+    rules: String
+    totalRecipients: Int
+    totalFund: Int
+    milestoneType: String
     createdAt: String
     updatedAt: String
   }
+
 
   input programsFilter {
     id: ID

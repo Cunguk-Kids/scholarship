@@ -15,7 +15,7 @@ export const programs = pgTable("programs", {
   endAt: timestamp("end_at", { mode: "string" }),
   votingAt: timestamp("voting_at", { mode: "string" }),
   rules: text("rules"),
-  totalRecipients: varchar("total_recipients", { length: 255 }),
+  totalRecipients: integer("total_recipients"),
   totalFund: integer("total_fund"),
   milestoneType: MilestoneAllocationEnum("milestone_type_enum"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
