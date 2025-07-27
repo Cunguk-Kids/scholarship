@@ -12,15 +12,15 @@ export const scholarship = () => {
   ponder.on("scholarship:ProgramCreated", async ({ event }) => {
     const { allocation, creator, id, metadataCID, totalFund } = event.args;
 
+
+    const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
     let baseData: InferInsertModel<typeof programs> = {
       milestoneType: Number(allocation) === 0 ? "FIXED" : "USER_DEFINED",
       creator: String(creator),
       programId: Number(id),
       totalFund: Number(totalFund),
-      metadataCID: metadataCID,
+      metadataCID: trimmedCID,
     };
-
-    const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
     if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
       const ipfsData = await fetchFromIPFS(trimmedCID);
 
