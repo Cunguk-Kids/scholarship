@@ -22,6 +22,10 @@ jobs:
         working-directory: ./packages/ponder
         run: cp ../../../../../.env .env
 
+      - name: Print .env.local contents (debug)
+        working-directory: ./packages/ponder
+        run: cp ../../../../../.env .env.local
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
 
