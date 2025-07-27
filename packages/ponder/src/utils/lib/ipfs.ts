@@ -1,7 +1,7 @@
 import { create } from 'ipfs-http-client';
 
 export const ipfs = create({
-  host: '139.59.232.68',
+  host: process.env.IPFS_HOST,
   port: 5001,
   protocol: 'http'
 });

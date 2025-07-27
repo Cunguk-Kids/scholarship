@@ -3,7 +3,7 @@ import { IPFSMetadata } from "@/types/meta";
 export const fetchFromIPFS = async (
   cid: string,
 ): Promise<IPFSMetadata> => {
-  const res = await fetch(`https://camping-programmes-annex-gorgeous.trycloudflare.com/ipfs/${cid}`);
+  const res = await fetch(`${process.env.IPFS_HOST_REQUEST}/ipfs/${cid}`);
   if (!res.ok) throw new Error(`Failed to fetch IPFS: ${cid}`);
 
   const raw = await res.json();
