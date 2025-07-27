@@ -13,7 +13,7 @@ export const programs = pgTable("programs", {
   description: text("description").default(""),
   startAt: timestamp("start_at", { mode: "string" }),
   endAt: timestamp("end_at", { mode: "string" }),
-  votingAt: timestamp("voting_at", { mode: "string" }),
+  votingAt: timestamp("voting_at", { mode: "string" }).defaultNow(),
   rules: text("rules").default(""),
   totalRecipients: integer("total_recipients").default(0),
   totalFund: integer("total_fund").default(0),
