@@ -43,7 +43,7 @@ export const scholarship = () => {
     logger.info({ baseData }, "Program Created");
 
     const cleanedData = Object.fromEntries(
-      Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null)
+      Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     );
 
     await db.insert(programs).values(cleanedData).onConflictDoNothing();
