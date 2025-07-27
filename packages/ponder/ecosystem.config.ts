@@ -3,8 +3,8 @@ module.exports = {
     {
       name: "ponder",
       cwd: "./packages/ponder",
-      script: "dev",
-      interpreter: "bun",
+      script: "bun",
+      args: "dev",
       exec_mode: "fork",
       watch: false,
       env: {

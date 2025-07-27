@@ -25,4 +25,4 @@ jobs:
 
       - name: Start or Reload Ponder via PM2
         working-directory: ./packages/ponder
-        run: pm2 startOrReload ecosystem.config.ts --interpreter bun
+        run: pm2 restart ponder

@@ -33,6 +33,7 @@ export const scholarship = () => {
         startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
       };
     }
+    logger.info({ baseData }, "Program Created");
 
     await db.insert(programs).values(baseData).onConflictDoNothing();
 
