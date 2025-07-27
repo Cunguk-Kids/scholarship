@@ -71,6 +71,13 @@
       "when": 1753599674231,
       "tag": "0009_robust_gressill",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1753611344457,
+      "tag": "0010_majestic_arclight",
+      "breakpoints": true
     }
   ]
 }
