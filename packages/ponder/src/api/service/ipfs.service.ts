@@ -6,7 +6,7 @@ export async function uploadToIPFS(file: File, metadata: IMetadata) {
 
   if (file) {
     const buffer = await file?.arrayBuffer();
-    const imageResult = await ipfs.add(Buffer.from(buffer));
+    const imageResult = await ipfs.add(Buffer.from(buffer), { pin: true });
     imageCID = imageResult.cid.toString();
   }
 
@@ -15,7 +15,7 @@ export async function uploadToIPFS(file: File, metadata: IMetadata) {
     image: imageCID ? `ipfs://${imageCID}` : '',
   };
 
-  const metaResult = await ipfs.add(JSON.stringify(finalMeta));
+  const metaResult = await ipfs.add(JSON.stringify(finalMeta), { pin: true });
   const metaCID = metaResult.cid.toString();
 
   return {
