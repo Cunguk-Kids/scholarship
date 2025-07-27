@@ -1,11 +1,13 @@
 import useSWR from "swr";
 import { mobius } from "@/gql/schema";
 import { toNullable } from "@/util/toNullData";
+import { useProgramsStudentWatcher } from "./useWatchEvent";
 
 type Filter = { id?: string; name?: string; };
 type SWRKey = [string, Filter?];
 
 export function useStudents(initialFilter?: Filter) {
+  useProgramsStudentWatcher();
 
   const fetcher = async (_key: string, filter?: Filter) => {
     const result = await mobius.query({

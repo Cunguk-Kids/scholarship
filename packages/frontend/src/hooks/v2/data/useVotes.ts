@@ -2,6 +2,7 @@ import useSWR from "swr";
 import { mobius } from "@/gql/schema";
 import { toNullable } from "@/util/toNullData";
 import type { Filter } from "viem";
+import { useProgramsVoteWatcher } from "./useWatchEvent";
 
 export type VoteFilter = {
   id?: string;
@@ -11,6 +12,8 @@ export type VoteFilter = {
 type SWRKey = [string, Filter?];
 
 export function useVotes(initialFilter?: VoteFilter) {
+  useProgramsVoteWatcher();
+
   const fetcher = async (_: string, filter?: VoteFilter) => {
     const result = await mobius.query({
       votess: {
@@ -38,7 +41,7 @@ export function useVotes(initialFilter?: VoteFilter) {
   );
 
   const refetch = async (newFilter?: Filter) => {
-    const key: SWRKey = ["programs", newFilter];
+    const key: SWRKey = ["votes", newFilter];
     return mutate(() => fetcher(key[0], key[1]), { revalidate: true });
   };
 

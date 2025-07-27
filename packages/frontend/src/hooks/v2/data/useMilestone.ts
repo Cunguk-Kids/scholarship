@@ -37,7 +37,7 @@ export function useMilestones(initialFilter?: MilestoneFilter) {
   );
 
   const refetch = async (newFilter?: Filter) => {
-    const key: SWRKey = ["programs", newFilter];
+    const key: SWRKey = ["milestones", newFilter];
     return mutate(() => fetcher(key[0], key[1]), { revalidate: true });
   };
 
