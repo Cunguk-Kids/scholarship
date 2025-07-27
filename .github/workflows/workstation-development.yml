@@ -13,6 +13,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Generate .env file
+        working-directory: ./packages/ponder
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "PONDER_RPC_URL_LISK=${{ secrets.PONDER_RPC_URL_LISK }}" >> .env
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
 
