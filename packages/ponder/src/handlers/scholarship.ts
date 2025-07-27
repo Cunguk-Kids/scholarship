@@ -46,7 +46,12 @@ export const scholarship = () => {
       Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     );
 
-    await db.insert(programs).values(cleanedData).onConflictDoNothing();
+    await db.insert(programs).values(cleanedData).onConflictDoUpdate({
+      target: programs.programId,
+      set: {
+        cleanedData
+      },
+    });
 
     await insertBlock({ event, eventName: "scholarship:ProgramCreated" });
 
