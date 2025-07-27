@@ -96,6 +96,7 @@
     "packages/ponder": {
       "name": "ponder",
       "dependencies": {
+        "@resvg/resvg-js": "^2.6.2",
         "dotenv": "^17.2.1",
         "ethers": "^6.15.0",
         "hono": "^4.5.0",
