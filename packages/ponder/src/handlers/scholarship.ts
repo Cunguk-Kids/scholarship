@@ -19,7 +19,7 @@ export const scholarship = () => {
       creator: String(creator),
       programId: Number(id),
       totalFund: Number(totalFund),
-      metadataCID: trimmedCID,
+      metadataCID: String(trimmedCID) || null,
     };
     if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
       const ipfsData = await fetchFromIPFS(trimmedCID);
