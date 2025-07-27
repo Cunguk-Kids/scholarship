@@ -1,11 +1,14 @@
 import { CardForm } from "@/components/CardForm";
+import { useApplyApplicantV2 } from "../hooks/apply-applicant";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  programId: string;
 };
 
-export const ApplicantModal = ({ isOpen, onClose }: Props) => {
+export const ApplicantModal = ({ isOpen, onClose, programId }: Props) => {
+  const { mutate } = useApplyApplicantV2(programId);
   if (!isOpen) return null;
 
   return (
@@ -14,7 +17,9 @@ export const ApplicantModal = ({ isOpen, onClose }: Props) => {
         <CardForm
           type="applicant"
           totalStep={3}
-          onSubmit={() => {}}
+          onSubmit={(data) => {
+            mutate(data);
+          }}
           onClose={() => onClose()}
         />
       </div>

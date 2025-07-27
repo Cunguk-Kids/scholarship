@@ -3,8 +3,10 @@ import { mobius } from "@/services/gql/schema";
 import { useProgramsEventWatcher } from "./useWatchEvent";
 import { toNullable } from "@/util/toNullData";
 
-type Filter = { id?: string; name?: string; };
+type Filter = { id?: string; name?: string };
 type SWRKey = [string, Filter?];
+
+export type ProgramResultDto = NonNullable<ReturnType<typeof usePrograms>["data"]>[0];
 
 export function usePrograms(initialFilter?: Filter) {
   useProgramsEventWatcher();
@@ -24,7 +26,8 @@ export function usePrograms(initialFilter?: Filter) {
             endAt: true,
             startAt: true,
             totalRecipients: true,
-            totalFund: true
+            totalFund: true,
+            programId: true,
           },
         },
       },
@@ -34,16 +37,14 @@ export function usePrograms(initialFilter?: Filter) {
 
   const swrKey = ["programs", initialFilter];
 
-  const {
-    data,
-    error,
-    isLoading,
-    isValidating,
-    mutate,
-  } = useSWR(swrKey, fetcher, {
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-  });
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    swrKey,
+    fetcher,
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+    }
+  );
 
   const refetch = async (newFilter?: Filter) => {
     const key: SWRKey = ["programs", newFilter];
