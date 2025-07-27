@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "active-node": "hardhat node",
+    "active-node": "hardhat node --show-stack-traces",
     "deploy": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network localhost",
     "deploy-v2": "bun hardhat ignition deploy ignition/modules/scholarship-manager-v2.ts --network localhost",
     "deploy-v2-lisk": "bun hardhat ignition deploy ignition/modules/scholarship-manager-v2.ts --network liskSepolia --verify",

@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1753547857354,
+      "tag": "0000_misty_red_ghost",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1753548076526,
+      "tag": "0001_stiff_masked_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1753548269767,
+      "tag": "0002_goofy_miek",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1753548468507,
+      "tag": "0003_black_boomerang",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1753550574769,
+      "tag": "0004_plain_mesmero",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1753550639410,
+      "tag": "0005_lethal_mother_askani",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1753553069788,
+      "tag": "0006_green_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1753554371224,
+      "tag": "0007_moaning_wrecking_crew",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1753554586242,
+      "tag": "0008_handy_tigra",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1753599674231,
+      "tag": "0009_robust_gressill",
+      "breakpoints": true
+    }
+  ]
+}

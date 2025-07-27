@@ -8,12 +8,10 @@ export default buildModule("ScholarshipManagerModule", (m) => {
 
   const programImplementation = m.contract("ScholarshipProgram");
 
-  const manager = m.contract("ScholarshipManager", [
-    programImplementation,
+  const manager = m.contract("contracts/v2/Scholarship.sol:ScholarshipManager", [
     donaterNFT,
     studentNFT,
     mockUSDC,
-    6,
   ]);
 
   const minterRole = keccak256(toHex("MINTER_ROLE"));

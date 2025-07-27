@@ -1,0 +1,1 @@
+ALTER TABLE "indexed_blocks" ADD CONSTRAINT "indexed_blocks_block_number_unique" UNIQUE("block_number");

@@ -22,9 +22,10 @@ contract BaseNFT is AccessControl, ERC721, ERC721URIStorage {
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor(string memory _tokenName, string memory _tokenSymbol)
-        ERC721(_tokenName, _tokenSymbol)
-    {
+    constructor(
+        string memory _tokenName,
+        string memory _tokenSymbol
+    ) ERC721(_tokenName, _tokenSymbol) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -38,7 +39,9 @@ contract BaseNFT is AccessControl, ERC721, ERC721URIStorage {
         _setTokenURI(id, metadataURI);
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         override(ERC721, AccessControl, ERC721URIStorage)
@@ -47,12 +50,9 @@ contract BaseNFT is AccessControl, ERC721, ERC721URIStorage {
         return super.supportsInterface(interfaceId);
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 }
@@ -63,7 +63,7 @@ contract ProgramCreatorNFT is BaseNFT("ProgramCreator", "PGCT") {}
 
 contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
     uint256 constant MILESTONE_APPROVE_DEADLINE = 2 days;
-    uint256 constant MINIMAL_FUND = 100 * 10**6; // 10 coin we assume using usdc;
+    uint256 constant MINIMAL_FUND = 100 * 10 ** 6; // 10 coin we assume using usdc;
 
     // remove after code fix
     enum ProgramStatus {
@@ -235,22 +235,18 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         if (id == 0 || id > _nextMilestoneId) revert OnlyValidMilestone();
     }
 
-    function _onlyOnGoing(uint256 programId)
-        internal
-        view
-        returns (bool isOngoing)
-    {
+    function _onlyOnGoing(
+        uint256 programId
+    ) internal view returns (bool isOngoing) {
         Program memory program = programs[programId];
         // remove after codefix
         if (program.status == ProgramStatus.InOnGoing) return true;
         if (block.timestamp < program.ongoingAt) revert ProgramNotOngoing();
     }
 
-    function _onlyVotingPeriod(uint256 programId)
-        internal
-        view
-        returns (bool isOnlyVotingPeiod)
-    {
+    function _onlyVotingPeriod(
+        uint256 programId
+    ) internal view returns (bool isOnlyVotingPeiod) {
         Program memory program = programs[programId];
         // remove after codefix
         if (program.status == ProgramStatus.InVoting) return true;
@@ -260,11 +256,9 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         ) revert OnlyOnVoting();
     }
 
-    function _onlyProgramOpen(uint256 programId)
-        internal
-        view
-        returns (bool isOnlyProgramOpen)
-    {
+    function _onlyProgramOpen(
+        uint256 programId
+    ) internal view returns (bool isOnlyProgramOpen) {
         Program memory program = programs[programId];
         if (program.status == ProgramStatus.InApplicant) return true;
         if (
@@ -286,20 +280,18 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         return programs[id];
     }
 
-    function changeProgramStatus(uint256 id, ProgramStatus status)
-        public
-        onlyValidProgram(id)
-        onlyRole(PROGRAM_CONTROL)
-    {
+    function changeProgramStatus(
+        uint256 id,
+        ProgramStatus status
+    ) public onlyValidProgram(id) onlyRole(PROGRAM_CONTROL) {
         Program storage program = programs[id];
         program.status = status;
     }
 
-    function changeMilestoneStatus(uint256 id, MilestoneStatus status)
-        public
-        onlyValidMilestone(id)
-        onlyRole(PROGRAM_CONTROL)
-    {
+    function changeMilestoneStatus(
+        uint256 id,
+        MilestoneStatus status
+    ) public onlyValidMilestone(id) onlyRole(PROGRAM_CONTROL) {
         Milestone storage milestone = applicantMilestones[id];
         milestone.status = status;
     }
@@ -311,8 +303,9 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         MilestoneAllocation allocation
     ) external {
         if (dates[0] < block.timestamp) revert CannotCreateProgramInThePast();
-        if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] < dates[3]))
-            revert DateIsNotSequential();
+        if (
+            !(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] < dates[3])
+        ) revert DateIsNotSequential();
         // transfer token from sender to this contract
         scholarshipToken.transferFrom(msg.sender, address(this), totalFund);
 
@@ -452,10 +445,10 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         emit OnVoted(voter, programId, applicantAddress);
     }
 
-    function submitMilestone(uint256 milestoneId, string calldata proveCID)
-        public
-        onlyValidMilestone(milestoneId)
-    {
+    function submitMilestone(
+        uint256 milestoneId,
+        string calldata proveCID
+    ) public onlyValidMilestone(milestoneId) {
         // get the milestone
         Milestone storage milestone = applicantMilestones[milestoneId];
 
@@ -545,21 +538,19 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         emit WithdrawMilestone(programId, applicant.id);
     }
 
-    function mintProgramCreator(uint256 id, string calldata metadataCID)
-        public
-        onlyValidProgram(id)
-        onlyOngoing(id)
-        nonReentrant
-    {
+    function mintProgramCreator(
+        uint256 id,
+        string calldata metadataCID
+    ) public onlyValidProgram(id) onlyOngoing(id) nonReentrant {
         Program storage program = programs[id];
         if (program.creator != msg.sender) revert OnlyProgramCreator();
         programCreatorNFT.mint(id, msg.sender, metadataCID);
     }
 
-    function mintApplicant(uint256 programId, string calldata metadataCID)
-        public
-        nonReentrant
-    {
+    function mintApplicant(
+        uint256 programId,
+        string calldata metadataCID
+    ) public nonReentrant {
         // check if function called by non applicant
         uint256 applicantId = addressToApplicant[programId][msg.sender];
         if (applicantId == 0) revert OnlyApplicant();
