@@ -1,7 +1,7 @@
 import { ponder } from "ponder:registry";
 import { db } from "@/db";
-import { and, eq, InferInsertModel } from "drizzle-orm";
-import { milestones, programs, students, votes } from "@/db/schema";
+import { and, eq, InferEnum, InferInsertModel } from "drizzle-orm";
+import { milestones, MilestoneTypeEnum, programs, students, votes } from "@/db/schema";
 import { fetchFromIPFS, isValidCID } from "../utils/ipfs";
 import { logger } from "@/utils/logger";
 import { insertBlock } from "@/services/block.log.service";
@@ -65,7 +65,38 @@ export const scholarship = () => {
   });
 
   ponder.on("scholarship:ApplicantRegistered", async ({ event }) => {
-    const { applicantAddress, programId, id } = event.args;
+    const { applicantAddress, programId, id, metadataCID } = event.args;
+
+    logger.info({ applicantAddress, programId, id }, " Student Param");
+
+    const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
+    let baseData: InferInsertModel<typeof students> = {
+      programId: Number(programId),
+      studentId: Number(id),
+      studentAddress: String(applicantAddress),
+    };
+
+    if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
+      logger.info({ trimmedCID }, "CID Data Program");
+      const ipfsData = await fetchFromIPFS(trimmedCID);
+      logger.info({ ipfsData }, "IPFS Data Program");
+
+      if (!isEmpty(ipfsData)) {
+        baseData = {
+          ...baseData,
+          email: ipfsData?.attributes?.[0]?.email as string || '',
+          fullName: ipfsData?.attributes?.[0]?.fullName as string || '',
+          financialSituation: ipfsData?.attributes?.[0]?.fullName as string || '',
+          scholarshipMotivation: ipfsData?.attributes?.[0]?.fullName as string || '',
+        };
+      }
+    }
+    const cleanedData = Object.fromEntries(
+      Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+    );
+
+    logger.info({ cleanedData }, "Cleaned Data Milestone");
+
 
     await db.insert(students).values({
       programId: Number(programId),
@@ -80,6 +111,8 @@ export const scholarship = () => {
 
   ponder.on("scholarship:OnVoted", async ({ event }) => {
     const { applicant, programId, voter } = event.args;
+
+    logger.info({ applicant, programId, voter }, " On Voted Param");
 
     const [student] = await db
       .select()
@@ -106,6 +139,7 @@ export const scholarship = () => {
   ponder.on("scholarship:MilestoneAdded", async ({ event }) => {
     const { metadataCID, amount, creator, id, programId } = event.args;
 
+    logger.info({ metadataCID, amount, creator, id, programId }, "Milestone Param");
     const [student] = await db
       .select()
       .from(students)
@@ -116,13 +150,36 @@ export const scholarship = () => {
       return;
     }
 
-    await db.insert(milestones).values({
+    const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
+    let baseData: InferInsertModel<typeof milestones> = {
       amount: Number(amount),
       milestoneId: Number(id),
       studentId: student.studentId,
       programId: Number(programId),
-      metadataCID: metadataCID
-    }).onConflictDoNothing();
+      metadataCID: metadataCID,
+    };
+
+    if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
+      logger.info({ trimmedCID }, "CID Data Program");
+      const ipfsData = await fetchFromIPFS(trimmedCID);
+      logger.info({ ipfsData }, "IPFS Data Program");
+
+      if (!isEmpty(ipfsData)) {
+        baseData = {
+          ...baseData,
+          description: ipfsData?.attributes?.[0]?.scholarshipName as string || '',
+          estimation: ipfsData?.attributes?.[0]?.estimation as number || 0,
+          type: ipfsData?.attributes?.[0]?.type as InferEnum<typeof MilestoneTypeEnum>,
+        };
+      }
+    }
+    const cleanedData = Object.fromEntries(
+      Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+    );
+
+    logger.info({ cleanedData }, "Cleaned Data Milestone");
+
+    await db.insert(milestones).values(cleanedData).onConflictDoNothing();
 
     await insertBlock({ event, eventName: "scholarship:MilestoneAdded" });
 
@@ -132,6 +189,9 @@ export const scholarship = () => {
 
   ponder.on("scholarship:WithdrawMilestone", async ({ event }) => {
     const { applicantId, programId } = event.args;
+
+    logger.info({ applicantId, programId }, "Withdraw Milestone Param");
+
     await db.update(milestones)
       .set({
         isCollected: true,
@@ -151,6 +211,8 @@ export const scholarship = () => {
 
   ponder.on("scholarship:SubmitMilestone", async ({ event }) => {
     const { milestoneId, proveCID } = event.args;
+
+    logger.info({ milestoneId, proveCID }, "Submit Milestone Param");
 
     await db.update(milestones)
       .set({
