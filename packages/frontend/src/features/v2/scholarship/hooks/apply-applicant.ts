@@ -47,7 +47,16 @@ export function useApplyApplicantV2(programId: string) {
         })
       );
 
-      const ipfs = await uploadToIPFS({ meta: data });
+      const ipfs = await uploadToIPFS({
+        meta: {
+          fullName: data.fullName,
+          email: data.email,
+          // TODO: add financial situation
+          financialSituation: "",
+          scholarshipMotivation: "",
+          studentId: data.studentId,
+        },
+      });
       const cid = cleanCID(ipfs?.metaCID);
 
       const hash = await writeContractAsync({

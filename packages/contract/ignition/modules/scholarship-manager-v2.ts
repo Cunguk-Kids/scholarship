@@ -2,11 +2,21 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 import { keccak256, toHex } from "viem";
 
 export default buildModule("ScholarshipManagerModuleV2", (m) => {
-  const donaterNFT = m.contract("ProgramCreatorNFT");
-  const studentNFT = m.contract("ApplicantNFT");
+  const donaterNFT = m.contractAt(
+    "ProgramCreatorNFT",
+    "0x6cB6d54108DfB4d8Dce2D8fAdbfe8465f222d3B5"
+  );
+  const studentNFT = m.contractAt(
+    "ApplicantNFT",
+    "0x282170e69DE842a323911c37716e28A878c1899F"
+  );
+  const usdc = m.contractAt(
+    "MockUSDC",
+    "0x9b379eA3B4dEE91E1B0F2e5c36C0931cCDf227a0"
+  );
 
   const manager = m.contract("ScholarshipManagerV2", [
-    "0x9b379eA3B4dEE91E1B0F2e5c36C0931cCDf227a0",
+    usdc,
     studentNFT,
     donaterNFT,
   ]);

@@ -20,6 +20,6 @@ const typeDefs = `
 ` as const;
 
 export const mobius = new Mobius<typeof typeDefs>({
-  url: 'http://localhost:42069/graphql',
+  url: 'http://139.59.232.68:42069/graphql',
   typeDefs,
 });

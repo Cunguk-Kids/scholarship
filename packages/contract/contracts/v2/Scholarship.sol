@@ -14,6 +14,7 @@ contract ScholarshipAccessControl is AccessControl {
     constructor() {
         _grantRole(VOTE_CONTROL, msg.sender);
         _grantRole(PROGRAM_CONTROL, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }
 
@@ -140,7 +141,8 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
     event ApplicantRegistered(
         uint256 indexed id,
         uint256 programId,
-        address applicantAddress
+        address applicantAddress,
+        string metadataCID
     );
     event OnVoted(address voter, uint256 programId, address applicant);
     event MilestoneAdded(
@@ -379,7 +381,7 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         _inputMilestone(programId, milestones);
 
         //emit event
-        emit ApplicantRegistered(_nextApplicantId, programId, msg.sender);
+        emit ApplicantRegistered(_nextApplicantId, programId, msg.sender, metadataCID);
     }
 
     function _inputMilestone(
