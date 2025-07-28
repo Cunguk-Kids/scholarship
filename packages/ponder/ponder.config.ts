@@ -25,7 +25,7 @@ export default createConfig({
     scholarship: {
       chain: "lisk",
       abi: scholarshipAbi,
-      address: "0xe2bfBd40F6A00F10c08c817a44fc3e3ffb418100",
+      address: "0x42D68F24469b681d86A1d62E54D256b13718567a",
       startBlock: 24118493,
     },
   },
