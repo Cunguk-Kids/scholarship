@@ -26,11 +26,11 @@ export const students = pgTable("students", {
   id: uuid('id').defaultRandom().primaryKey(),
   studentId: integer("student_id").unique().unique(),
   studentAddress: varchar("student_address", { length: 255 }).default(""),
+  programId: integer("program_id").references(() => programs.programId),
   fullName: varchar("full_name", { length: 255 }).default(""),
   email: varchar("email", { length: 255 }).default(""),
   financialSituation: text("financial_situation").default(""),
   scholarshipMotivation: text("scholarship_motivation").default(""),
-  programId: integer("program_id").references(() => programs.programId),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 });
@@ -49,15 +49,15 @@ export const achievements = pgTable("achievements", {
 export const milestones = pgTable("milestones", {
   id: uuid('id').defaultRandom().primaryKey(),
   milestoneId: integer("milestone_id").unique(),
-  isCollected: boolean("is_collected").default(false),
+  amount: integer("amount").default(0),
   studentId: integer("student_id").references(() => students.studentId),
   programId: integer("program_id").references(() => programs.programId),
+  metadataCID: varchar("metadata_cid", { length: 255 }).default(""),
+  proveCID: varchar("prove_cid", { length: 255 }).default(""),
+  isCollected: boolean("is_collected").default(false),
   type: MilestoneTypeEnum("type"),
   description: text("description").default(""),
   estimation: integer("estimation").default(0),
-  amount: integer("amount").default(0),
-  metadataCID: varchar("metadata_cid", { length: 255 }).default(""),
-  proveCID: varchar("prove_cid", { length: 255 }).default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 });
