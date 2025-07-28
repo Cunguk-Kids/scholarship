@@ -13,15 +13,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Generate .env file
+      - name: Generate .env file from selected system env
         working-directory: ./packages/ponder
         run: |
-          echo DATABASE_URL="${{ secrets.DATABASE_URL }}" >> .env
-          echo PONDER_RPC_URL_LISK="${{ secrets.PONDER_RPC_URL_LISK }}" >> .env
+          env | grep -v '^_' | grep -v '^PWD=' | grep -v '^HOME=' | grep -v '^GITHUB' > .env
 
       - name: Print .env contents (debug)
         working-directory: ./packages/ponder
-        run: cat .env
+        run: cp ../../../../../.env.development .env
+
+      - name: Print .env.local contents (debug)
+        working-directory: ./packages/ponder
+        run: cp ../../../../../.env.development .env.local
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
