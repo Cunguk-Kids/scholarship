@@ -9,11 +9,12 @@ import { VotingList } from "@/features/v2/vote/components/VotingList";
 import { ApplicantListModal } from "../components/ApplicantListModal";
 
 export function VotePage() {
-  const [openApplicantListModal, setOpenApplicantListModal] = useState(false);
+  const [programId, setProgramId] = useState<number | null>(null);
 
   const handleClickVote = (programId: number) => {
-    setOpenApplicantListModal(true);
+    setProgramId(programId);
   };
+
   return (
     <>
       <div className="flex flex-col relative h-[calc(100vh-162.4px)] w-full">
@@ -95,10 +96,12 @@ export function VotePage() {
         <Footer />
       </div>
 
-      <ApplicantListModal
-        isOpen={openApplicantListModal}
-        onClose={() => setOpenApplicantListModal(false)}
-      />
+      {programId && (
+        <ApplicantListModal
+          programId={programId}
+          onClose={() => setProgramId(null)}
+        />
+      )}
     </>
   );
 }

@@ -1,8 +1,8 @@
 import { CardScholarship } from "@/components/CardScholarship";
-import { useGetPrograms } from "@/features/scholarship/hooks/get-programs";
+import { usePrograms } from "@/hooks/v2/data/usePrograms";
 
 export const VotingList = ({ onClickVote }) => {
-  const { programs } = useGetPrograms();
+  const { data: programs } = usePrograms();
   if (!programs?.length)
     return (
       <div className="border-4 rounded-2xl p-20 my-auto neo-shadow place-content-center">
@@ -17,17 +17,21 @@ export const VotingList = ({ onClickVote }) => {
     <>
       {programs &&
         programs.length > 0 &&
-        programs.map((item: any, i) => (
+        programs.map((item, i) => (
           <CardScholarship
             key={i}
             program={{
               id: Number(item.id),
-              initiatorAddress: item.initiatorAddress,
-              endDate: new Date(item.endDate ?? "").getTime(),
-              startDate: new Date(item.startDate ?? "").getTime(),
-              targetApplicant: Number(item.targetApplicant),
-              programMetadataCID: item.title,
-              programContractAddress: item.contractAddress,
+              initiatorAddress: item.creator,
+              endDate: new Date(
+                new Date(item.endAt ?? "").getTime() ?? ""
+              ).getTime(),
+              startDate: new Date(
+                new Date(item.startAt ?? "").getTime() ?? ""
+              ).getTime(),
+              targetApplicant: Number(item.totalRecipients),
+              programMetadataCID: item.programId,
+              programContractAddress: "",
             }}
             labelButton={"Vote Now"}
             // status={activeTab}

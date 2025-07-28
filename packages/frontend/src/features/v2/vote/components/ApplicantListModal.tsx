@@ -2,15 +2,17 @@ import { useState } from "react";
 import { Arrow } from "@/components/Arrow";
 import { CardVote } from "@/components/CardVote";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
+import { useStudents } from "../hooks/use-student";
 
 type Props = {
-  isOpen: boolean;
+  programId: null | number;
   onClose: () => void;
 };
 
-export const ApplicantListModal = ({ isOpen, onClose }: Props) => {
+export const ApplicantListModal = ({ programId, onClose }: Props) => {
+  const { data } = useStudents();
   const [showSubmitModal, setShowSubmitModal] = useState(false);
-  if (!isOpen) return null;
+  if (programId == null) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -38,9 +40,14 @@ export const ApplicantListModal = ({ isOpen, onClose }: Props) => {
           </div>
         </div>
         <div className="my-10 w-full grid grid-cols-3 gap-8">
-          <CardVote onSubmit={() => setShowSubmitModal(true)} />
-          <CardVote onSubmit={() => setShowSubmitModal(true)} />
-          <CardVote onSubmit={() => setShowSubmitModal(true)} />
+          {data?.studentss.items.map((student) => (
+            <CardVote
+              key={student.id}
+              institution={student.financialSituation ?? undefined}
+              name={student.fullName ?? undefined}
+              onSubmit={() => setShowSubmitModal(true)}
+            />
+          ))}
         </div>
       </div>
 
