@@ -1,17 +1,17 @@
-import { useState } from "react";
-import { Orbits } from "@/features/v2/vote/components/Orbits";
-import { Hands } from "@/features/v2/vote/components/Hands";
-import { Bottom } from "@/features/v2/vote/components/Bottom";
-import { Choose } from "@/features/v2/vote/components/Choose";
-import SplitText from "@/components/ui/split-text";
-import { Footer } from "@/features/v2/vote/components/Footer";
-import { VotingList } from "@/features/v2/vote/components/VotingList";
-import { ApplicantListModal } from "../components/ApplicantListModal";
+import { useState } from 'react';
+import { Orbits } from '@/features/v2/vote/components/Orbits';
+import { Hands } from '@/features/v2/vote/components/Hands';
+import { Bottom } from '@/features/v2/vote/components/Bottom';
+import { Choose } from '@/features/v2/vote/components/Choose';
+import SplitText from '@/components/ui/split-text';
+import { Footer } from '@/features/v2/vote/components/Footer';
+import { VotingList } from '@/features/v2/vote/components/VotingList';
+import { ApplicantListModal } from '../components/ApplicantListModal';
 
 export function VotePage() {
   const [programId, setProgramId] = useState<number | null>(null);
 
-  const handleClickVote = (programId: number) => {
+  const handleClickVote = (programId: number | null) => {
     setProgramId(programId);
   };
 
@@ -34,7 +34,7 @@ export function VotePage() {
               threshold={0.1}
               rootMargin="-100px"
               textAlign="center"
-            />{" "}
+            />{' '}
             <Choose />
           </h2>
           <h2 className="font-paytone text-5xl text-center">
@@ -67,21 +67,15 @@ export function VotePage() {
           </p>
         </div>
         <Orbits className="absolute top-0 bottom-0 left-0 -translate-x-1/2" />
-        <Orbits
-          className="absolute top-0 bottom-0 right-0 translate-x-1/2"
-          invert
-        />
+        <Orbits className="absolute top-0 bottom-0 right-0 translate-x-1/2" invert />
 
         <Bottom />
       </div>
       <div
         id="active-voting"
-        className="relative w-full bg-skgreen z-1 flex flex-col items-start gap-8 shrink-0 p-12"
-      >
+        className="relative w-full bg-skgreen z-1 flex flex-col items-start gap-8 shrink-0 p-12">
         <div className="inline-flex flex-col items-start justify-center gap-3.5">
-          <h2 className="font-paytone text-5xl">
-            Scholarships in Voting Phase
-          </h2>
+          <h2 className="font-paytone text-5xl">Scholarships in Voting Phase</h2>
           <p className="text-2xl">Cast your vote before the deadline closes.</p>
         </div>
         <div className="grid grid-cols-2 gap-14 justify-center items-center w-full mb-16 z-10">
@@ -96,12 +90,7 @@ export function VotePage() {
         <Footer />
       </div>
 
-      {programId && (
-        <ApplicantListModal
-          programId={programId}
-          onClose={() => setProgramId(null)}
-        />
-      )}
+      {programId && <ApplicantListModal programId={programId} onClose={() => setProgramId(null)} />}
     </>
   );
 }
