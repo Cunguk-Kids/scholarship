@@ -1,15 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button } from "./Button";
-import { StatusBadge } from "./StatusBadge";
+import { Button } from './Button';
+import { StatusBadge } from './StatusBadge';
+import Timeline, { type TimelineItem } from './Timeline';
 
 export const CardVote = ({
-  name = "Alma",
-  institution = "Universitas Indonesia",
+  name = 'Alma',
+  institution = 'Universitas Indonesia',
   onSubmit = () => null,
+  milestones,
 }: {
   name?: string;
   institution?: string;
   onSubmit?: () => any;
+  milestones?: TimelineItem[];
 }) => {
   const handleClickVote = () => {
     onSubmit();
@@ -35,7 +38,7 @@ export const CardVote = ({
             <div className="flex flex-col items-start gap-1 self-stretch">
               <p className="text-xs">Milestone Plan:</p>
               <div className="flex flex-col items-start gap-2 self-stretch">
-                <img src="/img/milestone-plan.svg" alt="milestone" />
+                <Timeline items={milestones || []} title="" />
               </div>
             </div>
           </div>

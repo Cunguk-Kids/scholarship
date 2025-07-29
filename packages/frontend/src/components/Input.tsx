@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 type Option = {
   label: string;
@@ -9,21 +9,23 @@ type Option = {
 
 type InputProps = {
   type:
-    | "upload"
-    | "text"
-    | "input"
-    | "date-simple"
-    | "date"
-    | "dropdown"
-    | "slider-token"
-    | "radio-group";
+    | 'upload'
+    | 'text'
+    | 'input'
+    | 'date-simple'
+    | 'date'
+    | 'dropdown'
+    | 'slider-token'
+    | 'radio-group';
   value?: string;
   label?: string;
   placeholder?: string;
   note?: string;
   options?: Option[];
   tokenAmount?: string;
+  tokenSymbol?: string;
   idrAmount?: string;
+  conversionRate?: number;
   min?: number;
   max?: number;
   step?: number;
@@ -38,37 +40,29 @@ export const Input: React.FC<InputProps> = ({
   placeholder,
   note,
   options = [],
-  tokenAmount,
-  idrAmount,
   min = 1,
   max = 100,
   step = 1,
   onChange,
   onUpload,
 }) => {
-  const inputId = "upload-file";
+  const inputId = 'upload-file';
   const inputClass =
-    "flex p-4 items-center gap-4 self-stretch rounded-2xl border bg-white focus:outline-none focus:ring-2 focus:ring-skpurple";
+    'flex p-4 items-center gap-4 self-stretch rounded-2xl border bg-white focus:outline-none focus:ring-2 focus:ring-skpurple';
 
   return (
     <div className="flex flex-col items-start w-full gap-2.5 self-stretch p-2.5">
-      {label && (
-        <label className="text-base font-bold text-black text-left">
-          {label}
-        </label>
-      )}
+      {label && <label className="text-base font-bold text-black text-left">{label}</label>}
 
       {/* UPLOAD */}
-      {type === "upload" && (
+      {type === 'upload' && (
         <label
           htmlFor={inputId}
-          className="flex flex-col justify-center items-center gap-4 text-center w-full cursor-pointer"
-        >
+          className="flex flex-col justify-center items-center gap-4 text-center w-full cursor-pointer">
           <img src="/icons/upload-cloud.svg" alt="upload-cloud-icon" />
           <h2 className="font-bold">Upload proof</h2>
           <p className="text-xs text-gray-600">
-            Any receipts, screenshots, or assignments that show your milestone
-            is done.
+            Any receipts, screenshots, or assignments that show your milestone is done.
           </p>
           <input
             id={inputId}
@@ -84,7 +78,7 @@ export const Input: React.FC<InputProps> = ({
       )}
 
       {/* TEXTAREA */}
-      {type === "text" && (
+      {type === 'text' && (
         <textarea
           className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
           placeholder={placeholder}
@@ -95,7 +89,7 @@ export const Input: React.FC<InputProps> = ({
       )}
 
       {/* INPUT TEXT */}
-      {type === "input" && (
+      {type === 'input' && (
         <input
           type="text"
           className={inputClass}
@@ -106,7 +100,7 @@ export const Input: React.FC<InputProps> = ({
       )}
 
       {/* DATE SIMPLE */}
-      {type === "date-simple" && (
+      {type === 'date-simple' && (
         <input
           type="text"
           className={inputClass}
@@ -117,7 +111,7 @@ export const Input: React.FC<InputProps> = ({
       )}
 
       {/* DATE */}
-      {type === "date" && (
+      {type === 'date' && (
         <input
           type="date"
           className={inputClass}
@@ -128,14 +122,10 @@ export const Input: React.FC<InputProps> = ({
       )}
 
       {/* DROPDOWN */}
-      {type === "dropdown" && (
-        <select
-          className={inputClass}
-          value={value}
-          onChange={(e) => onChange?.(e.target.value)}
-        >
+      {type === 'dropdown' && (
+        <select className={inputClass} value={value} onChange={(e) => onChange?.(e.target.value)}>
           <option value="" disabled>
-            {placeholder || "Select an option"}
+            {placeholder || 'Select an option'}
           </option>
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -146,7 +136,7 @@ export const Input: React.FC<InputProps> = ({
       )}
 
       {/* SLIDER with Token + IDR Conversion */}
-      {type === "slider-token" && (
+      {type === 'slider-token' && (
         <div className="flex flex-col gap-4 w-full">
           <input
             type="range"
@@ -188,15 +178,14 @@ export const Input: React.FC<InputProps> = ({
       )}
 
       {/* RADIO GROUP */}
-      {type === "radio-group" && options.length > 0 && (
+      {type === 'radio-group' && options.length > 0 && (
         <div className="flex flex-col gap-3 w-full">
           {options.map((opt) => (
             <label
               key={opt.value}
               className={`flex items-start gap-2 cursor-pointer ${
-                opt.disabled ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
+                opt.disabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}>
               <input
                 type="radio"
                 value={opt.value}
@@ -208,9 +197,7 @@ export const Input: React.FC<InputProps> = ({
               <div className="flex flex-col">
                 <span className="font-semibold text-black">{opt.label}</span>
                 {opt.description && (
-                  <span className="text-sm text-gray-500">
-                    {opt.description}
-                  </span>
+                  <span className="text-sm text-gray-500">{opt.description}</span>
                 )}
               </div>
             </label>
