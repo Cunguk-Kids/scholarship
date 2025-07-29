@@ -32,8 +32,8 @@ const Timeline: React.FC<TimelineProps> = ({ title, items, className = '' }) => 
 
             {/* content */}
             <div className="ml-4 flex-1 flex justify-between items-center">
-              <span className={`text-sm font-medium`}>{item.description}</span>
-              <span className={`text-sm font-semibold`}>{item.amount}</span>
+              <span className={`text-sm font-bold`}>{item.description}</span>
+              <span className={`text-sm font-bold`}>{item.amount}</span>
             </div>
           </div>
         ))}

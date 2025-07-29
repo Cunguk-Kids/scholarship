@@ -173,7 +173,7 @@ export const scholarship = () => {
       if (!isEmpty(ipfsData)) {
         baseData = {
           ...baseData,
-          description: ipfsData?.attributes?.[0]?.scholarshipName as string || '',
+          description: ipfsData?.attributes?.[0]?.description as string || '',
           estimation: ipfsData?.attributes?.[0]?.estimation as number || 0,
           type: ipfsData?.attributes?.[0]?.type as InferEnum<typeof MilestoneTypeEnum>,
         };
