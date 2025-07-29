@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { Arrow } from '@/components/Arrow';
-import { CardVote } from '@/components/CardVote';
-import { ConfirmationModal } from '@/components/ConfirmationModal';
-import { useStudents } from '../hooks/use-student';
+import { useState } from "react";
+import { Arrow } from "@/components/Arrow";
+import { CardVote } from "@/components/CardVote";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
+import { useStudents } from "../hooks/use-student";
+import { useVoteApplicantV2 } from "../hooks/use-vote-applicant";
+import type { Address } from "viem";
 
 type Props = {
   programId: null | number;
@@ -11,7 +13,8 @@ type Props = {
 
 export const ApplicantListModal = ({ programId, onClose }: Props) => {
   const { data } = useStudents();
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const { mutate } = useVoteApplicantV2();
+  const [applicant, setApplicant] = useState("");
   if (programId == null) return null;
 
   return (
@@ -23,13 +26,17 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
         <div className="flex justify-between">
           <div className="inline-flex flex-col justify-center items-start gap-3.5">
             <h1 className="font-paytone text-5xl">Applicants</h1>
-            <p className="text-2xl">Cast your vote before the deadline closes.</p>
+            <p className="text-2xl">
+              Cast your vote before the deadline closes.
+            </p>
           </div>
           <div className="flex flex-col items-start gap-1">
             <h3 className="text-sm font-medium">Voting close in...</h3>
             <div className="flex gap-2 py-2 px-3 items-center rounded-2xl border bg-error-container border-on-error-container">
               <img src="/icons/alarm-clock.svg" alt="clock-icon" />
-              <span className={`text-sm text-[0.625rem] text-on-error-container`}>
+              <span
+                className={`text-sm text-[0.625rem] text-on-error-container`}
+              >
                 {`00 d: 00 hr: 00 min`}
               </span>
             </div>
@@ -41,7 +48,7 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
               key={student.id}
               institution={student.financialSituation ?? undefined}
               name={student.fullName ?? undefined}
-              onSubmit={() => setShowSubmitModal(true)}
+              onSubmit={() => setApplicant(student.studentAddress!)}
               milestones={student.milestones.items}
             />
           ))}
@@ -49,16 +56,19 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
       </div>
 
       <ConfirmationModal
-        isOpen={showSubmitModal}
-        onClose={() => setShowSubmitModal(false)}
+        isOpen={Boolean(applicant)}
+        onClose={() => setApplicant("")}
         onSubmit={() => {
-          setShowSubmitModal(false);
-          console.log('-----submit-----');
+          mutate({
+            programId: programId,
+            applicantAddress: applicant as Address,
+          });
+          console.log("-----submit-----");
         }}
-        title={'Choose with care!'}
+        title={"Choose with care!"}
         desc={`Your choice can change someone’s life \n See their story. Review their plan. Cast your vote. \n You only get one vote per scholarship. Make it count.`}
-        primaryLabel={'Confirm Vote'}
-        secondaryLabel={'Review Agian'}
+        primaryLabel={"Confirm Vote"}
+        secondaryLabel={"Review Agian"}
       />
     </div>
   );

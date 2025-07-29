@@ -1,39 +1,45 @@
-import { usdcAddress } from "@/constants/contractAddress";
-import { skoolchainV2Abi } from "@/repo/abi";
 import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { ContractFunctionExecutionError, type Address } from "viem";
-import { useConfig, useWriteContract } from "wagmi";
-import { waitForTransactionReceipt } from "wagmi/actions";
+import { useAccount } from "wagmi";
 
 const mutationKey = "vote-applicant";
 
 export function useVoteApplicantV2() {
-  const { writeContractAsync } = useWriteContract();
-  const config = useConfig();
+  const account = useAccount();
   return useMutation({
     onMutate: () => {
-      console.log("Voting program...");
+      toast.loading("Voting Program", { id: mutationKey });
     },
     onSuccess: () => {
-      console.log("Voting created!");
+      toast.success("Voting Created", { id: mutationKey });
     },
     onError: (error: ContractFunctionExecutionError) => {
-      console.log(error, "Voting failed!");
+      console.error(error);
+      toast.error("Voting Failed", { id: mutationKey });
     },
-    mutationKey: [mutationKey],
+    mutationKey: [mutationKey, account.address],
     mutationFn: async (data: {
-      programId: string;
-      voter: Address;
+      programId: number;
       applicantAddress: Address;
     }) => {
-      const hash = await writeContractAsync({
-        abi: skoolchainV2Abi,
-        address: usdcAddress,
-        functionName: "voteApplicant",
-        args: [BigInt(data.programId), data.voter, data.applicantAddress],
-      });
+      if (!account.address) return;
+      // @ts-expect-error unsafe binding
+      data.voter = account.address;
+      console.log(data, "---data-voter---");
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_HOST}/vote`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
-      await waitForTransactionReceipt(config, { hash });
+      if (response.ok) return response.json();
+      throw new Error(await response.text());
     },
   });
 }
