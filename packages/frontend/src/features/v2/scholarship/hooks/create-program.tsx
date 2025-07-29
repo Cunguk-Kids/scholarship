@@ -4,6 +4,7 @@ import { skoolchainV2Abi } from "@/repo/abi";
 import { uploadToIPFS } from "@/services/api/ipfs.service";
 import { cleanCID } from "@/util/cleanCID";
 import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { ContractFunctionExecutionError, erc20Abi } from "viem";
 import { useConfig, useWriteContract } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
@@ -46,12 +47,19 @@ export function useCreateProgramV2() {
       modifiedData.ongoingAt = Number(dates[2]);
       modifiedData.closedAt = Number(dates[3]);
 
-      const approveHash = await writeContractAsync({
-        abi: erc20Abi,
-        address: usdcAddress,
-        functionName: "approve",
-        args: [skoolchainV2Address, totalFund],
-      });
+      const approveHash = await toast.promise(
+        writeContractAsync({
+          abi: erc20Abi,
+          address: usdcAddress,
+          functionName: "approve",
+          args: [skoolchainV2Address, totalFund],
+        }),
+        {
+          loading: "Creating program...",
+          success: "Program created!",
+          error: "Program creation failed!",
+        }
+      );
       const ipfs = await uploadToIPFS({ meta: data });
 
       await waitForTransactionReceipt(config, { hash: approveHash });

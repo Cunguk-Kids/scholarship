@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/Button";
 import { ScholarshipModal } from "../components/ScholarshipModal";
 import { ApplicantModal } from "../components/ApplicantModal";
@@ -8,8 +8,11 @@ import { tabbingData } from "../constants/ScholarshipConstants";
 import SplitText from "@/components/ui/split-text";
 import { ApproachableWrapper } from "@/components/ornaments/approachable-wrapper";
 import { usePrograms } from "@/hooks/v2/data/usePrograms";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 export const ScholarshipsPage = () => {
+  const ref = useRef<HTMLDivElement>(null);
+
   const { applicants } = useApplicant("");
   const { data } = usePrograms();
 
@@ -37,6 +40,8 @@ export const ScholarshipsPage = () => {
 
     return () => clearInterval(interval);
   }, [messagesIndex]);
+
+  useClickOutside(ref, () => setOpenScholarshipModal(!open));
 
   return (
     <>
@@ -213,11 +218,13 @@ export const ScholarshipsPage = () => {
       </div>
 
       <ScholarshipModal
+        ref={ref}
         isOpen={openScholarshipModal}
         onClose={() => setOpenScholarshipModal(false)}
       />
 
       <ApplicantModal
+        ref={ref}
         programId={programId}
         isOpen={Boolean(programId)}
         onClose={() => setProgramId("")}
