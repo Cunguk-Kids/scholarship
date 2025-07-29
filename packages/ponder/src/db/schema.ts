@@ -1,5 +1,6 @@
 import { pgTable, varchar, text, integer, numeric, timestamp, uuid, boolean, } from "drizzle-orm/pg-core";
 import { MilestoneAllocationEnum, MilestoneTypeEnum } from "./enums";
+import { relations } from "drizzle-orm";
 
 export * from "./enums";
 
@@ -80,3 +81,54 @@ export const indexedBlocks = pgTable("indexed_blocks", {
   blockNumber: integer("block_number").unique().default(0),
   timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow()
 });
+
+
+// Program → Students, Milestones, Votes
+export const programRelations = relations(programs, ({ many }) => ({
+  students: many(students),
+  milestones: many(milestones),
+  votes: many(votes),
+}));
+
+// Student → Program, Milestones, Achievements, Votes
+export const studentRelations = relations(students, ({ one, many }) => ({
+  program: one(programs, {
+    fields: [students.programId],
+    references: [programs.programId],
+  }),
+  milestones: many(milestones),
+  achievements: many(achievements),
+  votes: many(votes),
+}));
+
+// Milestone → Student & Program
+export const milestoneRelations = relations(milestones, ({ one }) => ({
+  student: one(students, {
+    fields: [milestones.studentId],
+    references: [students.studentId],
+  }),
+  program: one(programs, {
+    fields: [milestones.programId],
+    references: [programs.programId],
+  }),
+}));
+
+// Vote → Student & Program
+export const voteRelations = relations(votes, ({ one }) => ({
+  student: one(students, {
+    fields: [votes.studentId],
+    references: [students.studentId],
+  }),
+  program: one(programs, {
+    fields: [votes.programId],
+    references: [programs.programId],
+  }),
+}));
+
+// Achievement → Student
+export const achievementRelations = relations(achievements, ({ one }) => ({
+  student: one(students, {
+    fields: [achievements.studentId],
+    references: [students.studentId],
+  }),
+}));
