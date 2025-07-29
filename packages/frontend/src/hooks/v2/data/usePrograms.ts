@@ -3,7 +3,7 @@ import { mobius } from "@/services/gql/schema";
 import { useProgramsEventWatcher } from "./useWatchEvent";
 import { toNullable } from "@/util/toNullData";
 
-type Filter = { id?: string; name?: string };
+type Filter = { id?: string; name?: string; };
 type SWRKey = [string, Filter?];
 
 export type ProgramResultDto = NonNullable<ReturnType<typeof usePrograms>["data"]>[0];
@@ -27,7 +27,6 @@ export function usePrograms(initialFilter?: Filter) {
             startAt: true,
             totalRecipients: true,
             totalFund: true,
-            programId: true,
           },
         },
       },
