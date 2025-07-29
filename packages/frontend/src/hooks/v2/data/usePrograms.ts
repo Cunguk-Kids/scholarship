@@ -22,6 +22,7 @@ export function usePrograms(initialFilter?: Filter) {
             id: true,
             name: true,
             description: true,
+            blockchainId: true,
             creator: true,
             endAt: true,
             startAt: true,
