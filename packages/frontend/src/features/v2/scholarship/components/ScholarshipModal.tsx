@@ -3,11 +3,12 @@ import { appStateInjection } from "@/hooks/inject/app-state";
 import { useCreateProgramV2 } from "../hooks/create-program";
 
 type Props = {
+  ref: React.RefObject<HTMLDivElement | null>;
   isOpen: boolean;
   onClose: () => void;
 };
 
-export const ScholarshipModal = ({ isOpen, onClose }: Props) => {
+export const ScholarshipModal = ({ ref, isOpen, onClose }: Props) => {
   const {
     loading: { setLoading },
   } = appStateInjection.use();
@@ -28,7 +29,10 @@ export const ScholarshipModal = ({ isOpen, onClose }: Props) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div
+      ref={ref}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    >
       <div className="rounded-2xl w-full max-w-9/12 relative shadow-x">
         <CardForm
           type="provider"
