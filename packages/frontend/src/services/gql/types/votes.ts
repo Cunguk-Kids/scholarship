@@ -1,16 +1,16 @@
 export const voteSchema = `
   type votes {
-   id: String!
-address: String
-programId: String
-studentId: String
-blockchainProgramId: Int
-blockchainStudentId: Int
-ipAddress: String
-createdAt: String
-updatedAt: String
-student: students
-program: programs
+  id: String!
+  address: String
+  programId: String
+  studentId: String
+  blockchainProgramId: Int
+  blockchainStudentId: Int
+  ipAddress: String
+  createdAt: String
+  updatedAt: String
+  student: students
+  program: programs
   }
 
   input votesFilter {
