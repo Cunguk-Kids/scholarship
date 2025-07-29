@@ -1,18 +1,20 @@
 export const milestoneSchema = `
   type milestones {
-    id: ID!
-    milestoneId: Int
-    isCollected: Boolean
-    studentId: Int
-    programId: Int
-    type: String
-    description: String
-    estimation: Int
-    amount: Int
-    metadataCID: String
-    proveCID: String
-    createdAt: String
-    updatedAt: String
+    id: String!
+blockchainId: Int
+amount: Int
+studentId: String
+programId: String
+metadataCID: String
+proveCID: String
+isCollected: Boolean
+type: String
+description: String
+estimation: Int
+createdAt: String
+updatedAt: String
+student: students
+program: programs
   }
 
   input milestonesFilter {

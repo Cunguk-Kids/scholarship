@@ -1,20 +1,44 @@
 export const programSchema = `
   type programs {
-    id: ID!
-    programId: Int
-    name: String
-    creator: String
-    metadataCID: String
-    description: String
-    startAt: String
-    endAt: String
-    votingAt: String
-    rules: String
-    totalRecipients: Int
-    totalFund: Int
-    milestoneType: String
-    createdAt: String
-    updatedAt: String
+    id: String!
+blockchainId: Int
+name: String
+creator: String
+metadataCID: String
+description: String
+startAt: String
+endAt: String
+votingAt: String
+rules: String
+totalRecipients: Int
+totalFund: Int
+milestoneType: String
+createdAt: String
+updatedAt: String
+students(
+where: studentsFilter
+orderBy: String
+orderDirection: String
+before: String
+after: String
+limit: Int
+): studentsPage
+milestones(
+where: milestonesFilter
+orderBy: String
+orderDirection: String
+before: String
+after: String
+limit: Int
+): milestonesPage
+votes(
+where: votesFilter
+orderBy: String
+orderDirection: String
+before: String
+after: String
+limit: Int
+): votesPage
   }
 
 

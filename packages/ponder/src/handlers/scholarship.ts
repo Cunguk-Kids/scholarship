@@ -18,7 +18,7 @@ export const scholarship = () => {
       let baseData: InferInsertModel<typeof programs> = {
         milestoneType: Number(allocation) === 0 ? "FIXED" : "USER_DEFINED",
         creator: String(creator),
-        programId: Number(id),
+        blockchainId: Number(id),
         totalFund: Number(totalFund),
         metadataCID: String(trimmedCID) || null,
         name: '',
@@ -69,10 +69,20 @@ export const scholarship = () => {
 
     logger.info({ applicantAddress, programId, id }, " Student Param");
 
+    const [program] = await db
+      .select()
+      .from(programs)
+      .where(eq(programs.blockchainId, Number(programId)));
+
+    if (!program) {
+      return;
+    }
+
+
     const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
     let baseData: InferInsertModel<typeof students> = {
-      programId: Number(programId),
-      studentId: Number(id),
+      programId: program.id,
+      blockchainId: Number(id),
       studentAddress: String(applicantAddress),
     };
 
@@ -98,11 +108,7 @@ export const scholarship = () => {
     logger.info({ cleanedData }, "Cleaned Data Milestone");
 
 
-    await db.insert(students).values({
-      programId: Number(programId),
-      studentId: Number(id),
-      studentAddress: String(applicantAddress),
-    }).onConflictDoNothing();
+    await db.insert(students).values(cleanedData).onConflictDoNothing();
 
     await insertBlock({ event, eventName: "scholarship:ApplicantRegistered" });
 
@@ -120,14 +126,15 @@ export const scholarship = () => {
       .where(eq(students.studentAddress, applicant));
 
     if (!student) {
-      console.warn(`Student not found for address: ${applicant}`);
       return;
     }
 
     await db.insert(votes).values({
       address: String(voter),
-      programId: Number(programId),
-      studentId: student.studentId,
+      programId: student.programId,
+      studentId: student.id,
+      blockchainProgramId: Number(programId),
+      blockchainStudentId: Number(student.blockchainId)
     }).onConflictDoNothing();
 
     await insertBlock({ event, eventName: "scholarship:OnVoted" });
@@ -146,16 +153,15 @@ export const scholarship = () => {
       .where(eq(students.studentAddress, creator));
 
     if (!student) {
-      console.warn(`Student not found for address: ${creator}`);
       return;
     }
 
     const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
     let baseData: InferInsertModel<typeof milestones> = {
       amount: Number(amount),
-      milestoneId: Number(id),
-      studentId: student.studentId,
-      programId: Number(programId),
+      blockchainId: Number(id),
+      studentId: student.id,
+      programId: student.programId,
       metadataCID: metadataCID,
     };
 
@@ -192,6 +198,20 @@ export const scholarship = () => {
 
     logger.info({ applicantId, programId }, "Withdraw Milestone Param");
 
+    const [student] = await db
+      .select()
+      .from(students)
+      .where(
+        and(
+          eq(students.blockchainId, Number(applicantId)),
+          eq(programs.blockchainId, Number(programId))
+        )
+      );
+
+    if (!student) {
+      return;
+    }
+
     await db.update(milestones)
       .set({
         isCollected: true,
@@ -199,8 +219,8 @@ export const scholarship = () => {
       })
       .where(
         and(
-          eq(milestones.programId, Number(programId)),
-          eq(milestones.studentId, Number(applicantId))
+          eq(milestones.programId, student.programId!),
+          eq(milestones.studentId, student.id)
         )
       );
 
@@ -214,12 +234,23 @@ export const scholarship = () => {
 
     logger.info({ milestoneId, proveCID }, "Submit Milestone Param");
 
+
+    const [milestone] = await db
+      .select()
+      .from(milestones)
+      .where(eq(milestones.blockchainId, Number(milestoneId)));
+
+    if (!milestone) {
+      return;
+    }
+
+
     await db.update(milestones)
       .set({
         proveCID: proveCID,
         updatedAt: new Date(),
       })
-      .where(eq(milestones.milestoneId, Number(milestoneId)));
+      .where(eq(milestones.id, milestone.id));
 
     await insertBlock({ event, eventName: "scholarship:SubmitMilestone" });
 
