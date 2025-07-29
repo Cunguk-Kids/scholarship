@@ -1,3 +1,5 @@
+
+import { api } from "@/util/api";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { ContractFunctionExecutionError, type Address } from "viem";
@@ -40,6 +42,31 @@ export function useVoteApplicantV2() {
 
       if (response.ok) return response.json();
       throw new Error(await response.text());
+    },
+  });
+}
+
+type VoteApplicantPayload = {
+  programId: string;
+  voter: string;
+  applicantAddress: string;
+};
+
+export function useVoteApplicantApiV2() {
+  return useMutation({
+    mutationKey: [mutationKey],
+    mutationFn: async (data: VoteApplicantPayload) => {
+      const response = await api.post("/vote", data);
+      return response.data;
+    },
+    onMutate: () => {
+      console.log("sending request via API...");
+    },
+    onSuccess: () => {
+      console.log("vote successful!");
+    },
+    onError: (err) => {
+      console.error("vote failed", err);
     },
   });
 }

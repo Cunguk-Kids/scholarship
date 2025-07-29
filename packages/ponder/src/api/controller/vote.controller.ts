@@ -32,9 +32,20 @@ export const voteController = async (c: Context) => {
 
   await db.insert(votes).values({
     address: String(voter),
-    programId: Number(programId),
-    studentId: student.studentId,
-  }).onConflictDoNothing();
+    programId: student.programId,
+    studentId: student.id,
+    blockchainProgramId: Number(programId),
+    blockchainStudentId: Number(student.blockchainId)
+  }).onConflictDoUpdate({
+    target: [votes.address, votes.programId, votes.studentId],
+    set: {
+      address: String(voter),
+      programId: student.programId,
+      studentId: student.id,
+      blockchainProgramId: Number(programId),
+      blockchainStudentId: Number(student.blockchainId)
+    },
+  });
 
   return c.json({
     data: {
