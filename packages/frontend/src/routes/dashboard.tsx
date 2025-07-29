@@ -12,9 +12,10 @@ import {
 } from "wagmi";
 import { type Address } from "viem";
 import { scholarshipProgramAbi } from "@/repo/abi";
+import { DashboardPageV2 } from "@/features/v2/dahsboard/pages";
 
 export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+  component: DashboardPageV2,
 });
 
 function RouteComponent() {
