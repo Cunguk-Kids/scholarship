@@ -1,5 +1,6 @@
 import { usdcAddress } from "@/constants/contractAddress";
 import { skoolchainV2Abi } from "@/repo/abi";
+import { api } from "@/util/api";
 import { useMutation } from "@tanstack/react-query";
 import { ContractFunctionExecutionError, type Address } from "viem";
 import { useConfig, useWriteContract } from "wagmi";
@@ -34,6 +35,31 @@ export function useVoteApplicantV2() {
       });
 
       await waitForTransactionReceipt(config, { hash });
+    },
+  });
+}
+
+type VoteApplicantPayload = {
+  programId: string;
+  voter: string;
+  applicantAddress: string;
+};
+
+export function useVoteApplicantApiV2() {
+  return useMutation({
+    mutationKey: [mutationKey],
+    mutationFn: async (data: VoteApplicantPayload) => {
+      const response = await api.post("/vote", data);
+      return response.data;
+    },
+    onMutate: () => {
+      console.log("sending request via API...");
+    },
+    onSuccess: () => {
+      console.log("vote successful!");
+    },
+    onError: (err) => {
+      console.error("vote failed", err);
     },
   });
 }

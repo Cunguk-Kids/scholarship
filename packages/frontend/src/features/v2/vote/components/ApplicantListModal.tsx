@@ -3,6 +3,8 @@ import { Arrow } from '@/components/Arrow';
 import { CardVote } from '@/components/CardVote';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
 import { useStudents } from '../hooks/use-student';
+import { useVoteApplicantApiV2 } from '../hooks/use-vote-applicant';
+import { useAccount } from 'wagmi';
 
 type Props = {
   programId: null | number;
@@ -10,9 +12,18 @@ type Props = {
 };
 
 export const ApplicantListModal = ({ programId, onClose }: Props) => {
-  const { data } = useStudents();
+  // states
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [applicant, setApplicant] = useState<string | null>(null);
+
+  // hooks
+  const { data } = useStudents();
+  const account = useAccount();
+  const voteApi = useVoteApplicantApiV2();
+
   if (programId == null) return null;
+
+  console.log(programId, '-----programId-----');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -41,7 +52,10 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
               key={student.id}
               institution={student.financialSituation ?? undefined}
               name={student.fullName ?? undefined}
-              onSubmit={() => setShowSubmitModal(true)}
+              onSubmit={() => {
+                setShowSubmitModal(true);
+                setApplicant(student.studentAddress);
+              }}
               milestones={student.milestones.items}
             />
           ))}
@@ -53,12 +67,17 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
         onClose={() => setShowSubmitModal(false)}
         onSubmit={() => {
           setShowSubmitModal(false);
-          console.log('-----submit-----');
+          console.log('-----submit vote-----');
+          voteApi.mutate({
+            applicantAddress: applicant as `0x${string}`,
+            programId: String(programId),
+            voter: account.address as `0x${string}`,
+          });
         }}
         title={'Choose with care!'}
         desc={`Your choice can change someone’s life \n See their story. Review their plan. Cast your vote. \n You only get one vote per scholarship. Make it count.`}
         primaryLabel={'Confirm Vote'}
-        secondaryLabel={'Review Agian'}
+        secondaryLabel={'Review Again'}
       />
     </div>
   );

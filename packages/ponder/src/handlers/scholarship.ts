@@ -135,7 +135,16 @@ export const scholarship = () => {
       studentId: student.id,
       blockchainProgramId: Number(programId),
       blockchainStudentId: Number(student.blockchainId)
-    }).onConflictDoNothing();
+    }).onConflictDoUpdate({
+      target: [votes.address, votes.programId, votes.studentId],
+      set: {
+        address: String(voter),
+        programId: student.programId,
+        studentId: student.id,
+        blockchainProgramId: Number(programId),
+        blockchainStudentId: Number(student.blockchainId)
+      },
+    });
 
     await insertBlock({ event, eventName: "scholarship:OnVoted" });
 
