@@ -42,6 +42,7 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
               institution={student.financialSituation ?? undefined}
               name={student.fullName ?? undefined}
               onSubmit={() => setShowSubmitModal(true)}
+              milestones={student.milestones.items}
             />
           ))}
         </div>

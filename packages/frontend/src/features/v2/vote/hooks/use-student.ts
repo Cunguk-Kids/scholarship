@@ -6,22 +6,6 @@ export function useStudents() {
     queryKey: ["students"],
     queryFn: async () => {
       const result = await mobius.query({
-        milestoness: {
-          select: {
-            items: {
-              amount: true,
-              createdAt: true,
-              description: true,
-              estimation: true,
-              id: true,
-              isCollected: true,
-              metadataCID: true,
-              proveCID: true,
-              type: true,
-              updatedAt: true,
-            },
-          },
-        },
         studentss: {
           select: {
             items: {
@@ -34,6 +18,16 @@ export function useStudents() {
               scholarshipMotivation: true,
               studentAddress: true,
               updatedAt: true,
+              milestones: {
+                select: {
+                  items: {
+                    amount: true,
+                    blockchainId: true,
+                    estimation: true,
+                    description: true,
+                  }
+                }
+              }
             },
           },
         },
