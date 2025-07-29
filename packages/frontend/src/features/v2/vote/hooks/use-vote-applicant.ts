@@ -56,7 +56,11 @@ export function useVoteApplicantApiV2() {
   return useMutation({
     mutationKey: [mutationKey],
     mutationFn: async (data: VoteApplicantPayload) => {
-      const response = await api.post("/vote", data);
+      const response = await api.post("/vote", data, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
       return response.data;
     },
     onMutate: () => {
