@@ -1,1 +1,0 @@
-ALTER TABLE "programs" ALTER COLUMN "total_recipients" SET DATA TYPE integer;

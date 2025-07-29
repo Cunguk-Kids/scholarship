@@ -1,1 +1,0 @@
-ALTER TABLE "votes" ALTER COLUMN "student_id" SET DATA TYPE integer;

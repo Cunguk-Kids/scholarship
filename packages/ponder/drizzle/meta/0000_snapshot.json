@@ -1,5 +1,5 @@
 {
-  "id": "9ebb7a14-8abd-4b4d-953d-a067cecc50e7",
+  "id": "d3f84a9c-00ac-4f4f-8729-5273bfaa96a3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -17,7 +17,13 @@
         },
         "student_id": {
           "name": "student_id",
-          "type": "varchar(50)",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blockchain_id": {
+          "name": "blockchain_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -25,33 +31,106 @@
           "name": "name",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "file": {
           "name": "file",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "achievements_student_id_students_student_id_fk": {
-          "name": "achievements_student_id_students_student_id_fk",
+        "achievements_student_id_students_id_fk": {
+          "name": "achievements_student_id_students_id_fk",
           "tableFrom": "achievements",
           "tableTo": "students",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
-            "student_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "achievements_blockchain_id_unique": {
+          "name": "achievements_blockchain_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "blockchain_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.indexed_blocks": {
+      "name": "indexed_blocks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_name": {
+          "name": "event_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "block_number": {
+          "name": "block_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "indexed_blocks_block_number_unique": {
+          "name": "indexed_blocks_block_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "block_number"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -67,11 +146,51 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "student_id": {
-          "name": "student_id",
-          "type": "varchar(50)",
+        "blockchain_id": {
+          "name": "blockchain_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "student_id": {
+          "name": "student_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "program_id": {
+          "name": "program_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata_cid": {
+          "name": "metadata_cid",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "prove_cid": {
+          "name": "prove_cid",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "is_collected": {
+          "name": "is_collected",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "type": {
           "name": "type",
@@ -84,39 +203,70 @@
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "estimation": {
           "name": "estimation",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": 0
         },
-        "amount": {
-          "name": "amount",
-          "type": "numeric",
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "milestones_student_id_students_student_id_fk": {
-          "name": "milestones_student_id_students_student_id_fk",
+        "milestones_student_id_students_id_fk": {
+          "name": "milestones_student_id_students_id_fk",
           "tableFrom": "milestones",
           "tableTo": "students",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
-            "student_id"
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "milestones_program_id_programs_id_fk": {
+          "name": "milestones_program_id_programs_id_fk",
+          "tableFrom": "milestones",
+          "tableTo": "programs",
+          "columnsFrom": [
+            "program_id"
+          ],
+          "columnsTo": [
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "milestones_blockchain_id_unique": {
+          "name": "milestones_blockchain_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "blockchain_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -132,23 +282,38 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "program_id": {
-          "name": "program_id",
-          "type": "serial",
+        "blockchain_id": {
+          "name": "blockchain_id",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "name": {
           "name": "name",
           "type": "varchar(255)",
           "primaryKey": false,
+          "notNull": false,
+          "default": "'Untitled Program'"
+        },
+        "creator": {
+          "name": "creator",
+          "type": "varchar(255)",
+          "primaryKey": false,
           "notNull": false
+        },
+        "metadata_cid": {
+          "name": "metadata_cid",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
         },
         "description": {
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "start_at": {
           "name": "start_at",
@@ -166,25 +331,29 @@
           "name": "voting_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "now()"
         },
         "rules": {
           "name": "rules",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "total_recipients": {
           "name": "total_recipients",
-          "type": "varchar(255)",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": 0
         },
         "total_fund": {
           "name": "total_fund",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": 0
         },
         "milestone_type_enum": {
           "name": "milestone_type_enum",
@@ -192,17 +361,31 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "programs_program_id_unique": {
-          "name": "programs_program_id_unique",
+        "programs_blockchain_id_unique": {
+          "name": "programs_blockchain_id_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "program_id"
+            "blockchain_id"
           ]
         }
       },
@@ -221,9 +404,22 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "student_id": {
-          "name": "student_id",
-          "type": "varchar",
+        "blockchain_id": {
+          "name": "blockchain_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "student_address": {
+          "name": "student_address",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "program_id": {
+          "name": "program_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -231,44 +427,56 @@
           "name": "full_name",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "email": {
           "name": "email",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "financial_situation": {
           "name": "financial_situation",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "scholarship_motivation": {
           "name": "scholarship_motivation",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
-        "program_id": {
-          "name": "program_id",
-          "type": "integer",
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "students_program_id_programs_program_id_fk": {
-          "name": "students_program_id_programs_program_id_fk",
+        "students_program_id_programs_id_fk": {
+          "name": "students_program_id_programs_id_fk",
           "tableFrom": "students",
           "tableTo": "programs",
           "columnsFrom": [
             "program_id"
           ],
           "columnsTo": [
-            "program_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -276,11 +484,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "students_student_id_unique": {
-          "name": "students_student_id_unique",
+        "students_blockchain_id_unique": {
+          "name": "students_blockchain_id_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "student_id"
+            "blockchain_id"
           ]
         }
       },
@@ -303,17 +511,24 @@
           "name": "address",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "program_id": {
           "name": "program_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
         "student_id": {
           "name": "student_id",
-          "type": "varchar(50)",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blockchain_id": {
+          "name": "blockchain_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -321,33 +536,48 @@
           "name": "ip_address",
           "type": "varchar(45)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "votes_program_id_programs_program_id_fk": {
-          "name": "votes_program_id_programs_program_id_fk",
+        "votes_program_id_programs_id_fk": {
+          "name": "votes_program_id_programs_id_fk",
           "tableFrom": "votes",
           "tableTo": "programs",
           "columnsFrom": [
             "program_id"
           ],
           "columnsTo": [
-            "program_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "votes_student_id_students_student_id_fk": {
-          "name": "votes_student_id_students_student_id_fk",
+        "votes_student_id_students_id_fk": {
+          "name": "votes_student_id_students_id_fk",
           "tableFrom": "votes",
           "tableTo": "students",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
-            "student_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"

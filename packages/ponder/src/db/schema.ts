@@ -7,7 +7,7 @@ export * from "./enums";
 // Table Program
 export const programs = pgTable("programs", {
   id: uuid('id').defaultRandom().primaryKey(),
-  programId: integer("program_id").unique(),
+  blockchainId: integer("blockchain_id").unique(),
   name: varchar("name", { length: 255 }).default("Untitled Program"),
   creator: varchar("creator", { length: 255 }),
   metadataCID: varchar("metadata_cid", { length: 255 }).default(""),
@@ -25,9 +25,9 @@ export const programs = pgTable("programs", {
 // Table Students
 export const students = pgTable("students", {
   id: uuid('id').defaultRandom().primaryKey(),
-  studentId: integer("student_id").unique().unique(),
+  blockchainId: integer("blockchain_id").unique(),
   studentAddress: varchar("student_address", { length: 255 }).default(""),
-  programId: integer("program_id").references(() => programs.programId),
+  programId: uuid("program_id").references(() => programs.id),
   fullName: varchar("full_name", { length: 255 }).default(""),
   email: varchar("email", { length: 255 }).default(""),
   financialSituation: text("financial_situation").default(""),
@@ -39,7 +39,8 @@ export const students = pgTable("students", {
 // Table Achievements
 export const achievements = pgTable("achievements", {
   id: uuid('id').defaultRandom().primaryKey(),
-  studentId: integer("student_id").references(() => students.studentId),
+  studentId: uuid("student_id").references(() => students.id),
+  blockchainId: integer("blockchain_id").unique(),
   name: varchar("name", { length: 255 }).default(""),
   file: varchar("file", { length: 255 }).default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -49,10 +50,10 @@ export const achievements = pgTable("achievements", {
 // Table Milestones
 export const milestones = pgTable("milestones", {
   id: uuid('id').defaultRandom().primaryKey(),
-  milestoneId: integer("milestone_id").unique(),
+  blockchainId: integer("blockchain_id").unique(),
   amount: integer("amount").default(0),
-  studentId: integer("student_id").references(() => students.studentId),
-  programId: integer("program_id").references(() => programs.programId),
+  studentId: uuid("student_id").references(() => students.id),
+  programId: uuid("program_id").references(() => programs.id),
   metadataCID: varchar("metadata_cid", { length: 255 }).default(""),
   proveCID: varchar("prove_cid", { length: 255 }).default(""),
   isCollected: boolean("is_collected").default(false),
@@ -67,8 +68,10 @@ export const milestones = pgTable("milestones", {
 export const votes = pgTable("votes", {
   id: uuid('id').defaultRandom().primaryKey(),
   address: varchar("address", { length: 255 }).default(""),
-  programId: integer("program_id").references(() => programs.programId),
-  studentId: integer("student_id").references(() => students.studentId),
+  programId: uuid("program_id").references(() => programs.id),
+  studentId: uuid("student_id").references(() => students.id),
+  blockchainProgramId: integer("blockchain_id"),
+  blockchainStudentId: integer("blockchain_id"),
   ipAddress: varchar("ip_address", { length: 45 }).default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
@@ -94,7 +97,7 @@ export const programRelations = relations(programs, ({ many }) => ({
 export const studentRelations = relations(students, ({ one, many }) => ({
   program: one(programs, {
     fields: [students.programId],
-    references: [programs.programId],
+    references: [programs.id],
   }),
   milestones: many(milestones),
   achievements: many(achievements),
@@ -105,11 +108,11 @@ export const studentRelations = relations(students, ({ one, many }) => ({
 export const milestoneRelations = relations(milestones, ({ one }) => ({
   student: one(students, {
     fields: [milestones.studentId],
-    references: [students.studentId],
+    references: [students.id],
   }),
   program: one(programs, {
     fields: [milestones.programId],
-    references: [programs.programId],
+    references: [programs.id],
   }),
 }));
 
@@ -117,11 +120,11 @@ export const milestoneRelations = relations(milestones, ({ one }) => ({
 export const voteRelations = relations(votes, ({ one }) => ({
   student: one(students, {
     fields: [votes.studentId],
-    references: [students.studentId],
+    references: [students.id],
   }),
   program: one(programs, {
     fields: [votes.programId],
-    references: [programs.programId],
+    references: [programs.id],
   }),
 }));
 
@@ -129,6 +132,6 @@ export const voteRelations = relations(votes, ({ one }) => ({
 export const achievementRelations = relations(achievements, ({ one }) => ({
   student: one(students, {
     fields: [achievements.studentId],
-    references: [students.studentId],
+    references: [students.id],
   }),
 }));
