@@ -67,7 +67,6 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
         onClose={() => setShowSubmitModal(false)}
         onSubmit={() => {
           setShowSubmitModal(false);
-          console.log('-----submit vote-----');
           voteApi.mutate({
             applicantAddress: applicant as `0x${string}`,
             programId: String(programId),
