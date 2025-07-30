@@ -1,10 +1,10 @@
 import { Context } from "hono";
-import { contractAddress, publicClient, walletClient } from "../constants/config";
+import { contractAddress, walletClient } from "../constants/config";
 import { scholarshipAbi } from "abis/abi";
 import { VoterSchemaType } from "../validators/vote.validator";
 import { db } from "@/db";
-import { students, votes } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { programs, students, votes } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 import { getClientIP } from "@/utils/getClientIP";
 
 export const voteController = async (c: Context) => {
@@ -17,10 +17,26 @@ export const voteController = async (c: Context) => {
   const socket = req?.socket;
   if (socket?.remoteAddress) ipAddress = socket.remoteAddress;
 
+  const [program] = await db
+    .select()
+    .from(programs)
+    .where(and(
+      eq(programs.blockchainId, programId),
+    ));
+
+  if (!program) {
+    return c.json({
+      message: `Program not found for address: ${applicantAddress}`
+    });
+  }
+
   const [student] = await db
     .select()
     .from(students)
-    .where(eq(students.studentAddress, applicantAddress));
+    .where(and(
+      eq(students.studentAddress, applicantAddress),
+      eq(students.programId, program.id),
+    ));
 
   if (!student) {
     return c.json({
@@ -28,11 +44,11 @@ export const voteController = async (c: Context) => {
     });
   }
 
-  const recipientWallet = await publicClient.simulateContract({
+  const recipientWallet = await walletClient.writeContract({
     address: contractAddress,
     abi: scholarshipAbi,
     functionName: 'voteApplicant',
-    args: [BigInt(Number(programId)), voter as `0x${string}`, applicantAddress as `0x${string}`],
+    args: [BigInt(programId), voter as `0x${string}`, applicantAddress as `0x${string}`],
     account: walletClient.account
   });
 
@@ -43,16 +59,7 @@ export const voteController = async (c: Context) => {
     blockchainProgramId: Number(programId),
     blockchainStudentId: Number(student.blockchainId),
     ipAddress: ipAddress || ''
-  }).onConflictDoUpdate({
-    target: [votes.address, votes.programId, votes.studentId],
-    set: {
-      address: String(voter),
-      programId: student.programId,
-      studentId: student.id,
-      blockchainProgramId: Number(programId),
-      blockchainStudentId: Number(student.blockchainId)
-    },
-  });
+  }).onConflictDoNothing();
 
   return c.json({
     data: {

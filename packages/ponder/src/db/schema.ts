@@ -70,8 +70,8 @@ export const votes = pgTable("votes", {
   address: varchar("address", { length: 255 }).default(""),
   programId: uuid("program_id").references(() => programs.id),
   studentId: uuid("student_id").references(() => students.id),
-  blockchainProgramId: integer("blockchain_id"),
-  blockchainStudentId: integer("blockchain_id"),
+  blockchainProgramId: integer("blockchain_program_id"),
+  blockchainStudentId: integer("blockchain_student_id"),
   ipAddress: varchar("ip_address", { length: 45 }).default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
