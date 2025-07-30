@@ -8,11 +8,13 @@ export const CardVote = ({
   institution = 'Universitas Indonesia',
   onSubmit = () => null,
   milestones,
+  rate = 1,
 }: {
   name?: string;
   institution?: string;
   onSubmit?: () => any;
   milestones?: TimelineItem[];
+  rate?: number;
 }) => {
   const handleClickVote = () => {
     onSubmit();
@@ -38,7 +40,7 @@ export const CardVote = ({
             <div className="flex flex-col items-start gap-1 self-stretch">
               <p className="text-xs">Milestone Plan:</p>
               <div className="flex flex-col items-start gap-2 self-stretch">
-                <Timeline items={milestones || []} title="" />
+                <Timeline items={milestones || []} title="" rate={rate} />
               </div>
             </div>
           </div>

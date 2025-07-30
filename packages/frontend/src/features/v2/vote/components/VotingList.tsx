@@ -1,8 +1,11 @@
 import { CardScholarship } from '@/components/CardScholarship';
+import { useTokenRate } from '@/context/token-rate-context';
 import { usePrograms } from '@/hooks/v2/data/usePrograms';
 
 export const VotingList = ({ onClickVote }: { onClickVote: (id: number | null) => void }) => {
   const { data: programs } = usePrograms();
+  const { rate } = useTokenRate();
+
   if (!programs?.length)
     return (
       <div className="border-4 rounded-2xl p-20 my-auto neo-shadow place-content-center">
@@ -30,6 +33,7 @@ export const VotingList = ({ onClickVote }: { onClickVote: (id: number | null) =
             labelButton={'Vote Now'}
             // status={activeTab}
             onClickButton={() => onClickVote(item.blockchainId)}
+            liskToIDR={rate || 0}
           />
         ))}
     </>
