@@ -120,10 +120,23 @@ export const scholarship = () => {
 
     logger.info({ applicant, programId, voter }, " On Voted Param");
 
+    const [program] = await db
+      .select()
+      .from(programs)
+      .where(eq(programs.blockchainId, Number(programId)));
+
+    if (!program) {
+      return;
+    }
+
+
     const [student] = await db
       .select()
       .from(students)
-      .where(eq(students.studentAddress, applicant));
+      .where(and(
+        eq(students.studentAddress, applicant),
+        eq(students.programId, program.id),
+      ));
 
     if (!student) {
       return;

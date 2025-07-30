@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, integer, numeric, timestamp, uuid, boolean, } from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, integer, numeric, timestamp, uuid, boolean, unique, } from "drizzle-orm/pg-core";
 import { MilestoneAllocationEnum, MilestoneTypeEnum } from "./enums";
 import { relations } from "drizzle-orm";
 
@@ -75,7 +75,9 @@ export const votes = pgTable("votes", {
   ipAddress: varchar("ip_address", { length: 45 }).default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
-});
+}, (votes) => ({
+  uniqVote: unique().on(votes.address, votes.programId, votes.studentId),
+}));
 
 // Table Indexed Blocks
 export const indexedBlocks = pgTable("indexed_blocks", {
