@@ -19,6 +19,7 @@ export const VotingList = ({ onClickVote }: { onClickVote: (id: number | null) =
           <CardScholarship
             key={i}
             program={{
+              ...item,
               id: Number(item.id),
               initiatorAddress: item.creator,
               endDate: new Date(new Date(item.endAt ?? '').getTime() ?? '').getTime(),
