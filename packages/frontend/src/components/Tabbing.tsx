@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CardScholarship } from './CardScholarship';
 import MilestoneProgress from './MilestoneProgress';
 import { CardVote } from './CardVote';
+import { useTokenRate } from '@/context/token-rate-context';
 
 type Tab = {
   id: string;
@@ -51,6 +52,7 @@ export const Tabbing = <T,>({
   participants?: any[];
 }) => {
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? '');
+  const { rate } = useTokenRate();
 
   // const onClickAction = (item: Record<string, T>, activeTab: string) => {
   //   if (onClickTabbing) onClickTabbing(item, activeTab);
@@ -122,6 +124,7 @@ export const Tabbing = <T,>({
                     }
                     status={activeTab}
                     onClickButton={() => handleClickItemButton(item.blockchainId)}
+                    liskToIDR={rate || 0}
                   />
                 ))}
             </div>

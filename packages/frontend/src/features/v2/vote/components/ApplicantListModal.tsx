@@ -5,6 +5,7 @@ import { ConfirmationModal } from '@/components/ConfirmationModal';
 import { useStudents } from '../hooks/use-student';
 import { useVoteApplicantApiV2 } from '../hooks/use-vote-applicant';
 import { useAccount } from 'wagmi';
+import { useTokenRate } from '@/context/token-rate-context';
 
 type Props = {
   programId: null | number;
@@ -15,15 +16,13 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
   // states
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [applicant, setApplicant] = useState<string | null>(null);
-
   // hooks
+  const { rate } = useTokenRate();
   const { data } = useStudents();
   const account = useAccount();
   const voteApi = useVoteApplicantApiV2();
 
   if (programId == null) return null;
-
-  console.log(programId, '-----programId-----');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -57,6 +56,7 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
                 setApplicant(student.studentAddress);
               }}
               milestones={student.milestones.items}
+              rate={rate || 1}
             />
           ))}
         </div>
