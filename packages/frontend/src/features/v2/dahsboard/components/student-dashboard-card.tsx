@@ -1,4 +1,6 @@
+import { formatCurrency } from "@/util/currency";
 import { BaseCard } from "./base-card";
+import { Button } from "@/components/Button";
 
 export function StudentDashboardCard(props: {
   name: string;
@@ -9,6 +11,7 @@ export function StudentDashboardCard(props: {
   totalFund: number;
   milestoneProgress?: React.ReactNode;
   programCreatorImage: string;
+  clickNext?: () => unknown;
 }) {
   return (
     <BaseCard className="space-y-3">
@@ -20,7 +23,11 @@ export function StudentDashboardCard(props: {
             </div>
             <h1 className="font-paytone text-2xl">Hi, {props.name}!</h1>
           </div>
-          <div className="size-10 bg-skyellow rounded-2xl"></div>
+          <Button
+            onClick={props.clickNext}
+            className="size-10 bg-skyellow rounded-2xl place-content-center !p-0"
+            label={<img src="/icons/arrow-right.svg" alt="arrow-right" />}
+          />
         </div>
         <h2>{props.motivationHeadline}</h2>
       </div>
@@ -51,7 +58,7 @@ export function StudentDashboardCard(props: {
           src="https://assets.coingecko.com/coins/images/6319/standard/usdc.png?1696506694"
           alt="usd"
         />
-        <p>{props.totalFund / 10 ** 6}</p>
+        <p>{formatCurrency(props.totalFund / 10 ** 6, "USD")}</p>
       </div>
       {props.milestoneProgress}
     </BaseCard>

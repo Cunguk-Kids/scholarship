@@ -1,8 +1,8 @@
 import { ConnectButton } from "@xellar/kit";
 
 interface ButtonProps {
-  label?: string;
-  type?: "" | "connect";
+  label?: React.ReactNode;
+  type?: "button" | "submit" | "connect";
   size?: "small" | "large";
   variant?: "primary" | "secondary";
   bgShadow?: string;
@@ -38,7 +38,7 @@ const ButtonWrapper = ({
 
 export const Button = ({
   label = "buttonLabel",
-  type = "",
+  type = "button",
   size = "small",
   variant = "primary",
   bgShadow = "bg-black",
@@ -51,7 +51,7 @@ export const Button = ({
         <ButtonWrapper bgShadow={bgShadow}>
           <button
             onClick={onClick}
-            type={"button"}
+            type={type}
             className={getButtonClasses(
               size,
               variant === "secondary" ? "bg-skbw" : "bg-skpurple",
