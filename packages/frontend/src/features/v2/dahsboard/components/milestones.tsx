@@ -10,10 +10,12 @@ const types = {
 } as const;
 
 type Milestone = {
-  id: number;
   type: keyof typeof types;
-  price: number;
-  title: string;
+  amount: number | null;
+  blockchainId: number | null;
+  estimation: number | null;
+  description: string | null;
+  proveCID: string | null;
 };
 
 export function Milestones(props: {
@@ -36,13 +38,13 @@ export function Milestones(props: {
           ></div>
           <div className="col-span-1 w-max">Milestone #{index + 1}</div>
           <div className="col-span-4 font-bold max-md:col-[2/13]">
-            {mile.title}
+            {mile.description}
           </div>
           <div className="col-span-3 font-bold max-md:col-[2/13]">
-            {formatCurrency(formatUSDC(mile.price), "USD")}
+            {formatCurrency(formatUSDC(mile.amount ?? 0), "USD")}
           </div>
           {mile.type == "locked" ? (
-            <div className="col-[-3/-1] text-xs self-end ml-auto max-md:col-[2/13] max-md:ml-0">
+            <div className="col-[-4/-1] text-xs self-end ml-auto max-md:col-[2/13] max-md:ml-0">
               🔒 Locked until Milestone {index} approved
             </div>
           ) : (

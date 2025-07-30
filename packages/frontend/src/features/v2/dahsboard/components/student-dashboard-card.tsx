@@ -21,7 +21,7 @@ export function StudentDashboardCard(props: {
             <div className="bg-skpink w-max px-2 text-black rounded-full">
               Student
             </div>
-            <h1 className="font-paytone text-2xl">Hi, {props.name}!</h1>
+            <h1 className="font-paytone text-2xl capitalize">Hi, {props.name}!</h1>
           </div>
           <Button
             onClick={props.clickNext}

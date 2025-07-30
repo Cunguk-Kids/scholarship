@@ -41,7 +41,7 @@ export function useApplyApplicantV2(programId: string) {
         data.milestones.map(async (mile) => {
           const ipfs = await uploadToIPFS({ meta: mile });
           return {
-            amount: BigInt(mile.amount),
+            amount: BigInt(mile.amount) * 10n ** 6n,
             metadataCID: cleanCID(ipfs?.metaCID),
           };
         })

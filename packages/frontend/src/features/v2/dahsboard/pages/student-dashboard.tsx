@@ -11,54 +11,60 @@ import {
 } from "../components/base-tabbing";
 import { CurrentBalance } from "../components/current-balance";
 import { Milestones } from "../components/milestones";
+import { useMemo, useState } from "react";
 
 export function StudentDashboardPage() {
   const { mutate, isPending } = useSubmitMilestoneV2();
   const { data } = useGetStudentProfile();
-  console.log(data);
+  const [index, setCurrentIndex] = useState(0);
+  const next = () => {
+    const length = data?.studentss.items.length ?? 0;
+    setCurrentIndex((x) => (x + 1) % length);
+  };
+  const item = data?.studentss.items?.[index];
+  const totalFund = useMemo(
+    () => item?.milestones.items.reduce((a, b) => a + (b.amount ?? 0), 0) ?? 0,
+    [item]
+  );
+  const milestones = useMemo(() => {
+    let usedPending = false;
+    return (item?.milestones.items ?? []).map((item) => {
+      console.log(usedPending);
+      const type = item.proveCID
+        ? "disbursed"
+        : usedPending
+          ? "locked"
+          : "pending";
+      if (!item.proveCID) usedPending = true;
+      return {
+        ...item,
+        type,
+      } as const;
+    });
+  }, [item]);
   return (
     <>
       <div className="lg:max-w-[24rem] space-y-6">
         <StudentDashboardCard
-          name="Utami"
+          name={item?.fullName ?? "No Name"}
           motivationHeadline="Let’s get you one step closer to your dreams."
-          profileImage="https://api.dicebear.com/9.x/thumbs/svg?seed=Utami"
-          programCreator="0x31242u309482904890284028402340"
-          programCreatorImage="https://api.dicebear.com/9.x/thumbs/svg?seed=0x31242u309482904890284028402340"
-          programTitle="Creative Futures Grant"
+          profileImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.studentAddress}`}
+          programCreator={item?.program.creator ?? "0x0"}
+          programCreatorImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.program.creator}`}
+          programTitle={item?.program.name ?? "No Name"}
           // USDC with 6 decimals
-          totalFund={45_000 * 10 ** 6}
+          totalFund={totalFund}
+          clickNext={next}
           milestoneProgress={
             <div>
               Disbursment:
-              <Timeline
-                items={[
-                  {
-                    amount: 45_000,
-                    description: "Tuition",
-                    blockchainId: 2,
-                    estimation: 20,
-                  },
-                  {
-                    amount: 45_000,
-                    description: "Tuition",
-                    blockchainId: 2,
-                    estimation: 20,
-                  },
-                  {
-                    amount: 45_000,
-                    description: "Tuition",
-                    blockchainId: 2,
-                    estimation: 20,
-                  },
-                ]}
-              />
+              <Timeline items={item?.milestones.items ?? []} />
             </div>
           }
         />
         <MessageFromProgramCreator
-          message="Keep creating and keep believing, Utami. You’ve got talent—this is just the beginning. 💫"
-          programCreator="0x31242u309482904890284028402340"
+          message={`Keep creating and keep believing, ${item?.fullName ?? "No Name"}. You’ve got talent—this is just the beginning. 💫`}
+          programCreator={item?.program.creator ?? "0x0"}
         />
       </div>
       <BaseTabbing defaultValue="milestones" className="grow">
@@ -82,28 +88,9 @@ export function StudentDashboardPage() {
           <Milestones
             isPending={isPending}
             onSubmit={(milestone, prove) => {
-              mutate([milestone.id + "", prove]);
+              mutate([milestone.blockchainId + "", prove]);
             }}
-            milestones={[
-              {
-                id: 1,
-                title: "Tuition Payment",
-                price: 182530000,
-                type: "disbursed",
-              },
-              {
-                id: 2,
-                title: "Coursework Essentials",
-                price: 60840000,
-                type: "pending",
-              },
-              {
-                id: 3,
-                title: "Thesis Project",
-                price: 60840000,
-                type: "locked",
-              },
-            ]}
+            milestones={milestones}
           />
         </BaseTabbingContent>
         <BaseTabbingContent value="achivement">Achivement</BaseTabbingContent>
