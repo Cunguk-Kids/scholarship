@@ -45,6 +45,7 @@ export const programSchema = `
   input programsFilter {
     id: ID
     name: String
+    creator: String
   }
 
   type programsPage {

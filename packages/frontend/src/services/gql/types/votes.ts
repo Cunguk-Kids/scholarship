@@ -16,7 +16,10 @@ export const voteSchema = `
   input votesFilter {
     id: ID
     voter: String
+    address: String
     proposalId: String
+    programId: String
+    studentId: String
   }
 
   type votesPage {

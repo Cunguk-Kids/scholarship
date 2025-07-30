@@ -22,10 +22,10 @@ export function TokenRateProvider({ children }: TokenRateProviderProps) {
     const fetchRate = async () => {
       try {
         const res = await fetch(
-          'https://api.coingecko.com/api/v3/simple/price?ids=lisk&vs_currencies=idr',
+          'https://api.coingecko.com/api/v3/simple/price?ids=lisk&vs_currencies=usd',
         );
         const data = await res.json();
-        setRate(data.lisk.idr);
+        setRate(data.lisk.usd);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Unknown error'));
       } finally {

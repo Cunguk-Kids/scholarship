@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import useSWR from "swr";
 import { mobius } from "@/services/gql/schema";
 import { useProgramsEventWatcher } from "./useWatchEvent";
@@ -15,7 +16,7 @@ export function usePrograms(initialFilter?: Filter) {
     const result = await mobius.query({
       programss: {
         where: {
-          where: toNullable(filter),
+          where: toNullable(filter) as any,
         },
         select: {
           items: {
