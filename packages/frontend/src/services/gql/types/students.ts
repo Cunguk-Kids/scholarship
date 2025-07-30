@@ -40,6 +40,8 @@ export const studentSchema = `
   input studentsFilter {
     id: ID
     name: String
+    studentAddress: String
+    programId: String
   }
 
   type studentsPage {

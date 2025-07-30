@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import useSWR from "swr";
 import { mobius } from "@/services/gql/schema";
 import { toNullable } from "@/util/toNullData";
@@ -13,12 +14,12 @@ export function useStudents(initialFilter?: Filter) {
     const result = await mobius.query({
       studentss: {
         where: {
-          where: toNullable(filter),
+          where: toNullable(filter) as any,
         },
         select: {
           items: {
             id: true,
-            name: true,
+            fullName: true,
 
           },
         },

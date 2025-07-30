@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import useSWR from "swr";
 import { mobius } from "@/services/gql/schema";
 import { toNullable } from "@/util/toNullData";
@@ -18,7 +19,7 @@ export function useVotes(initialFilter?: VoteFilter) {
     const result = await mobius.query({
       votess: {
         where: {
-          where: toNullable(filter),
+          where: toNullable(filter) as any,
         },
         select: {
           items: {

@@ -20,6 +20,8 @@ export const milestoneSchema = `
   input milestonesFilter {
     id: ID
     title: String
+    programId: String
+    studentId: String
   }
 
   type milestonesPage {

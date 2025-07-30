@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import useSWR from "swr";
 import { mobius } from "@/services/gql/schema";
 import { toNullable } from "@/util/toNullData";
@@ -14,7 +15,7 @@ export function useMilestones(initialFilter?: MilestoneFilter) {
     const result = await mobius.query({
       milestoness: {
         where: {
-          where: toNullable(filter),
+          where: toNullable(filter) as any,
         },
         select: {
           items: {

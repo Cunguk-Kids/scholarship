@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { formatGwei } from 'viem';
 import { Button } from './Button';
 import { StatusBadge } from './StatusBadge';
 import { getProgramStatus } from '@/util/programStatus';
+import { getLocalValue } from '@/util/localCurrency';
 
 const getTextSize = (size: string, base: string, small: string) =>
   size === 'small' ? small : base;
@@ -38,30 +38,6 @@ export const CardScholarship = ({
     startAt: program.startAt,
     endAt: program.endAt,
   });
-
-  const getLocalValue = (amount: bigint | number | string) => {
-    let token: number;
-
-    try {
-      token =
-        typeof amount === 'bigint'
-          ? Number(formatGwei(amount))
-          : typeof amount === 'string'
-            ? parseFloat(amount)
-            : amount;
-    } catch {
-      token = 0;
-    }
-
-    const converted = (token / 1000000) * liskToIDR;
-    const safeValue = isNaN(converted) || !isFinite(converted) ? 0 : converted;
-
-    return safeValue.toLocaleString('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      maximumFractionDigits: 0,
-    });
-  };
 
   return (
     <div className="flex flex-col items-center">
@@ -154,7 +130,7 @@ export const CardScholarship = ({
                       <img src="/icons/information-diamond.svg" alt="info" />
                       <span>worth around</span>
                       <span className="font-bold">
-                        {getLocalValue(program.totalFund as bigint)} {'IDR'}
+                        {getLocalValue(program.totalFund as bigint, liskToIDR)} {'USDC'}
                       </span>
                     </div>
                   </div>
