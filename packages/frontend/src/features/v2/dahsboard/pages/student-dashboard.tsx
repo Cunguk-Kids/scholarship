@@ -52,6 +52,7 @@ export function StudentDashboardPage() {
         <SwitchDashboard />
         <StudentDashboardCard
           isLoading={isLoading || !isExist}
+          programId={item?.program.blockchainId ?? 0}
           name={item?.fullName ?? "No Name"}
           motivationHeadline="Let’s get you one step closer to your dreams."
           profileImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.studentAddress}`}

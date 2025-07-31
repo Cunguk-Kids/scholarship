@@ -32,6 +32,7 @@ export function useGetStudentProfile() {
               studentAddress: true,
               updatedAt: true,
               program: {
+                blockchainId: true,
                 creator: true,
                 name: true,
               },

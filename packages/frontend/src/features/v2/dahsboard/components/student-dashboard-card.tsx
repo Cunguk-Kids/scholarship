@@ -2,6 +2,8 @@ import { formatCurrency } from "@/util/currency";
 import { BaseCard } from "./base-card";
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
+import { useState } from "react";
+import { NftMinting } from "./nft-minting";
 
 export function StudentDashboardCard(props: {
   name: string;
@@ -9,13 +11,28 @@ export function StudentDashboardCard(props: {
   profileImage: string;
   programTitle: string;
   programCreator: string;
+  programId: number;
   totalFund: number;
   milestoneProgress?: React.ReactNode;
   programCreatorImage: string;
   isLoading: boolean;
   clickNext?: () => unknown;
 }) {
-  return (
+  const [isOnMintNFT, setIsOnMintNFT] = useState(false);
+  return isOnMintNFT ? (
+    <div className="flex flex-col items-end gap-4">
+      <NftMinting
+        name={props.name}
+        id={props.programId}
+        programName={props.programTitle}
+      />
+      <Button
+        onClick={() => setIsOnMintNFT(false)}
+        label="Mint Student NFT"
+        className="!bg-skgreen !text-black"
+      />
+    </div>
+  ) : (
     <BaseCard className="space-y-3 relative isolate">
       {props.isLoading && (
         <Loader className="absolute inset-0 m-auto size-20" />
@@ -38,7 +55,13 @@ export function StudentDashboardCard(props: {
           <Button
             onClick={props.clickNext}
             className="size-10 bg-skyellow rounded-2xl place-content-center !p-0 group"
-            label={<img src="/icons/arrow-right.svg" alt="arrow-right" className="group-active:rotate-90 transition-transform" />}
+            label={
+              <img
+                src="/icons/arrow-right.svg"
+                alt="arrow-right"
+                className="group-active:rotate-90 transition-transform"
+              />
+            }
           />
         </div>
         <h2>{props.motivationHeadline}</h2>
@@ -84,6 +107,13 @@ export function StudentDashboardCard(props: {
           <p>{formatCurrency(props.totalFund / 10 ** 6, "USD")}</p>
         </div>
         {props.milestoneProgress}
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setIsOnMintNFT(true)}
+            label="Mint Student NFT"
+            className="!bg-skgreen !text-black"
+          />
+        </div>
       </div>
     </BaseCard>
   );
