@@ -2,47 +2,42 @@ import { mobius } from "@/services/gql/schema";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 
-export function useGetStudentProfile() {
+export function useGetProgramCreatorProfile() {
   const account = useAccount();
   return useQuery({
     refetchOnMount: true,
-    queryKey: ["students-profile"],
+    queryKey: ["program-creator-profile"],
     queryFn: async () => {
       const result = await mobius.query({
-        studentss: {
+        programss: {
           where: {
             where: {
-              studentAddress: account.address,
+              creator: account.address,
             } as unknown as {
               id: null;
               name: null;
-              programId: null;
-              studentAddress: null;
+              creator: string;
             },
           },
           select: {
             items: {
-              createdAt: true,
-              email: true,
-              financialSituation: true,
-              fullName: true,
-              id: true,
-              programId: true,
-              scholarshipMotivation: true,
-              studentAddress: true,
-              updatedAt: true,
-              program: {
-                creator: true,
-                name: true,
-              },
+              description: true,
+              totalRecipients: true,
+              blockchainId: true,
+              totalFund: true,
+              rules: true,
               milestones: {
                 select: {
                   items: {
-                    amount: true,
                     blockchainId: true,
-                    estimation: true,
-                    description: true,
                     proveCID: true,
+                    student: {
+                      fullName: true,
+                      email: true,
+                      studentAddress: true,
+                    },
+                    description: true,
+                    amount: true,
                   },
                 },
               },

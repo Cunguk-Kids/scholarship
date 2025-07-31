@@ -104,6 +104,16 @@ export function Milestones(props: {
             )}
           </div>
         ))}
+        {!props.milestones.length && (
+          <div className="flex flex-col items-center justify-center h-full space-y-3">
+            <img
+              src="/img/Illustration Student.svg"
+              alt="empty-state"
+              className=""
+            />
+            <div className="font-bold text-2xl">No milestones found</div>
+          </div>
+        )}
       </div>
     </div>
   );

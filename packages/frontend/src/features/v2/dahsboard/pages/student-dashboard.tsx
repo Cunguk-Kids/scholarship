@@ -1,7 +1,7 @@
 import { useGetStudentProfile } from "../hooks/get-student-profile";
 import { useSubmitMilestoneV2 } from "../hooks/submit-milestone";
 import Timeline from "@/components/Timeline";
-import { MessageFromProgramCreator } from "../components/message-from-program-creator-card";
+import { MessageCard } from "../components/message-from-program-creator-card";
 import { StudentDashboardCard } from "../components/student-dashboard-card";
 import {
   BaseTabbing,
@@ -14,16 +14,17 @@ import { Milestones } from "../components/milestones";
 import { useMemo, useState } from "react";
 import { ComingSoon } from "@/components/fallback/comming-soon";
 import { NotFoundStudentFallback } from "../components/notfound-student-fallback";
+import { SwitchDashboard } from "../components/switch-dashboard";
 
 export function StudentDashboardPage() {
   const { mutate, isPending } = useSubmitMilestoneV2();
   const { data, isLoading } = useGetStudentProfile();
   const [index, setCurrentIndex] = useState(0);
   const next = () => {
-    const length = data?.studentss.items.length ?? 0;
+    const length = data?.studentss?.items.length ?? 0;
     setCurrentIndex((x) => (x + 1) % length);
   };
-  const item = data?.studentss.items?.[index];
+  const item = data?.studentss?.items?.[index];
   const totalFund = useMemo(
     () => item?.milestones.items.reduce((a, b) => a + (b.amount ?? 0), 0) ?? 0,
     [item]
@@ -31,7 +32,6 @@ export function StudentDashboardPage() {
   const milestones = useMemo(() => {
     let usedPending = false;
     return (item?.milestones.items ?? []).map((item) => {
-      console.log(usedPending);
       const type = item.proveCID
         ? "disbursed"
         : usedPending
@@ -45,16 +45,17 @@ export function StudentDashboardPage() {
     });
   }, [item]);
 
-  const isExist = Boolean(data?.studentss.items.length);
+  const isExist = Boolean(data?.studentss?.items?.length);
   return (
     <>
       <div className="lg:max-w-[24rem] space-y-6">
+        <SwitchDashboard />
         <StudentDashboardCard
           isLoading={isLoading || !isExist}
           name={item?.fullName ?? "No Name"}
           motivationHeadline="Let’s get you one step closer to your dreams."
           profileImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.studentAddress}`}
-          programCreator={item?.program.creator ?? "0x0"}
+          programCreator={item?.program?.creator ?? "0x0"}
           programCreatorImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.program.creator}`}
           programTitle={item?.program.name ?? "No Name"}
           // USDC with 6 decimals
@@ -67,10 +68,10 @@ export function StudentDashboardPage() {
             </div>
           }
         />
-        <MessageFromProgramCreator
+        <MessageCard
           isLoading={isLoading || !isExist}
           message={`Keep creating and keep believing, ${item?.fullName ?? "No Name"}. You’ve got talent—this is just the beginning. 💫`}
-          programCreator={item?.program.creator ?? "0x0"}
+          sender={item?.program.creator ?? "0x0"}
         />
       </div>
       <BaseTabbing defaultValue="milestones" className="grow">

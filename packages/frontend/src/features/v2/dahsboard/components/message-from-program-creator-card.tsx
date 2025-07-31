@@ -2,8 +2,8 @@ import { Button } from "@/components/Button";
 import { BaseCard } from "./base-card";
 import { Loader } from "@/components/fallback/loader";
 
-export function MessageFromProgramCreator(props: {
-  programCreator: string;
+export function MessageCard(props: {
+  sender: string;
   message: string;
   isLoading: boolean;
 }) {
@@ -22,8 +22,8 @@ export function MessageFromProgramCreator(props: {
           <img src="/icons/message-notification-01.svg" alt="msg-notif-icon" />
           from{" "}
           <span className="font-bold">
-            {props.programCreator.slice(0, 7)}...
-            {props.programCreator.slice(-4)}
+            {props.sender.slice(0, 7)}...
+            {props.sender.slice(-4)}
           </span>
         </div>
         <div className="h-px w-full bg-black/8"></div>
