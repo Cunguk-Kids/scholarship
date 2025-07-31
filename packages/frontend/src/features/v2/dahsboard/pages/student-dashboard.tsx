@@ -12,10 +12,12 @@ import {
 import { CurrentBalance } from "../components/current-balance";
 import { Milestones } from "../components/milestones";
 import { useMemo, useState } from "react";
+import { ComingSoon } from "@/components/fallback/comming-soon";
+import { NotFoundStudentFallback } from "../components/notfound-student-fallback";
 
 export function StudentDashboardPage() {
   const { mutate, isPending } = useSubmitMilestoneV2();
-  const { data } = useGetStudentProfile();
+  const { data, isLoading } = useGetStudentProfile();
   const [index, setCurrentIndex] = useState(0);
   const next = () => {
     const length = data?.studentss.items.length ?? 0;
@@ -42,10 +44,13 @@ export function StudentDashboardPage() {
       } as const;
     });
   }, [item]);
+
+  const isExist = Boolean(data?.studentss.items.length);
   return (
     <>
       <div className="lg:max-w-[24rem] space-y-6">
         <StudentDashboardCard
+          isLoading={isLoading || !isExist}
           name={item?.fullName ?? "No Name"}
           motivationHeadline="Let’s get you one step closer to your dreams."
           profileImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.studentAddress}`}
@@ -63,6 +68,7 @@ export function StudentDashboardPage() {
           }
         />
         <MessageFromProgramCreator
+          isLoading={isLoading || !isExist}
           message={`Keep creating and keep believing, ${item?.fullName ?? "No Name"}. You’ve got talent—this is just the beginning. 💫`}
           programCreator={item?.program.creator ?? "0x0"}
         />
@@ -85,15 +91,22 @@ export function StudentDashboardPage() {
             <CurrentBalance />
           </div>
           <div className="h-px bg-black/40"></div>
-          <Milestones
-            isPending={isPending}
-            onSubmit={(milestone, prove) => {
-              mutate([milestone.blockchainId + "", prove]);
-            }}
-            milestones={milestones}
-          />
+          {isExist && !isLoading ? (
+            <Milestones
+              isLoading={isLoading}
+              isPending={isPending}
+              onSubmit={(milestone, prove) => {
+                mutate([milestone.blockchainId + "", prove]);
+              }}
+              milestones={milestones}
+            />
+          ) : (
+            <NotFoundStudentFallback />
+          )}
         </BaseTabbingContent>
-        <BaseTabbingContent value="achivement">Achivement</BaseTabbingContent>
+        <BaseTabbingContent value="achivement">
+          <ComingSoon className="w-full justify-center" />
+        </BaseTabbingContent>
       </BaseTabbing>
     </>
   );

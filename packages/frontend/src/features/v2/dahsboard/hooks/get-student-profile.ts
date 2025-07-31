@@ -12,7 +12,7 @@ export function useGetStudentProfile() {
         studentss: {
           where: {
             where: {
-              studentAddress: "0x73F98364f6B62a5683F2C14ae86a23D7288f6106",
+              studentAddress: account.address,
             } as unknown as {
               id: null;
               name: null;

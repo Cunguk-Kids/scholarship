@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { erc20Abi } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 import { formatCurrency } from "@/util/currency";
-import { useTokenRate } from "@/context/token-rate-context";
+import { Loader } from "@/components/fallback/loader";
 
 export function CurrentBalance(props: { className?: string }) {
   const account = useAccount();
@@ -22,14 +22,17 @@ export function CurrentBalance(props: { className?: string }) {
     [balance.data]
   );
 
-  const rate = useTokenRate();
-  console.log(rate.rate);
   return (
     <div
-      className={`${"bg-black rounded-2xl py-2 px-8 text-white flex flex-col items-end"} ${props.className ?? ""}`}
+      className={`${"bg-black rounded-2xl py-2 px-8 text-white flex flex-col items-end relative isolate"} ${props.className ?? ""}`}
     >
-      <div>Current Balance</div>
-      <div className="w-max">{formatCurrency(converted, "USD")} USDC</div>
+      {balance.isLoading && <Loader className="absolute inset-0 m-auto" />}
+      <div className={balance.isLoading ? "text-black" : ""}>
+        Current Balance
+      </div>
+      <div className={`w-max ${balance.isLoading ? "text-black" : ""}`}>
+        {formatCurrency(converted, "USD")} USDC
+      </div>
     </div>
   );
 }
