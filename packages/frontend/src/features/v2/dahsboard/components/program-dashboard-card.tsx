@@ -2,6 +2,10 @@ import { formatCurrency } from "@/util/currency";
 import { BaseCard } from "./base-card";
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
+import { useMintProgramCreatorNFTV2 } from "../hooks/mint-program-creator-nft";
+import { useState } from "react";
+import { NftMinting } from "./nft-minting";
+import { useAccount } from "wagmi";
 
 export function ProgramDashboardCard(props: {
   programTitle: string;
@@ -9,9 +13,28 @@ export function ProgramDashboardCard(props: {
   totalFund: number;
   programCreatorImage: string;
   isLoading: boolean;
+  programId: number;
   clickNext?: () => unknown;
 }) {
-  return (
+  const account = useAccount();
+  const { mutate, isPending } = useMintProgramCreatorNFTV2();
+  const [isOnMintNFT, setIsOnMintNFT] = useState(false);
+  return isOnMintNFT ? (
+    <NftMinting
+      disabled={isPending}
+      template="provider"
+      name={account.address!}
+      id={props.programId}
+      programName={props.programTitle}
+      onMint={(file) => {
+        mutate({
+          file,
+          programId: props.programId + "",
+        });
+      }}
+      onBack={() => setIsOnMintNFT(false)}
+    />
+  ) : (
     <BaseCard className="space-y-3 relative isolate">
       {props.isLoading && (
         <Loader className="absolute inset-0 m-auto size-20" />
@@ -43,7 +66,13 @@ export function ProgramDashboardCard(props: {
           <Button
             onClick={props.clickNext}
             className="size-10 bg-skyellow rounded-2xl place-content-center !p-0 group"
-            label={<img src="/icons/arrow-right.svg" alt="arrow-right" className="group-active:rotate-90 transition-transform" />}
+            label={
+              <img
+                src="/icons/arrow-right.svg"
+                alt="arrow-right"
+                className="group-active:rotate-90 transition-transform"
+              />
+            }
           />
         </div>
       </div>
@@ -80,6 +109,14 @@ export function ProgramDashboardCard(props: {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          onClick={() => setIsOnMintNFT(true)}
+          label="Mint Student NFT"
+          className="!bg-skgreen !text-black"
+        />
       </div>
     </BaseCard>
   );

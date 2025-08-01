@@ -52,6 +52,7 @@ export function StudentDashboardPage() {
         <SwitchDashboard />
         <StudentDashboardCard
           isLoading={isLoading || !isExist}
+          studentId={item?.blockchainId ?? 0}
           programId={item?.program.blockchainId ?? 0}
           name={item?.fullName ?? "No Name"}
           motivationHeadline="Let’s get you one step closer to your dreams."

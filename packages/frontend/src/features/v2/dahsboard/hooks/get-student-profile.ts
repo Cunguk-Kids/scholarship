@@ -22,6 +22,7 @@ export function useGetStudentProfile() {
           },
           select: {
             items: {
+              blockchainId: true,
               createdAt: true,
               email: true,
               financialSituation: true,

@@ -4,6 +4,7 @@ import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
 import { useState } from "react";
 import { NftMinting } from "./nft-minting";
+import { useMintApplicantNFTV2 } from "../hooks/mint-applicant-nft";
 
 export function StudentDashboardCard(props: {
   name: string;
@@ -12,26 +13,31 @@ export function StudentDashboardCard(props: {
   programTitle: string;
   programCreator: string;
   programId: number;
+  studentId: number;
   totalFund: number;
   milestoneProgress?: React.ReactNode;
   programCreatorImage: string;
   isLoading: boolean;
   clickNext?: () => unknown;
 }) {
+  const { mutate, isPending } = useMintApplicantNFTV2();
   const [isOnMintNFT, setIsOnMintNFT] = useState(false);
   return isOnMintNFT ? (
-    <div className="flex flex-col items-end gap-4">
-      <NftMinting
-        name={props.name}
-        id={props.programId}
-        programName={props.programTitle}
-      />
-      <Button
-        onClick={() => setIsOnMintNFT(false)}
-        label="Mint Student NFT"
-        className="!bg-skgreen !text-black"
-      />
-    </div>
+    <NftMinting
+      disabled={isPending}
+      template="student"
+      name={props.name}
+      id={props.studentId}
+      programName={props.programTitle}
+      onMint={(file) => {
+        mutate({
+          studentId: props.studentId + "",
+          file,
+          programId: props.programId + "",
+        });
+      }}
+      onBack={() => setIsOnMintNFT(false)}
+    />
   ) : (
     <BaseCard className="space-y-3 relative isolate">
       {props.isLoading && (
