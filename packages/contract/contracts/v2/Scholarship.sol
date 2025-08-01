@@ -35,7 +35,7 @@ contract BaseNFT is AccessControl, ERC721, ERC721URIStorage {
         address to,
         string calldata metadataURI
     ) public onlyRole(MINTER_ROLE) {
-        if (ownerOf(id) != address(0x0)) revert AlreadyMinted();
+        if (_ownerOf(id) != address(0x0)) revert AlreadyMinted();
         _mint(to, id);
         _setTokenURI(id, metadataURI);
     }
@@ -178,6 +178,9 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
     error DateIsNotSequential();
     error MilestoneAlreadyApproved();
     error ApplicantAlreadyWithdrawFund();
+    error MilestoneCannotEmpty();
+    error CannotApplyToSelfProgram();
+    error MilestoneAlreadyOnSubmit();
 
     IERC20 scholarshipToken;
     BaseNFT applicantNFT;
@@ -350,8 +353,10 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         InputMilestone[] calldata milestones,
         string calldata metadataCID
     ) external onlyValidProgram(programId) onlyProgramOpen(programId) {
+        if (milestones.length < 1) revert MilestoneCannotEmpty();
         if (addressToApplicant[programId][msg.sender] != 0)
             revert AlreadyApplied();
+        if (programs[programId].creator == msg.sender) revert CannotApplyToSelfProgram();
 
         // Increase Applicant ID
         _nextApplicantId += 1;
@@ -456,6 +461,8 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
 
         // check if the program in status on going
         _onlyOnGoing(milestone.programId);
+
+        if (milestone.submitedAt != 0) revert MilestoneAlreadyOnSubmit();
 
         if (msg.sender != milestone.creator) revert OnlyMilestoneCreator();
 
