@@ -26,7 +26,7 @@ export const voteController = async (c: Context) => {
 
   if (!program) {
     return c.json({
-      message: `Program not found for address: ${applicantAddress}`
+      message: `Program not found for address: ${applicantAddress} , and blockchain program Id: ${programId}`
     });
   }
 
@@ -40,7 +40,7 @@ export const voteController = async (c: Context) => {
 
   if (!student) {
     return c.json({
-      message: `Student not found for address: ${applicantAddress}`
+      message: `Student not found for address: ${applicantAddress}, program id: program.id`
     });
   }
 
