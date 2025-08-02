@@ -42,3 +42,11 @@ export const formatToIDR = (value: number): string => {
     maximumFractionDigits: 0
   }).format(value);
 };
+
+export const formatToUSD = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  }).format(value);
+};
