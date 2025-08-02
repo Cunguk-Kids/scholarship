@@ -7,6 +7,7 @@ import { useVoteApplicantApiV2 } from '../hooks/use-vote-applicant';
 import { useAccount } from 'wagmi';
 import { useTokenRate } from '@/context/token-rate-context';
 import { Loader } from '@/components/fallback/loader';
+import gsap from 'gsap';
 
 type Props = {
   programId: null | number;
@@ -31,13 +32,17 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
     if (!isLoading && cardsRef.current) {
       const cards = gsap.utils.toArray('.card-vote') as HTMLElement[];
 
-      gsap.from(cards, {
-        opacity: 0,
-        y: 30,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: 'power2.out',
-      });
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: 'power2.out',
+        },
+      );
     }
   }, [isLoading, data]);
 
@@ -62,24 +67,26 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
             </div>
           </div>
         </div>
-        <div className="my-10 w-full grid grid-cols-3 gap-8">
+        <div ref={cardsRef} className="my-10 w-full grid grid-cols-3 gap-8">
           {isLoading && (
             <div className="col-span-3 flex justify-center items-center">
               <Loader className="size-30 text-black/50" />
             </div>
           )}
           {data?.studentss.items.map((student) => (
-            <CardVote
-              key={student.id}
-              institution={student.financialSituation ?? undefined}
-              name={student.fullName ?? undefined}
-              onSubmit={() => {
-                setShowSubmitModal(true);
-                setApplicant(student.studentAddress);
-              }}
-              milestones={student.milestones.items}
-              rate={rate || 1}
-            />
+            <div key={student.id} className="card-vote">
+              <CardVote
+                key={student.id}
+                institution={student.financialSituation ?? undefined}
+                name={student.fullName ?? undefined}
+                onSubmit={() => {
+                  setShowSubmitModal(true);
+                  setApplicant(student.studentAddress);
+                }}
+                milestones={student.milestones.items}
+                rate={rate || 1}
+              />
+            </div>
           ))}
         </div>
       </div>
