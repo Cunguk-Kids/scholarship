@@ -1,4 +1,7 @@
+import { idrToUsdc } from '@/util/localCurrency';
 import React from 'react';
+import { NumericFormat } from 'react-number-format';
+import { twMerge } from 'tailwind-merge';
 
 type Option = {
   label: string;
@@ -31,9 +34,13 @@ type InputProps = {
   step?: number;
   onChange?: (val: string) => void;
   onUpload?: (file: File) => void;
+  error?: boolean;
+  helperText?: string;
+  isCurrency?: boolean;
 };
 
 export const Input: React.FC<InputProps> = ({
+  isCurrency,
   type,
   value,
   label,
@@ -45,6 +52,8 @@ export const Input: React.FC<InputProps> = ({
   step = 1,
   onChange,
   onUpload,
+  error,
+  helperText,
 }) => {
   const inputId = 'upload-file';
   const inputClass =
@@ -52,7 +61,18 @@ export const Input: React.FC<InputProps> = ({
 
   return (
     <div className="flex flex-col items-start w-full gap-2.5 self-stretch p-2.5">
-      {label && <label className="text-base font-bold text-black text-left">{label}</label>}
+      {/* {error && helperText && <span className="text-sm text-red-500 mt-1">{helperText}</span>} */}
+      {label && (
+        <label
+          className={twMerge(
+            'text-base font-bold text-black text-left',
+            error && helperText && ' text-red-500',
+          )}>
+          {label}
+          <span> </span>
+          {error && helperText && <span className="text-red-500 mt-1">{helperText}</span>}
+        </label>
+      )}
 
       {/* UPLOAD */}
       {type === 'upload' && (
@@ -89,13 +109,33 @@ export const Input: React.FC<InputProps> = ({
       )}
 
       {/* INPUT TEXT */}
-      {type === 'input' && (
+      {type === 'input' && !isCurrency && (
         <input
           type="text"
           className={inputClass}
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
+        />
+      )}
+
+      {/* CURRENCY INPUT */}
+      {type === 'input' && isCurrency && (
+        <NumericFormat
+          value={value ? Number(value) * 16000 : ''}
+          thousandSeparator="."
+          decimalSeparator=","
+          prefix="Rp "
+          allowNegative={false}
+          placeholder="e.g., Rp 3.000.000"
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onValueChange={(values: any) => {
+            const idr = values.floatValue || 0;
+            const usdc = idrToUsdc(idr);
+            if (onChange) {
+              onChange(String(usdc));
+            }
+          }}
         />
       )}
 

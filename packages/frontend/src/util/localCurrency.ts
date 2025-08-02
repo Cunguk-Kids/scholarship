@@ -26,3 +26,19 @@ export const getLocalValue = (
     maximumFractionDigits: 0,
   });
 };
+
+export const idrToUsdc = (idr: number, rate = 16000): number => {
+  return +(idr / rate).toFixed(6);
+};
+
+export const parseIDR = (val: string): number => {
+  return Number(val.replace(/\D/g, ''));
+};
+
+export const formatToIDR = (value: number): string => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0
+  }).format(value);
+};
