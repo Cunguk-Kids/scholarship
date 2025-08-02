@@ -16,7 +16,7 @@ export const CardScholarship = ({
   onClickButton = () => {},
   sizeButton = 'large',
   size = 'large',
-  tokenCcy = 'LSK',
+  tokenCcy = 'USDC',
   program,
   liskToIDR = 0,
 }: {
@@ -130,7 +130,7 @@ export const CardScholarship = ({
                       <img src="/icons/information-diamond.svg" alt="info" />
                       <span>worth around</span>
                       <span className="font-bold">
-                        {getLocalValue(program.totalFund as bigint, liskToIDR)} {'USDC'}
+                        {`IDR ${getLocalValue(program.totalFund as bigint, liskToIDR)}`}
                       </span>
                     </div>
                   </div>
