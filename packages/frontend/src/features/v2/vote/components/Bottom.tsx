@@ -42,15 +42,15 @@ export function Bottom() {
   }, []);
 
   return (
-    <div ref={ref} className="h-50">
+    <div ref={ref} className="h-50 max-md:mt-auto max-md:h-30">
       <div className="flex h-full relative before:bg-skgreen before:absolute before:inset-0 isolate before:-z-1 before:[clip-path:_ellipse(60%_100%_at_50%_100%)] justify-center">
-        <div className="absolute top-0 left-6 box">
+        <div className="absolute top-0 left-6 box max-md:-left-20 max-sm:hidden">
           <BoxVote />
         </div>
-        <div className="absolute top-0 right-6 box">
+        <div className="absolute top-0 right-6 max-sm:hidden max-md:-right-20 box">
           <Computer />
         </div>
-        <div className="flex flex-col w-full gap-2 flex-wrap items-center mb-10">
+        <div className="flex flex-col w-full gap-2 items-center">
           <div className="-translate-y-1/2">
             <Button
               label="Join Active Voting"
