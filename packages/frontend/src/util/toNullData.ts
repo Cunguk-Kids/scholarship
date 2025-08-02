@@ -1,8 +1,9 @@
-export function toNullable<T extends object>(input?: Partial<T>): { [K in keyof T]: T[K] | null } {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const output = {} as any;
-  for (const key in input) {
-    output[key] = input?.[key] ?? null;
-  }
-  return output;
+import { omitBy } from "lodash";
+
+export function toNullable<T extends object>(input?: Partial<T>): Partial<T> {
+  if (!input) return {};
+
+  return omitBy(input, (v) =>
+    v === null || v === undefined || v === '' || v === 0 || v === false
+  ) as Partial<T>;
 }
