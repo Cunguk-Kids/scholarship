@@ -2,7 +2,11 @@ import { CardScholarship } from '@/components/CardScholarship';
 import { useTokenRate } from '@/context/token-rate-context';
 import { usePrograms } from '@/hooks/v2/data/usePrograms';
 
-export const VotingList = ({ onClickVote }: { onClickVote: (id: number | null) => void }) => {
+export const VotingList = ({
+  onClickVote,
+}: {
+  onClickVote: (id: number | null, indexerId: string | null) => void;
+}) => {
   const { data: programs } = usePrograms();
   const { rate } = useTokenRate();
 
@@ -32,7 +36,7 @@ export const VotingList = ({ onClickVote }: { onClickVote: (id: number | null) =
             }}
             labelButton={'Vote Now'}
             // status={activeTab}
-            onClickButton={() => onClickVote(item.blockchainId)}
+            onClickButton={() => onClickVote(item.blockchainId, item.id)}
             liskToIDR={rate || 0}
           />
         ))}

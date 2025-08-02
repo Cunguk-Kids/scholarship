@@ -9,10 +9,13 @@ import { VotingList } from '@/features/v2/vote/components/VotingList';
 import { ApplicantListModal } from '../components/ApplicantListModal';
 
 export function VotePage() {
+  // states
   const [programId, setProgramId] = useState<number | null>(null);
+  const [programIndexerId, setProgramIndexerId] = useState<string | null>(null);
 
-  const handleClickVote = (programId: number | null) => {
+  const handleClickVote = (programId: number | null, indexId: string | null) => {
     setProgramId(programId);
+    setProgramIndexerId(indexId);
   };
 
   return (
@@ -90,7 +93,13 @@ export function VotePage() {
         <Footer />
       </div>
 
-      {programId && <ApplicantListModal programId={programId} onClose={() => setProgramId(null)} />}
+      {programId && (
+        <ApplicantListModal
+          programIndexerId={programIndexerId}
+          programId={programId}
+          onClose={() => setProgramId(null)}
+        />
+      )}
     </>
   );
 }

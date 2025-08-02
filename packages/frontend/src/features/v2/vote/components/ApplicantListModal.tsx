@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Arrow } from '@/components/Arrow';
 import { CardVote } from '@/components/CardVote';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
@@ -6,23 +6,49 @@ import { useStudents } from '../hooks/use-student';
 import { useVoteApplicantApiV2 } from '../hooks/use-vote-applicant';
 import { useAccount } from 'wagmi';
 import { useTokenRate } from '@/context/token-rate-context';
+import { Loader } from '@/components/fallback/loader';
+import gsap from 'gsap';
 
 type Props = {
   programId: null | number;
+  programIndexerId: null | string;
   onClose: () => void;
 };
 
-export const ApplicantListModal = ({ programId, onClose }: Props) => {
+export const ApplicantListModal = ({ programIndexerId, programId, onClose }: Props) => {
+  // ref
+  const cardsRef = useRef<HTMLDivElement>(null);
+
   // states
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [applicant, setApplicant] = useState<string | null>(null);
   // hooks
   const { rate } = useTokenRate();
-  const { data } = useStudents();
+  const { data, refetch, isFetching } = useStudents(
+    programIndexerId ? { programId: programIndexerId } : {},
+  );
   const account = useAccount();
   const voteApi = useVoteApplicantApiV2();
 
-  if (programId == null) return null;
+  useEffect(() => {
+    if (programIndexerId) {
+      refetch();
+    }
+  }, [programIndexerId]);
+
+  useLayoutEffect(() => {
+    if (!isFetching && cardsRef.current) {
+      const cards = gsap.utils.toArray('.card-vote') as HTMLElement[];
+
+      gsap.from(cards, {
+        opacity: 0,
+        y: 30,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: 'power2.out',
+      });
+    }
+  }, [isFetching, data]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -45,20 +71,28 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
             </div>
           </div>
         </div>
-        <div className="my-10 w-full grid grid-cols-3 gap-8">
-          {data?.studentss.items.map((student) => (
-            <CardVote
-              key={student.id}
-              institution={student.financialSituation ?? undefined}
-              name={student.fullName ?? undefined}
-              onSubmit={() => {
-                setShowSubmitModal(true);
-                setApplicant(student.studentAddress);
-              }}
-              milestones={student.milestones.items}
-              rate={rate || 1}
-            />
-          ))}
+        <div ref={cardsRef} className="my-10 w-full grid grid-cols-3 gap-8">
+          {isFetching && (
+            <div className="w-full min-h-[280px]">
+              <Loader className="absolute inset-0 m-auto size-20" />
+            </div>
+          )}
+          {!isFetching &&
+            data?.studentss.items.map((student) => (
+              <div key={student.id} className="card-vote">
+                <CardVote
+                  key={student.id}
+                  institution={student.financialSituation ?? undefined}
+                  name={student.fullName ?? undefined}
+                  onSubmit={() => {
+                    setShowSubmitModal(true);
+                    setApplicant(student.studentAddress);
+                  }}
+                  milestones={student.milestones.items}
+                  rate={rate || 1}
+                />
+              </div>
+            ))}
         </div>
       </div>
 

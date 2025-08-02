@@ -46,6 +46,7 @@ export const programSchema = `
     id: ID
     name: String
     creator: String
+    blockchainId: Int
   }
 
   type programsPage {
