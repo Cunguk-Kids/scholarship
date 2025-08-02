@@ -12,6 +12,8 @@ export const scholarship = () => {
   ponder.on("scholarship:ProgramCreated", async ({ event }) => {
     try {
       const { allocation, creator, id, metadataCID, totalFund } = event.args;
+      logger.info({ allocation, creator, id, metadataCID, totalFund, eventName: "Program Param" }, "Program Param");
+
       //  "openedAt": "1754137548",
       //       "votingAt": "1759190400",
       //       "ongoingAt": "1759363200",
@@ -44,10 +46,10 @@ export const scholarship = () => {
             name: ipfsData?.attributes?.[0]?.scholarshipName as string || '',
             description: ipfsData?.attributes?.[0]?.description as string || '',
             totalRecipients: ipfsData?.attributes?.[0]?.recipientCount as number || 1,
-            startAt: moment(ipfsData?.attributes?.[0]?.openedAt as string || '').format("YYYY-MM-DD").toString(),
-            votingAt: moment(ipfsData?.attributes?.[0]?.votingAt as string || '').format("YYYY-MM-DD").toString(),
-            ongoingAt: moment(ipfsData?.attributes?.[0]?.ongoingAt as string || '').format("YYYY-MM-DD").toString(),
-            endAt: moment(ipfsData?.attributes?.[0]?.closedAt as string || '').format("YYYY-MM-DD").toString(),
+            startAt: moment.unix(Number(ipfsData?.attributes?.[0]?.openedAt)).format('YYYY-MM-DD HH:mm:ss'),
+            votingAt: moment.unix(Number(ipfsData?.attributes?.[0]?.votingAt)).format('YYYY-MM-DD HH:mm:ss'),
+            ongoingAt: moment.unix(Number(ipfsData?.attributes?.[0]?.ongoingAt)).format('YYYY-MM-DD HH:mm:ss'),
+            endAt: moment.unix(Number(ipfsData?.attributes?.[0]?.closedAt)).format('YYYY-MM-DD HH:mm:ss'),
           };
         }
       }
@@ -63,7 +65,7 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:ProgramCreated" });
 
-      logger.info({ id }, "Program Created");
+      logger.info({ id, eventName: "scholarship:ProgramCreated" }, "Program Created");
     } catch (error) {
 
       logger.error({ error }, "Create Program Error");
