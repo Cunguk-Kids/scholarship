@@ -34,6 +34,9 @@ export function DashboardPageV2() {
 
   return (
     <pageState.provider value={provider}>
+      {!provider.isStudentDashboard && (
+        <div className="absolute top-0 bg-skpurple left-0 right-0 h-[50vh] -z-1" />
+      )}
       <main
         className={`${"flex max-md:px-3 px-9 gap-9 w-full overflow-hidden pb-9 relative isolate min-h-screen max-lg:flex-col"} ${provider.isStudentDashboard ? "bg-skred" : "bg-skyellow"}`}
       >

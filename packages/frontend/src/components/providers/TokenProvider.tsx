@@ -25,9 +25,7 @@ export function TokenRateProvider({ children }: TokenRateProviderProps) {
           'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin&vs_currencies=idr',
         );
         const data = await res.json();
-        console.log(data, '-----data-----');
-
-        setRate(data?.['usd-coin'].idr);
+        setRate(data['usd-coin'].idr);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Unknown error'));
       } finally {

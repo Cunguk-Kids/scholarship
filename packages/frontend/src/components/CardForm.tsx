@@ -2,9 +2,6 @@ import { useRef, useState, useEffect } from 'react';
 import { Arrow } from './Arrow';
 import { Input } from './Input';
 import { ConfirmationModal } from './ConfirmationModal';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { applicantSchema, providerSchema } from '@/features/v2/scholarship/validations/schemas';
 
 interface CardFormProps<T extends 'applicant' | 'provider'> {
   totalStep: number;
@@ -64,36 +61,6 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
     totalFund: '',
     distributionMethod: 'milestone',
     selectionMethod: 'dao',
-  });
-
-  const schema = type === 'applicant' ? applicantSchema : providerSchema;
-
-  const {
-    getValues,
-    register,
-    handleSubmit,
-    control,
-    watch,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(schema),
-    defaultValues:
-      type === 'applicant'
-        ? {
-            fullName: '',
-            email: '',
-            studentId: '',
-            milestones: [createEmptyMilestone()],
-          }
-        : {
-            scholarshipName: '',
-            description: '',
-            deadline: '',
-            recipientCount: '5',
-            totalFund: '',
-            distributionMethod: 'milestone',
-            selectionMethod: 'dao',
-          },
   });
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -224,32 +191,13 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
           {step === 1 &&
             (type === 'applicant' ? (
               <>
-                <Controller
-                  name="fullName"
-                  control={control}
-                  render={(form) => {
-                    const { field, fieldState } = form;
-                    console.log('fieldState', fieldState, form);
-                    return (
-                      <Input
-                        type="input"
-                        label="Full Name (required)"
-                        placeholder="Your Name"
-                        value={field.value}
-                        onChange={field.onChange}
-                        error={!!fieldState?.error}
-                        helperText={fieldState?.error?.message}
-                      />
-                    );
-                  }}
-                />
-                {/* <Input
+                <Input
                   type="input"
                   label="Full Name (required)"
                   placeholder="Your Name"
                   value={formData.fullName}
                   onChange={(val) => handleFieldChange('fullName', val, type)}
-                /> */}
+                />
                 <Input
                   type="input"
                   label="Email Address (optional)"
@@ -361,10 +309,10 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                 <Input
                   type="input"
                   label="Total Fund"
-                  placeholder="e.g., 45000 LISK"
+                  placeholder="e.g., 100 USDC"
                   value={formDataProvider.totalFund}
                   onChange={(val) => handleFieldChange('totalFund', val, type)}
-                  tokenSymbol="LISK"
+                  tokenSymbol="USDC"
                   conversionRate={0.00000000614}
                 />
               </>
@@ -424,19 +372,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
         onSubmit={() => {
           setShowSubmitModal(false);
           // @ts-expect-error we know what we're doing
-          // onSubmit(type === 'applicant' ? formData : formDataProvider);
-
-          console.log(getValues());
-
-          handleSubmit((form) =>
-            console.log(
-              formData,
-              formDataProvider,
-              '-------- formDataProvider --------',
-              form,
-              '---form---',
-            ),
-          );
+          onSubmit(type === 'applicant' ? formData : formDataProvider);
         }}
         title={type === 'provider' ? 'DAO Smart Contract Notice' : "You're Ready to Submit!"}
         desc={

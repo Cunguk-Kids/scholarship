@@ -130,7 +130,7 @@ export const CardScholarship = ({
                       <img src="/icons/information-diamond.svg" alt="info" />
                       <span>worth around</span>
                       <span className="font-bold">
-                        {`IDR ${getLocalValue(program.totalFund as bigint, liskToIDR)}`}
+                        {getLocalValue(program.totalFund as bigint, liskToIDR)}
                       </span>
                     </div>
                   </div>

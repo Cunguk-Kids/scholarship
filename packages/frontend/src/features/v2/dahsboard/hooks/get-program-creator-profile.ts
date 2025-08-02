@@ -21,6 +21,7 @@ export function useGetProgramCreatorProfile() {
           },
           select: {
             items: {
+              name: true,
               description: true,
               totalRecipients: true,
               blockchainId: true,

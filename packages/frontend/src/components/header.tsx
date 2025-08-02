@@ -1,4 +1,4 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "./Button";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
@@ -11,8 +11,8 @@ const navItems = [
 ];
 
 export function Header() {
-  const router = useRouter();
-  const currentPath = router.state.location.pathname;
+  const location = useLocation();
+  const currentPath = location.pathname;
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
