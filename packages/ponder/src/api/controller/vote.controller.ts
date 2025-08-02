@@ -40,7 +40,7 @@ export const voteController = async (c: Context) => {
 
   if (!student) {
     return c.json({
-      message: `Student not found for address: ${applicantAddress}, program id: program.id`
+      message: `Student not found for address: ${applicantAddress}, program id: ${program.id}`
     });
   }
 
