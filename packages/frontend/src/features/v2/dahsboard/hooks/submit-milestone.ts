@@ -1,7 +1,8 @@
 import { skoolchainV2Address } from "@/constants/contractAddress";
 import { skoolchainV2Abi } from "@/repo/abi";
 import { uploadToIPFS } from "@/services/api/ipfs.service";
-import { useMutation } from "@tanstack/react-query";
+import { wait } from "@/util/supense";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { ContractFunctionExecutionError } from "viem";
 import { useConfig, useWriteContract } from "wagmi";
@@ -10,6 +11,7 @@ import { waitForTransactionReceipt } from "wagmi/actions";
 const mutationKey = "submit-milestone";
 
 export function useSubmitMilestoneV2() {
+  const queryClient = useQueryClient();
   const { writeContractAsync } = useWriteContract();
   const config = useConfig();
   return useMutation({
@@ -18,6 +20,7 @@ export function useSubmitMilestoneV2() {
     },
     onSuccess: () => {
       toast.success("Milestone Submited", { id: mutationKey });
+      queryClient.invalidateQueries({ queryKey: ["students-profile"] });
     },
     onError: (error: ContractFunctionExecutionError) => {
       toast.error(error.shortMessage, { id: mutationKey });
@@ -44,6 +47,9 @@ export function useSubmitMilestoneV2() {
       });
 
       await waitForTransactionReceipt(config, { hash });
+
+      // wait the indexer to catch the event
+      await wait(5 * 1_000);
     },
   });
 }

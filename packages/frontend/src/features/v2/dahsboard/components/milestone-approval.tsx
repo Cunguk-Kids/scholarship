@@ -36,7 +36,7 @@ export function MilestoneApproval(props: {
               <td className="p-2 w-16 align-top @max-[358px]:hidden">
                 <img
                   className="size-10 rounded-full border-4 block"
-                  src={`https://api.dicebear.com/9.x/thumbs/svg?seed=${mile.student.studentAddress}`}
+                  src={`https://api.dicebear.com/9.x/thumbs/svg?seed=${mile.student.id}`}
                 />
               </td>
               <td className="w-1">

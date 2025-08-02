@@ -543,6 +543,8 @@ contract ScholarshipManagerV2 is ScholarshipAccessControl, ReentrancyGuard {
         scholarshipToken.transfer(msg.sender, totalAmount);
 
         program.spendedFund += totalAmount;
+        
+        applicant.alreadyWithdraw = true;
 
         emit WithdrawMilestone(programId, applicant.id);
     }

@@ -34,7 +34,6 @@ export function Header() {
       <div className="flex justify-between max-lg:self-stretch">
         <img src="/skoolcein-logo.svg" alt="logo" />
         <button className="hidden max-lg:block" onClick={() => {
-          console.log("clicked");
           setOpen(!open);
         }}>
           <svg

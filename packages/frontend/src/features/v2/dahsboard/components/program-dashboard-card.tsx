@@ -24,7 +24,7 @@ export function ProgramDashboardCard(props: {
     <NftMinting
       disabled={isPending}
       template="provider"
-      name={account.address!}
+      name={`${account.address!.slice(0, 6)}...${account.address!.slice(-4, account.address!.length)}`}
       id={props.programId}
       programName={props.programTitle}
       onMint={(file) => {

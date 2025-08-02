@@ -6,18 +6,14 @@ export function useGetProgramCreatorProfile() {
   const account = useAccount();
   return useQuery({
     refetchOnMount: true,
-    queryKey: ["program-creator-profile"],
+    queryKey: ["program-creator-profile", account.address],
     queryFn: async () => {
       const result = await mobius.query({
         programss: {
           where: {
             where: {
               creator: account.address,
-            } as unknown as {
-              id: null;
-              name: null;
-              creator: string;
-            },
+            } as never,
           },
           select: {
             items: {
@@ -33,6 +29,7 @@ export function useGetProgramCreatorProfile() {
                     blockchainId: true,
                     proveCID: true,
                     student: {
+                      id: true,
                       fullName: true,
                       email: true,
                       studentAddress: true,

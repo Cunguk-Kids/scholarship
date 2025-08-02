@@ -1,6 +1,7 @@
-import { usdcAddress } from "@/constants/contractAddress";
+import { skoolchainV2Address } from "@/constants/contractAddress";
 import { skoolchainV2Abi } from "@/repo/abi";
 import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { ContractFunctionExecutionError } from "viem";
 import { useConfig, useWriteContract } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
@@ -16,19 +17,24 @@ export function useRecoverProgramFundV2() {
   const config = useConfig();
   return useMutation({
     onMutate: () => {
-      console.log("Recovering Program Fund...");
+      toast.loading("Recovering Program Fund...", { id: mutationKey });
     },
     onSuccess: () => {
-      console.log("Program Fund Recovered!");
+      toast.success("Program Fund Recovered!", { id: mutationKey });
     },
     onError: (error: ContractFunctionExecutionError) => {
-      console.log(error, "Recover Program Fund Failed!");
+      console.error(error);
+      toast.error(
+        "Recovering Program Fund Failed! " +
+          (error.shortMessage ?? error.message),
+        { id: mutationKey }
+      );
     },
     mutationKey: [mutationKey],
     mutationFn: async (data: MutationProps) => {
       const hash = await writeContractAsync({
         abi: skoolchainV2Abi,
-        address: usdcAddress,
+        address: skoolchainV2Address,
         functionName: "recoverProgramFund",
         args: [BigInt(data.programId)],
       });

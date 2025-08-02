@@ -14,10 +14,13 @@ import { ProgramDashboardCard } from "../components/program-dashboard-card";
 import { useAccount } from "wagmi";
 import { MilestoneApproval } from "../components/milestone-approval";
 import { NotFoundStudentFallback } from "../components/notfound-student-fallback";
+import { useApproveMilestoneV2 } from "../hooks/approve-milestone";
+import toast from "react-hot-toast";
 
 export function ProgramCreatorDashboard() {
   const account = useAccount();
   const { data, isLoading } = useGetProgramCreatorProfile();
+  const { mutate } = useApproveMilestoneV2();
   const [index, setCurrentIndex] = useState(0);
   const next = () => {
     const length = data?.programss?.items?.length ?? 0;
@@ -64,8 +67,14 @@ export function ProgramCreatorDashboard() {
             <CurrentBalance />
           </div>
           <div className="h-px bg-black/40"></div>
-          {!isExist && isLoading && (
+          {(isExist || isLoading) && (
             <MilestoneApproval
+              onApprove={(mile) => {
+                mutate(mile.blockchainId ?? 0);
+              }}
+              onDeny={() => {
+                toast.success("Coming Soon");
+              }}
               isLoading={isLoading}
               milestones={item?.milestones.items ?? []}
             />

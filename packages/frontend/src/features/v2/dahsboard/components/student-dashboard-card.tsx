@@ -5,6 +5,7 @@ import { Loader } from "@/components/fallback/loader";
 import { useState } from "react";
 import { NftMinting } from "./nft-minting";
 import { useMintApplicantNFTV2 } from "../hooks/mint-applicant-nft";
+import { useWithdrawMilestoneV2 } from "../hooks/withdraw-milestone";
 
 export function StudentDashboardCard(props: {
   name: string;
@@ -20,6 +21,7 @@ export function StudentDashboardCard(props: {
   isLoading: boolean;
   clickNext?: () => unknown;
 }) {
+  const { mutate: withdraw } = useWithdrawMilestoneV2();
   const { mutate, isPending } = useMintApplicantNFTV2();
   const [isOnMintNFT, setIsOnMintNFT] = useState(false);
   return isOnMintNFT ? (
@@ -51,7 +53,7 @@ export function StudentDashboardCard(props: {
       >
         <div className="flex justify-between">
           <div className="space-y-2">
-            <div className="bg-skpink w-max px-2 text-black rounded-full">
+            <div className="bg-skpink border w-max px-2 text-black rounded-full">
               Student
             </div>
             <h1 className="font-paytone text-2xl capitalize">
@@ -113,11 +115,20 @@ export function StudentDashboardCard(props: {
           <p>{formatCurrency(props.totalFund / 10 ** 6, "USD")}</p>
         </div>
         {props.milestoneProgress}
-        <div className="flex justify-end">
+        <div className="flex justify-between gap-2 mt-5">
+          <Button
+            className="w-full !bg-skgreen !text-black"
+            wrapperClassName="grow"
+            onClick={() => {
+              withdraw({ programId: props.programId });
+            }}
+            label="Withdraw"
+          />
           <Button
             onClick={() => setIsOnMintNFT(true)}
             label="Mint Student NFT"
-            className="!bg-skgreen !text-black"
+            wrapperClassName="grow"
+            className=" w-full text-center"
           />
         </div>
       </div>

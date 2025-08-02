@@ -6,7 +6,7 @@ export function useGetStudentProfile() {
   const account = useAccount();
   return useQuery({
     refetchOnMount: true,
-    queryKey: ["students-profile"],
+    queryKey: ["students-profile", account.address],
     queryFn: async () => {
       const result = await mobius.query({
         studentss: {

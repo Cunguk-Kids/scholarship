@@ -31,18 +31,20 @@ export function StudentDashboardPage() {
   );
   const milestones = useMemo(() => {
     let usedPending = false;
-    return (item?.milestones.items ?? []).map((item) => {
-      const type = item.proveCID
-        ? "disbursed"
-        : usedPending
-          ? "locked"
-          : "pending";
-      if (!item.proveCID) usedPending = true;
-      return {
-        ...item,
-        type,
-      } as const;
-    });
+    return (item?.milestones.items ?? [])
+      .sort((a, b) => (a.blockchainId ?? 0) - (b.blockchainId ?? 0))
+      .map((item) => {
+        const type = item.proveCID
+          ? "disbursed"
+          : usedPending
+            ? "locked"
+            : "pending";
+        if (!item.proveCID) usedPending = true;
+        return {
+          ...item,
+          type,
+        } as const;
+      });
   }, [item]);
 
   const isExist = Boolean(data?.studentss?.items?.length);

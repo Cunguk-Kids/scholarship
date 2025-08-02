@@ -1,7 +1,6 @@
 import { skoolchainV2Address } from "@/constants/contractAddress";
 import { skoolchainV2Abi } from "@/repo/abi";
-import { uploadToIPFS } from "@/services/api/ipfs.service";
-import { createMetadataNFT } from "@/util/cleanCID";
+import {  uploadToIPFSNFT } from "@/services/api/ipfs.service";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { ContractFunctionExecutionError } from "viem";
@@ -35,21 +34,19 @@ export function useMintProgramCreatorNFTV2() {
     mutationKey: [mutationKey, account.address],
     mutationFn: async (data: MutationProps) => {
       if (!account.address) throw new Error("Must Login First");
-      const { imageURL } = await uploadToIPFS({ file: data.file });
-      const { metadataURL } = await uploadToIPFS({
-        meta: createMetadataNFT({
-          imageURL,
-          description: "Program Creator NFT",
-          name: "Program Creator NFT - " + data.programId,
-          owner: account.address,
-        }),
+
+      const result = await uploadToIPFSNFT({
+        file: data.file,
+        name: "Program Creator NFT - " + data.programId,
+        description: "Program Creator NFT",
+        owner: account.address,
       });
 
       const hash = await writeContractAsync({
         abi: skoolchainV2Abi,
         address: skoolchainV2Address,
         functionName: "mintProgramCreator",
-        args: [BigInt(data.programId), metadataURL],
+        args: [BigInt(data.programId), result.metadataURL],
       });
 
       await waitForTransactionReceipt(config, { hash });

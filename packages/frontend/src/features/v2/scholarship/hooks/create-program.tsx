@@ -14,17 +14,7 @@ const mutationKey = "create-program";
 const day = 60n * 60n * 24n;
 
 export function useCreateProgramV2() {
-  const { writeContractAsync } = useWriteContract({
-    mutation: {
-      onMutate: () => {
-        toast.loading("Calling Contract", { id: mutationKey });
-      },
-
-      onSuccess: () => {
-        toast.loading("Success Calling Contract", { id: mutationKey });
-      },
-    },
-  });
+  const { writeContractAsync } = useWriteContract();
   const config = useConfig();
   return useMutation({
     onMutate: () => {
@@ -61,6 +51,8 @@ export function useCreateProgramV2() {
       modifiedData.ongoingAt = Number(dates[2]);
       modifiedData.closedAt = Number(dates[3]);
 
+      toast.loading("Approving USDC transfer...", { id: mutationKey });
+
       const approveHash = await writeContractAsync({
         abi: erc20Abi,
         address: usdcAddress,
@@ -68,15 +60,19 @@ export function useCreateProgramV2() {
         args: [skoolchainV2Address, totalFund],
       });
 
+      await waitForTransactionReceipt(config, { hash: approveHash });
+
+      toast.loading("Uploading metadata to IPFS...", { id: mutationKey });
+
       const ipfs = await uploadToIPFS({ meta: data });
 
-      await waitForTransactionReceipt(config, { hash: approveHash });
+      toast.loading("Creating program on-chain...", { id: mutationKey });
 
       const programCreationHash = await writeContractAsync({
         abi: skoolchainV2Abi,
         address: skoolchainV2Address,
         functionName: "createProgram",
-        args: [totalFund, dates, cleanCID(ipfs?.metaCID), 0],
+        args: [totalFund, dates, cleanCID(ipfs?.metaCID), 1],
       });
 
       await waitForTransactionReceipt(config, { hash: programCreationHash });

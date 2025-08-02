@@ -153,7 +153,7 @@ export const Input: React.FC<InputProps> = ({
       {/* DATE */}
       {type === 'date' && (
         <input
-          type="date"
+          type="datetime-local"
           className={inputClass}
           placeholder={placeholder}
           value={value}

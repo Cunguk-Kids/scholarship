@@ -59,7 +59,6 @@ export function NftMinting(props: {
               // });
 
               const file = dataURLToFile(svgUrl, "student-card.svg");
-              console.log(file);
 
               props.onMint?.(file);
             }}

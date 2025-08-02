@@ -1,6 +1,7 @@
-import { usdcAddress } from "@/constants/contractAddress";
+import { skoolchainV2Address } from "@/constants/contractAddress";
 import { skoolchainV2Abi } from "@/repo/abi";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { ContractFunctionExecutionError } from "viem";
 import { useConfig, useWriteContract } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
@@ -8,27 +9,33 @@ import { waitForTransactionReceipt } from "wagmi/actions";
 const mutationKey = "withdraw-milestone";
 
 type MutationProps = {
-  programId: string;
+  programId: number;
 };
 
 export function useWithdrawMilestoneV2() {
   const { writeContractAsync } = useWriteContract();
+  const queryClient = useQueryClient();
   const config = useConfig();
   return useMutation({
     onMutate: () => {
-      console.log("Withdrawing Milestone...");
+      toast.loading("Withdrawing Milestone...", { id: mutationKey });
     },
     onSuccess: () => {
-      console.log("Milestone Withdrawed!");
+      queryClient.resetQueries({ queryKey: "balanceOf" as never });
+      toast.success("Milestone Withdrawed!", { id: mutationKey });
     },
     onError: (error: ContractFunctionExecutionError) => {
-      console.log(error, "Withdraw Milestone Failed!");
+      console.error(error);
+      toast.error(
+        "Withdraw Milestone Failed! " + (error.shortMessage ?? error.message),
+        { id: mutationKey }
+      );
     },
     mutationKey: [mutationKey],
     mutationFn: async (data: MutationProps) => {
       const hash = await writeContractAsync({
         abi: skoolchainV2Abi,
-        address: usdcAddress,
+        address: skoolchainV2Address,
         functionName: "withdrawMilestone",
         args: [BigInt(data.programId)],
       });
