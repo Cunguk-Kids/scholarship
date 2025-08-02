@@ -31,6 +31,8 @@ type InputProps = {
   step?: number;
   onChange?: (val: string) => void;
   onUpload?: (file: File) => void;
+  error?: boolean;
+  helperText?: string;
 };
 
 export const Input: React.FC<InputProps> = ({
@@ -45,6 +47,8 @@ export const Input: React.FC<InputProps> = ({
   step = 1,
   onChange,
   onUpload,
+  error,
+  helperText,
 }) => {
   const inputId = 'upload-file';
   const inputClass =
@@ -212,6 +216,9 @@ export const Input: React.FC<InputProps> = ({
           <img src="/icons/information-circle.svg" alt="info" />
         </div>
       )}
+
+      {/* error */}
+      {error && helperText && <span className="text-sm text-red-500 mt-1">{helperText}</span>}
     </div>
   );
 };
