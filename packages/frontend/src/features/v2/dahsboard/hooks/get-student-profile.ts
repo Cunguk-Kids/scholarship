@@ -13,21 +13,16 @@ export function useGetStudentProfile() {
           where: {
             where: {
               studentAddress: account.address,
-            } as unknown as {
-              id: null;
-              name: null;
-              programId: null;
-              studentAddress: null;
-            },
+            } as never,
           },
           select: {
             items: {
+              id: true,
               blockchainId: true,
               createdAt: true,
               email: true,
               financialSituation: true,
               fullName: true,
-              id: true,
               programId: true,
               scholarshipMotivation: true,
               studentAddress: true,

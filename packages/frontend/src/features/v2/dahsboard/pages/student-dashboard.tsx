@@ -56,7 +56,7 @@ export function StudentDashboardPage() {
           programId={item?.program.blockchainId ?? 0}
           name={item?.fullName ?? "No Name"}
           motivationHeadline="Let’s get you one step closer to your dreams."
-          profileImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.studentAddress}`}
+          profileImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.id}`}
           programCreator={item?.program?.creator ?? "0x0"}
           programCreatorImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.program.creator}`}
           programTitle={item?.program.name ?? "No Name"}

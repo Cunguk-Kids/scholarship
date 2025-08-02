@@ -8,6 +8,7 @@ interface ButtonProps {
   bgShadow?: string;
   onClick?: () => void;
   className?: string;
+  wrapperClassName?: string;
 }
 
 const getButtonClasses = (
@@ -44,10 +45,11 @@ export const Button = ({
   bgShadow = "bg-black",
   onClick = () => {},
   className,
+  wrapperClassName,
 }: ButtonProps) => {
   if (type !== "connect") {
     return (
-      <div className="flex flex-col items-start">
+      <div className={`flex flex-col items-start ${wrapperClassName}`}>
         <ButtonWrapper bgShadow={bgShadow}>
           <button
             onClick={onClick}
@@ -95,13 +97,15 @@ export const Button = ({
 
         const address = `${account?.address?.slice(0, 6)}...${account?.address?.slice(-4)}`;
         return (
-          <div className="flex flex-col items-start gap-2">
+          <div
+            className={`flex flex-col items-start gap-2 ${wrapperClassName}`}
+          >
             {!connected ? (
               <ButtonWrapper>
                 <button
                   onClick={openConnectModal}
                   type="button"
-                  className={getButtonClasses(size)}
+                  className={`${getButtonClasses(size)} max-lg:w-full`}
                 >
                   {label}
                 </button>
@@ -117,12 +121,12 @@ export const Button = ({
                 </button>
               </ButtonWrapper>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex gap-2 max-lg:flex-col max-lg:w-full">
                 <ButtonWrapper>
                   <button
                     onClick={openChainModal}
                     type="button"
-                    className={getButtonClasses(size)}
+                    className={`${getButtonClasses(size)} max-lg:w-full`}
                   >
                     {/* {chain.hasIcon && chain.iconUrl && (
                       <div
@@ -150,7 +154,7 @@ export const Button = ({
                   <button
                     onClick={openProfileModal}
                     type="button"
-                    className={getButtonClasses(size)}
+                    className={`${getButtonClasses(size)} max-lg:w-full`}
                   >
                     {address}
                     {account.address &&
