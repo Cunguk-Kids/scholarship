@@ -16,7 +16,7 @@ const messages = [
 
 const Title = memo(function Title() {
   return (
-    <div className="lg:w-2xl">
+    <div className="z-20 max-lg:text-4xl">
       <h1>
         <SplitText
           text="Empower the Future."
@@ -109,12 +109,12 @@ export const ScholarshipsPage = () => {
     <>
       <div className="w-screen h-auto flex flex-col">
         <div className="">
-          <div className="flex flex-col m-16 items-center gap-6 font-paytone text-[3.5rem] text-center">
+          <div className="flex flex-col m-16 max-lg:mx-0 max-lg:mt-0 items-center gap-6 font-paytone text-[3.5rem] text-center">
             <Title />
           </div>
         </div>
         <div className="h-0">
-          <div className="relative z-10 -top-80">
+          <div className="relative z-10 -top-80 max-lg:-top-40">
             <div className="flex justify-between">
               <ApproachableWrapper className="relative -left-8 w-[8.625rem] h-40">
                 <img

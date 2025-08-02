@@ -38,10 +38,10 @@ export function DashboardPageV2() {
         <div className="absolute top-0 bg-skpurple left-0 right-0 h-[50vh] -z-1" />
       )}
       <main
-        className={`${"flex max-md:px-3 px-9 gap-9 w-full overflow-hidden pb-9 relative isolate min-h-screen max-lg:flex-col"} ${provider.isStudentDashboard ? "bg-skred" : "bg-skyellow"}`}
+        className={`${"flex max-md:px-3 px-9 gap-9 w-full overflow pb-9 relative isolate min-h-screen max-lg:flex-col"} ${provider.isStudentDashboard ? "bg-skred" : "bg-skyellow"}`}
       >
         <div
-          className={`${"h-[60vh] absolute right-0 left-0 pointer-events-none"} ${provider.isStudentDashboard ? "bg-skbw" : "bg-skpurple"}`}
+          className={`${"h-[60vh] absolute right-0 left-0 pointer-events-none -top-px"} ${provider.isStudentDashboard ? "bg-skbw" : "bg-skpurple"}`}
           style={{
             clipPath: arc,
           }}
