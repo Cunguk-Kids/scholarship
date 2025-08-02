@@ -3,6 +3,7 @@ import { skoolchainV2Abi } from "@/repo/abi";
 import { uploadToIPFS } from "@/services/api/ipfs.service";
 import { cleanCID } from "@/util/cleanCID";
 import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { ContractFunctionExecutionError } from "viem";
 import { useConfig, useWriteContract } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
@@ -23,17 +24,31 @@ type ApplicantFormData = {
 };
 
 export function useApplyApplicantV2(programId: string) {
-  const { writeContractAsync } = useWriteContract();
+  const { writeContractAsync } = useWriteContract({
+    mutation: {
+      onMutate: () => {
+        toast.loading("Calling Contract", { id: mutationKey });
+      },
+
+      onSuccess: () => {
+        toast.loading("Waiting For Transaction", { id: mutationKey });
+      },
+    },
+  });
   const config = useConfig();
   return useMutation({
     onMutate: () => {
-      console.log("Applying Program...");
+      toast.loading("Applying Program...", { id: mutationKey });
     },
     onSuccess: () => {
-      console.log("Program Applied!");
+      toast.success("Program Applied!", { id: mutationKey });
     },
     onError: (error: ContractFunctionExecutionError) => {
-      console.log(error, "Apply Program Failed!");
+      console.error(error);
+      toast.error(
+        "Apply Program Failed!: " + (error.shortMessage ?? error.message),
+        { id: mutationKey }
+      );
     },
     mutationKey: [mutationKey, programId],
     mutationFn: async (data: ApplicantFormData) => {

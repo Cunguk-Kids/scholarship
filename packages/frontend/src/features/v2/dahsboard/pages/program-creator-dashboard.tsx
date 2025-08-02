@@ -28,16 +28,16 @@ export function ProgramCreatorDashboard() {
   const isExist = Boolean(data?.programss?.items?.length);
   return (
     <>
-      <div className="fixed top-0 bg-skpurple left-0 right-0 h-[50vh] -z-9" />
       <div className="lg:max-w-[24rem] space-y-6">
         <SwitchDashboard />
         <ProgramDashboardCard
+          programDescription={item?.description ?? ""}
           programId={item?.blockchainId ?? 0}
           clickNext={next}
           isLoading={isLoading || !isExist}
           programCreator={account.address ?? "0x0"}
           programCreatorImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${account.address}`}
-          programTitle={item?.description ?? ""}
+          programTitle={item?.name ?? ""}
           totalFund={item?.totalFund ?? 0}
         />
         <MessageCard

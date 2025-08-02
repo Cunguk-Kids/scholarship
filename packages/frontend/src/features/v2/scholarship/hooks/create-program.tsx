@@ -14,17 +14,31 @@ const mutationKey = "create-program";
 const day = 60n * 60n * 24n;
 
 export function useCreateProgramV2() {
-  const { writeContractAsync } = useWriteContract();
+  const { writeContractAsync } = useWriteContract({
+    mutation: {
+      onMutate: () => {
+        toast.loading("Calling Contract", { id: mutationKey });
+      },
+
+      onSuccess: () => {
+        toast.loading("Success Calling Contract", { id: mutationKey });
+      },
+    },
+  });
   const config = useConfig();
   return useMutation({
     onMutate: () => {
-      console.log("Creating program...");
+      toast.loading("Creating Program", { id: mutationKey });
     },
     onSuccess: () => {
-      console.log("Program created!");
+      toast.success("Program Created", { id: mutationKey });
     },
     onError: (error: ContractFunctionExecutionError) => {
-      console.log(error, "Program creation failed!");
+      console.error(error);
+      toast.error(
+        "Program creation failed! " + (error.shortMessage ?? error.message),
+        { id: mutationKey }
+      );
     },
     mutationKey: [mutationKey],
     mutationFn: async (data: FormDataProvider) => {
@@ -47,19 +61,13 @@ export function useCreateProgramV2() {
       modifiedData.ongoingAt = Number(dates[2]);
       modifiedData.closedAt = Number(dates[3]);
 
-      const approveHash = await toast.promise(
-        writeContractAsync({
-          abi: erc20Abi,
-          address: usdcAddress,
-          functionName: "approve",
-          args: [skoolchainV2Address, totalFund],
-        }),
-        {
-          loading: "Creating program...",
-          success: "Program created!",
-          error: "Program creation failed!",
-        }
-      );
+      const approveHash = await writeContractAsync({
+        abi: erc20Abi,
+        address: usdcAddress,
+        functionName: "approve",
+        args: [skoolchainV2Address, totalFund],
+      });
+
       const ipfs = await uploadToIPFS({ meta: data });
 
       await waitForTransactionReceipt(config, { hash: approveHash });

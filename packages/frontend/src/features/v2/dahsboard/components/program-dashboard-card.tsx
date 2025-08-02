@@ -9,6 +9,7 @@ import { useAccount } from "wagmi";
 
 export function ProgramDashboardCard(props: {
   programTitle: string;
+  programDescription: string;
   programCreator: string;
   totalFund: number;
   programCreatorImage: string;
@@ -82,8 +83,7 @@ export function ProgramDashboardCard(props: {
           opacity: props.isLoading ? 0 : 1,
         }}
       >
-        <p>Active Scholarship:</p>
-        <h2 className="text-2xl font-bold">{props.programTitle}</h2>
+        <h2 className="text-2xl font-bold">{props.programDescription}</h2>
         <div className="flex items-center gap-2">
           <img
             className="size-5 rounded-full font-semibold"
@@ -111,10 +111,15 @@ export function ProgramDashboardCard(props: {
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div
+        style={{
+          opacity: props.isLoading ? 0 : 1,
+        }}
+        className="flex justify-end"
+      >
         <Button
           onClick={() => setIsOnMintNFT(true)}
-          label="Mint Student NFT"
+          label="Mint Program Creator NFT"
           className="!bg-skgreen !text-black"
         />
       </div>
