@@ -169,10 +169,23 @@ export const scholarship = () => {
     const { metadataCID, amount, creator, id, programId } = event.args;
 
     logger.info({ metadataCID, amount, creator, id, programId }, "Milestone Param");
+
+    const [program] = await db
+      .select()
+      .from(programs)
+      .where(eq(programs.blockchainId, Number(programId)));
+
+    if (!program) {
+      return;
+    }
+
     const [student] = await db
       .select()
       .from(students)
-      .where(eq(students.studentAddress, creator));
+      .where(and(
+        eq(students.studentAddress, creator),
+        eq(students.programId, program.id)
+      ));
 
     if (!student) {
       return;
@@ -183,7 +196,7 @@ export const scholarship = () => {
       amount: Math.round(parseFloat(String(amount)) / 1_000_000),
       blockchainId: Number(id),
       studentId: student.id,
-      programId: student.programId,
+      programId: program.id,
       metadataCID: metadataCID,
       description: '',
       estimation: 0,
