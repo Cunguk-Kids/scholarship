@@ -1,0 +1,41 @@
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/frontend/**'
+      - '.github/workflows/workstation-development-frontend.yml'
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, raihanard-frontend]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Generate .env file from selected system env
+        working-directory: ./packages/frontend
+        run: |
+          env | grep -v '^_' | grep -v '^PWD=' | grep -v '^HOME=' | grep -v '^GITHUB' > .env
+
+      - name: Print .env contents (debug)
+        working-directory: ./packages/frontend
+        run: cp ../../../../../.env.development-frontend .env
+
+      - name: Print .env.local contents (debug)
+        working-directory: ./packages/frontend
+        run: cp ../../../../../.env.development-frontend .env.local
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install Dependencies (monorepo)
+        run: bun install
+
+      - name: Change directory to packages/frontend
+        working-directory: ./packages/frontend
+        run: echo "Changed to frontend"
+
+      - name: Start or Reload frontend via PM2
+        working-directory: ./packages/frontend
+        run: pm2 restart frontend
