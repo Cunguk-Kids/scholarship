@@ -1,30 +1,94 @@
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/Button';
-import { ScholarshipModal } from '../components/ScholarshipModal';
-import { ApplicantModal } from '../components/ApplicantModal';
-import { useApplicant } from '@/hooks/@programs/applicant/use-list-applicant';
-import { Tabbing } from '@/components/Tabbing';
-import { tabbingData } from '../constants/ScholarshipConstants';
-import SplitText from '@/components/ui/split-text';
-import { ApproachableWrapper } from '@/components/ornaments/approachable-wrapper';
-import { usePrograms } from '@/hooks/v2/data/usePrograms';
-import { useClickOutside } from '@/hooks/useClickOutside';
+import { memo, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/Button";
+import { ScholarshipModal } from "../components/ScholarshipModal";
+import { ApplicantModal } from "../components/ApplicantModal";
+import { useApplicant } from "@/hooks/@programs/applicant/use-list-applicant";
+import { Tabbing } from "@/components/Tabbing";
+import { tabbingData } from "../constants/ScholarshipConstants";
+import SplitText from "@/components/ui/split-text";
+import { ApproachableWrapper } from "@/components/ornaments/approachable-wrapper";
+import { usePrograms } from "@/hooks/v2/data/usePrograms";
+import { useClickOutside } from "@/hooks/useClickOutside";
+const messages = [
+  "Looking for a fair, transparent way to fund your education?",
+  "Ready to turn your funds into real student success stories?",
+];
+
+const Title = memo(function Title() {
+  return (
+    <div className="lg:w-2xl">
+      <h1>
+        <SplitText
+          text="Empower the Future."
+          delay={200}
+          duration={0.6}
+          ease="power3.out"
+          splitType="words"
+          from={{ opacity: 0, y: 40 }}
+          to={{ opacity: 1, y: 0 }}
+          threshold={0.1}
+          rootMargin="-100px"
+          textAlign="center"
+        />
+      </h1>
+      <h1>
+        <SplitText
+          text="or Be Empowered."
+          delay={200}
+          duration={0.6}
+          ease="power3.out"
+          splitType="words"
+          from={{ opacity: 0, y: 40 }}
+          to={{ opacity: 1, y: 0 }}
+          threshold={0.1}
+          rootMargin="-99px"
+          textAlign="center"
+        />
+      </h1>
+      <div className="font-nunito text-2xl">
+        <SplitText
+          text="All scholarships are powered by smart contracts. "
+          delay={50}
+          duration={0.6}
+          ease="power3.out"
+          splitType="words"
+          from={{ opacity: 0, y: 40 }}
+          to={{ opacity: 1, y: 0 }}
+          threshold={0.1}
+          rootMargin="-100px"
+          textAlign="center"
+        />
+        <br />
+        <SplitText
+          text="Funds go directly to students, no middlemen."
+          delay={50}
+          duration={0.6}
+          ease="power3.out"
+          splitType="words"
+          from={{ opacity: 0, y: 40 }}
+          to={{ opacity: 1, y: 0 }}
+          threshold={0.1}
+          rootMargin="-100px"
+          textAlign="center"
+        />
+      </div>
+    </div>
+  );
+});
 
 export const ScholarshipsPage = () => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const { applicants } = useApplicant('');
+  const { applicants } = useApplicant("");
   const { data } = usePrograms();
 
   const [openScholarshipModal, setOpenScholarshipModal] = useState(false);
-  const [programId, setProgramId] = useState('');
+  const [programId, setProgramId] = useState("");
 
-  const messages = [
-    'Looking for a fair, transparent way to fund your education?',
-    'Ready to turn your funds into real student success stories?',
-  ];
   const [messagesIndex, setMessagesIndex] = useState(0);
-  const [prevMessagesIndex, setPrevMessagesIndex] = useState<number | null>(null);
+  const [prevMessagesIndex, setPrevMessagesIndex] = useState<number | null>(
+    null
+  );
 
   const handleApplyNow = (id: string) => {
     setProgramId(id);
@@ -46,70 +110,18 @@ export const ScholarshipsPage = () => {
       <div className="w-screen h-auto flex flex-col">
         <div className="">
           <div className="flex flex-col m-16 items-center gap-6 font-paytone text-[3.5rem] text-center">
-            <div className="lg:w-2xl">
-              <h1>
-                <SplitText
-                  text="Empower the Future."
-                  delay={200}
-                  duration={0.6}
-                  ease="power3.out"
-                  splitType="words"
-                  from={{ opacity: 0, y: 40 }}
-                  to={{ opacity: 1, y: 0 }}
-                  threshold={0.1}
-                  rootMargin="-100px"
-                  textAlign="center"
-                />
-              </h1>
-              <h1>
-                <SplitText
-                  text="or Be Empowered."
-                  delay={200}
-                  duration={0.6}
-                  ease="power3.out"
-                  splitType="words"
-                  from={{ opacity: 0, y: 40 }}
-                  to={{ opacity: 1, y: 0 }}
-                  threshold={0.1}
-                  rootMargin="-99px"
-                  textAlign="center"
-                />
-              </h1>
-              <p className="font-nunito text-2xl">
-                <SplitText
-                  text="All scholarships are powered by smart contracts. "
-                  delay={50}
-                  duration={0.6}
-                  ease="power3.out"
-                  splitType="words"
-                  from={{ opacity: 0, y: 40 }}
-                  to={{ opacity: 1, y: 0 }}
-                  threshold={0.1}
-                  rootMargin="-100px"
-                  textAlign="center"
-                />
-                <br />
-                <SplitText
-                  text="Funds go directly to students, no middlemen."
-                  delay={50}
-                  duration={0.6}
-                  ease="power3.out"
-                  splitType="words"
-                  from={{ opacity: 0, y: 40 }}
-                  to={{ opacity: 1, y: 0 }}
-                  threshold={0.1}
-                  rootMargin="-100px"
-                  textAlign="center"
-                />
-              </p>
-            </div>
+            <Title />
           </div>
         </div>
         <div className="h-0">
           <div className="relative z-10 -top-80">
             <div className="flex justify-between">
               <ApproachableWrapper className="relative -left-8 w-[8.625rem] h-40">
-                <img src="/img/Flower.svg" alt="flower" className="w-full h-full" />
+                <img
+                  src="/img/Flower.svg"
+                  alt="flower"
+                  className="w-full h-full"
+                />
               </ApproachableWrapper>
 
               <ApproachableWrapper className="relative -right-1">
@@ -118,15 +130,25 @@ export const ScholarshipsPage = () => {
             </div>
             <div className="relative -top-36 flex w-full justify-between">
               <ApproachableWrapper className="relative -left-1">
-                <img src="/img/Illustration Provider.svg" alt="Illustration Provider" />
+                <img
+                  src="/img/Illustration Provider.svg"
+                  alt="Illustration Provider"
+                />
               </ApproachableWrapper>
               <ApproachableWrapper className="relative -right-1">
-                <img src="/img/Illustration Student.svg" alt="Illustration Student" />
+                <img
+                  src="/img/Illustration Student.svg"
+                  alt="Illustration Student"
+                />
               </ApproachableWrapper>
             </div>
           </div>
           <div className="relative z-1 -top-150">
-            <img src="/img/Ellipse 1.svg" alt="ellipse 1" className="w-screen" />
+            <img
+              src="/img/Ellipse 1.svg"
+              alt="ellipse 1"
+              className="w-screen"
+            />
             <div className="relative w-screen -top-1 bg-skyellow h-[33rem]"></div>
           </div>
         </div>
@@ -139,13 +161,15 @@ export const ScholarshipsPage = () => {
             {prevMessagesIndex !== null && (
               <span
                 key={`prev-${prevMessagesIndex}`}
-                className="absolute text-2xl font-bold text-center animate-slideDown-fadeOut">
+                className="absolute text-2xl font-bold text-center animate-slideDown-fadeOut"
+              >
                 {messages[prevMessagesIndex]}
               </span>
             )}
             <span
               key={`curr-${messagesIndex}`}
-              className="absolute text-2xl font-bold text-center animate-slideUp-fadeIn">
+              className="absolute text-2xl font-bold text-center animate-slideUp-fadeIn"
+            >
               {messages[messagesIndex]}
             </span>
           </div>
@@ -159,9 +183,9 @@ export const ScholarshipsPage = () => {
               label="Explore Scholarships"
               size="large"
               onClick={() => {
-                const section = document.getElementById('find-scholarship');
+                const section = document.getElementById("find-scholarship");
                 if (section) {
-                  section.scrollIntoView({ behavior: 'smooth' });
+                  section.scrollIntoView({ behavior: "smooth" });
                 }
               }}
             />
@@ -182,9 +206,9 @@ export const ScholarshipsPage = () => {
               programs={
                 data?.map((x) => {
                   // @ts-expect-error ytta
-                  x.endDate = new Date(x.endAt ?? '').getTime();
+                  x.endDate = new Date(x.endAt ?? "").getTime();
                   // @ts-expect-error ytta
-                  x.startDate = new Date(x.startAt ?? '').getTime();
+                  x.startDate = new Date(x.startAt ?? "").getTime();
                   // @ts-expect-error ytta
                   x.initiatorAddress = x.creator;
                   return x;
@@ -209,7 +233,7 @@ export const ScholarshipsPage = () => {
         ref={ref}
         programId={programId}
         isOpen={Boolean(programId)}
-        onClose={() => setProgramId('')}
+        onClose={() => setProgramId("")}
       />
     </>
   );
