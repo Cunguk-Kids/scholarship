@@ -12,7 +12,10 @@ export const scholarship = () => {
   ponder.on("scholarship:ProgramCreated", async ({ event }) => {
     try {
       const { allocation, creator, id, metadataCID, totalFund } = event.args;
-
+      //  "openedAt": "1754137548",
+      //       "votingAt": "1759190400",
+      //       "ongoingAt": "1759363200",
+      //       "closedAt": "1759536000"
 
       const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
       let baseData: InferInsertModel<typeof programs> = {
@@ -25,9 +28,10 @@ export const scholarship = () => {
         description: '',
         totalRecipients: 1,
         endAt: moment().format("YYYY-MM-DD"),
-        startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
         rules: "",
+        startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
         votingAt: moment().add(2, 'days').format("YYYY-MM-DD"),
+        ongoingAt: moment().add(2, 'days').format("YYYY-MM-DD"),
       };
       if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
         logger.info({ trimmedCID }, "CID Data Program");
@@ -40,8 +44,10 @@ export const scholarship = () => {
             name: ipfsData?.attributes?.[0]?.scholarshipName as string || '',
             description: ipfsData?.attributes?.[0]?.description as string || '',
             totalRecipients: ipfsData?.attributes?.[0]?.recipientCount as number || 1,
-            endAt: moment(ipfsData?.attributes?.[0]?.deadline as string || '').format("YYYY-MM-DD").toString(),
-            startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
+            startAt: moment(ipfsData?.attributes?.[0]?.openedAt as string || '').format("YYYY-MM-DD").toString(),
+            votingAt: moment(ipfsData?.attributes?.[0]?.votingAt as string || '').format("YYYY-MM-DD").toString(),
+            ongoingAt: moment(ipfsData?.attributes?.[0]?.ongoingAt as string || '').format("YYYY-MM-DD").toString(),
+            endAt: moment(ipfsData?.attributes?.[0]?.closedAt as string || '').format("YYYY-MM-DD").toString(),
           };
         }
       }
