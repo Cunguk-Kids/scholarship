@@ -185,6 +185,11 @@ export const scholarship = () => {
       studentId: student.id,
       programId: student.programId,
       metadataCID: metadataCID,
+      description: '',
+      estimation: 0,
+      type: "Others" as InferEnum<typeof MilestoneTypeEnum>,
+      proveCID: "",
+      isCollected: false,
     };
 
     if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {

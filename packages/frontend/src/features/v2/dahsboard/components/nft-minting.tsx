@@ -52,8 +52,13 @@ export function NftMinting(props: {
     return fills;
   }
 
-  const starFills = generateStarFills(5);
-  const svg = StudentCard({ id: '#001', name: 'test', programName: 'test', ...starFills });
+  const starFills = generateStarFills(3);
+  const svg = StudentCard({
+    id: `#${props.id}`,
+    name: props.name,
+    programName: props.programName,
+    ...starFills,
+  });
   const svgUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 
   function dataURLToFile(dataUrl: string, filename: string): File {
@@ -89,6 +94,8 @@ export function NftMinting(props: {
               // });
 
               const file = dataURLToFile(svgUrl, 'student-card.svg');
+              console.log(file);
+
               props.onMint?.(file);
             }}
             label={'Mint'}
