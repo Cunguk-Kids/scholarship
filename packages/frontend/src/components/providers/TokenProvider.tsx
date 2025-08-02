@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useEffect, useState, type ReactNode } from "react";
 
 export type TokenRateContextType = {
   rate: number | null;
@@ -7,7 +7,9 @@ export type TokenRateContextType = {
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const TokenRateContext = createContext<TokenRateContextType | undefined>(undefined);
+export const TokenRateContext = createContext<TokenRateContextType | undefined>(
+  undefined
+);
 
 type TokenRateProviderProps = {
   children: ReactNode;
@@ -22,12 +24,12 @@ export function TokenRateProvider({ children }: TokenRateProviderProps) {
     const fetchRate = async () => {
       try {
         const res = await fetch(
-          'https://api.coingecko.com/api/v3/simple/price?ids=lisk&vs_currencies=usd',
+          "https://api.coingecko.com/api/v3/simple/price?ids=usd-coin&vs_currencies=idr"
         );
         const data = await res.json();
-        setRate(data.lisk.usd);
+        setRate(data["usd-coin"].idr);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Unknown error'));
+        setError(err instanceof Error ? err : new Error("Unknown error"));
       } finally {
         setLoading(false);
       }

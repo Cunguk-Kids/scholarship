@@ -1,13 +1,16 @@
 import { formatGwei } from "viem";
 
-export const getLocalValue = (amount: bigint | number | string, rate: number) => {
+export const getLocalValue = (
+  amount: bigint | number | string,
+  rate: number
+) => {
   let token: number;
 
   try {
     token =
-      typeof amount === 'bigint'
+      typeof amount === "bigint"
         ? Number(formatGwei(amount))
-        : typeof amount === 'string'
+        : typeof amount === "string"
           ? parseFloat(amount)
           : amount;
   } catch {
@@ -17,9 +20,9 @@ export const getLocalValue = (amount: bigint | number | string, rate: number) =>
   const converted = (token / 1000000) * rate;
   const safeValue = isNaN(converted) || !isFinite(converted) ? 0 : converted;
 
-  return safeValue.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return safeValue.toLocaleString("en-US", {
+    style: "currency",
+    currency: "IDR",
     maximumFractionDigits: 0,
   });
 };
