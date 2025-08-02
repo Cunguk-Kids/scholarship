@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { Resvg } from '@resvg/resvg-js';
 import { publicDir } from '../publicDirectory';
 
 function replaceSvgPlaceholders<T extends Record<string, unknown>>(svgContent: string, metadata: T): string {
