@@ -1,5 +1,4 @@
-import { idrToUsdc } from '@/util/localCurrency';
-import React from 'react';
+import { forwardRef } from 'react';
 import { NumericFormat } from 'react-number-format';
 import { twMerge } from 'tailwind-merge';
 
@@ -34,33 +33,36 @@ type InputProps = {
   step?: number;
   onChange?: (val: string) => void;
   onUpload?: (file: File) => void;
+  onClickNote?: () => void;
   error?: boolean;
   helperText?: string;
   isCurrency?: boolean;
 };
 
-export const Input: React.FC<InputProps> = ({
-  isCurrency,
-  type,
-  value,
-  label,
-  placeholder,
-  note,
-  options = [],
-  min = 1,
-  max = 100,
-  step = 1,
-  onChange,
-  onUpload,
-  error,
-  helperText,
-}) => {
+export const Input = forwardRef<HTMLDivElement | null, InputProps>((param, ref) => {
+  const {
+    isCurrency,
+    type,
+    value,
+    label,
+    placeholder,
+    note,
+    options = [],
+    min = 1,
+    max = 100,
+    step = 1,
+    onChange,
+    onUpload,
+    error,
+    helperText,
+    onClickNote = () => null,
+  } = param;
   const inputId = 'upload-file';
   const inputClass =
     'flex p-4 items-center gap-4 self-stretch rounded-2xl border bg-white focus:outline-none focus:ring-2 focus:ring-skpurple';
 
   return (
-    <div className="flex flex-col items-start w-full gap-2.5 self-stretch p-2.5">
+    <div ref={ref} className="flex flex-col items-start w-full gap-2.5 self-stretch p-2.5">
       {/* {error && helperText && <span className="text-sm text-red-500 mt-1">{helperText}</span>} */}
       {label && (
         <label
@@ -122,7 +124,8 @@ export const Input: React.FC<InputProps> = ({
       {/* CURRENCY INPUT */}
       {type === 'input' && isCurrency && (
         <NumericFormat
-          value={value ? Number(value) * 16000 : ''}
+          className="w-full"
+          value={value}
           thousandSeparator="."
           decimalSeparator=","
           prefix="Rp "
@@ -130,10 +133,8 @@ export const Input: React.FC<InputProps> = ({
           placeholder="e.g., Rp 3.000.000"
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onValueChange={(values: any) => {
-            const idr = values.floatValue || 0;
-            const usdc = idrToUsdc(idr);
             if (onChange) {
-              onChange(String(usdc));
+              onChange(values.floatValue || 0);
             }
           }}
         />
@@ -249,9 +250,14 @@ export const Input: React.FC<InputProps> = ({
       {note && (
         <div className="flex justify-end items-center gap-2.5 self-stretch">
           <p className="text-sm text-skpurple font-medium text-right">{note}</p>
-          <img src="/icons/information-circle.svg" alt="info" />
+          <img
+            src="/icons/information-circle.svg"
+            alt="info"
+            className="cursor-pointer"
+            onClick={onClickNote}
+          />
         </div>
       )}
     </div>
   );
-};
+});

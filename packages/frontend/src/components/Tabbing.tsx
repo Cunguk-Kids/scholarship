@@ -47,7 +47,7 @@ export const Tabbing = <T,>({
   tabs: Tab[];
   type?: string;
   onClickTabbing?: (item: Record<string, T>, activeTab: string) => void;
-  onClickButtonItem?: (id: string) => void;
+  onClickButtonItem?: (id: string, item?: Record<string, T>) => void;
   currentBalance?: string;
   participants?: any[];
 }) => {
@@ -58,9 +58,9 @@ export const Tabbing = <T,>({
   //   if (onClickTabbing) onClickTabbing(item, activeTab);
   // };
 
-  const handleClickItemButton = (id: string) => {
+  const handleClickItemButton = (id: string, item: Record<string, T>) => {
     if (onClickButtonItem) {
-      onClickButtonItem(id);
+      onClickButtonItem(id, item);
     }
   };
 
@@ -123,7 +123,7 @@ export const Tabbing = <T,>({
                           : 'Donate Now'
                     }
                     status={activeTab}
-                    onClickButton={() => handleClickItemButton(item.blockchainId)}
+                    onClickButton={() => handleClickItemButton(item.blockchainId, item)}
                     liskToIDR={rate || 0}
                   />
                 ))}

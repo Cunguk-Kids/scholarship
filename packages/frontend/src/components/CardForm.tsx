@@ -5,9 +5,17 @@ import { ConfirmationModal } from './ConfirmationModal';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { applicantSchema, providerSchema } from '@/features/v2/scholarship/validations/schemas';
+import { CurrencyConverter } from '@/features/v2/scholarship/components/CurrencyConverter';
+import { sumBy } from 'lodash';
+import { idrToUsdc } from '@/util/localCurrency';
+import { createPopper } from '@popperjs/core';
+
 interface CardFormProps<T extends 'applicant' | 'provider'> {
   totalStep: number;
   type: T;
+  totalFund?: number;
+  totalParticipant?: number;
+  rate?: number;
   onSubmit: (formData: T extends 'applicant' ? FormData : FormDataProvider) => void;
   onClose?: () => void;
 }
@@ -46,15 +54,28 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   onSubmit,
   onClose = () => {},
   type,
+  totalFund,
+  rate,
+  totalParticipant,
 }: CardFormProps<T>) => {
+  // ref
+  const referenceRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const popperRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  // state
+  const [show, setShow] = useState(false);
   const [step, setStep] = useState(1);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
 
   const schema = type === 'applicant' ? applicantSchema : providerSchema;
 
   const {
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm({
     mode: 'onChange',
@@ -78,6 +99,40 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
           },
   });
 
+  const milestones = watch('milestones');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const reference = referenceRefs.current[selectedIndex];
+      const popper = popperRefs.current[selectedIndex];
+
+      if (reference && popper && show) {
+        const instance = createPopper(reference, popper, {
+          placement: 'bottom-start',
+          modifiers: [
+            {
+              name: 'offset',
+              options: { offset: [0, 8] },
+            },
+          ],
+        });
+
+        return () => {
+          instance.destroy();
+        };
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [show]);
+
+  useEffect(() => {
+    popperRefs.current = Array(milestones.length).fill(null);
+  }, [milestones.length]);
+  useEffect(() => {
+    referenceRefs.current = Array(milestones.length).fill(null);
+  }, [milestones.length]);
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'milestones',
@@ -98,6 +153,8 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   };
 
   const handleAddMilestone = () => append(createEmptyMilestone());
+
+  const totalSpend = sumBy(watch('milestones'), 'amount');
 
   useEffect(() => {
     if (bottomRef.current && bottomRef.current.parentElement) {
@@ -286,8 +343,8 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
 
           {step === 2 &&
             (type === 'applicant' ? (
-              <>
-                {fields.map((m, i) => (
+              <div>
+                {fields.map((_m, i) => (
                   <div
                     key={i}
                     className="flex flex-col bg-skbw rounded-xl w-full relative gap-4 p-4">
@@ -301,6 +358,20 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                         </button>
                       )}
                     </div>
+                    {show && selectedIndex === i && (
+                      <div
+                        ref={(el) => {
+                          popperRefs.current[selectedIndex] = el;
+                        }}
+                        className="z-10 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-2 border-black p-2 rounded-lg">
+                        <CurrencyConverter
+                          exchangeRate={rate || 1}
+                          usdAmount={(totalFund || 1) / 1_000_000}
+                          totalParticipant={totalParticipant || 1}
+                          participantSpend={totalSpend}
+                        />
+                      </div>
+                    )}
                     {/* <Input
                       type="dropdown"
                       label="Milestone Type"
@@ -337,22 +408,33 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                       control={control}
                       render={({ field, fieldState }) => (
                         <Input
+                          ref={(el) => {
+                            referenceRefs.current[i] = el;
+                          }}
                           isCurrency
                           type="input"
                           label="Requested Amount (Rp)"
                           placeholder="e.g., Rp 3,000,000"
-                          value={field.value}
-                          onChange={field.onChange}
+                          value={String(parseIdr)}
+                          onChange={(values) => {
+                            const idr = Number(values) || 0;
+                            const usdc = idrToUsdc(idr);
+                            field.onChange(String(usdc));
+                          }}
                           error={!!fieldState.error}
                           helperText={fieldState.error?.message}
                           note="How much do you need for this specific milestone?"
+                          onClickNote={() => {
+                            setSelectedIndex(i);
+                            setShow(!show);
+                          }}
                         />
                       )}
                     />
                   </div>
                 ))}
                 <div ref={bottomRef} />
-              </>
+              </div>
             ) : (
               <>
                 <Controller
