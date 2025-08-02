@@ -9,7 +9,7 @@ import moment from "moment";
 import { isEmpty } from "lodash";
 export const scholarship = () => {
 
-  ponder.on("scholarship:m", async ({ event }) => {
+  ponder.on("scholarship:MilestoneAdded", async ({ event }) => {
     try {
 
     } catch (error) {
