@@ -180,7 +180,7 @@ export const scholarship = () => {
 
     const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
     let baseData: InferInsertModel<typeof milestones> = {
-      amount: Number(amount),
+      amount: Number(amount) / 1000000,
       blockchainId: Number(id),
       studentId: student.id,
       programId: student.programId,
