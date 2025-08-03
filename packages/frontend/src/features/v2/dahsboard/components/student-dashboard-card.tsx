@@ -19,6 +19,7 @@ export function StudentDashboardCard(props: {
   milestoneProgress?: React.ReactNode;
   programCreatorImage: string;
   isLoading: boolean;
+  milestoneType: string;
   clickNext?: () => unknown;
 }) {
   const { mutate: withdraw } = useWithdrawMilestoneV2();
@@ -116,14 +117,16 @@ export function StudentDashboardCard(props: {
         </div>
         {props.milestoneProgress}
         <div className="flex justify-between gap-2 mt-5">
-          <Button
-            className="w-full !bg-skgreen !text-black"
-            wrapperClassName="grow"
-            onClick={() => {
-              withdraw({ programId: props.programId });
-            }}
-            label="Withdraw"
-          />
+          {props.milestoneType === "FIXED" && (
+            <Button
+              className="w-full !bg-skgreen !text-black"
+              wrapperClassName="grow"
+              onClick={() => {
+                withdraw({ programId: props.programId });
+              }}
+              label="Withdraw"
+            />
+          )}
           <Button
             onClick={() => setIsOnMintNFT(true)}
             label="Mint Student NFT"

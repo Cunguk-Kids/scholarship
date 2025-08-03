@@ -55,6 +55,7 @@ export function StudentDashboardPage() {
         <StudentDashboardCard
           isLoading={isLoading || !isExist}
           studentId={item?.blockchainId ?? 0}
+          milestoneType={item?.program.milestoneType ?? ""}
           programId={item?.program.blockchainId ?? 0}
           name={item?.fullName ?? "No Name"}
           motivationHeadline="Let’s get you one step closer to your dreams."

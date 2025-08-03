@@ -30,7 +30,7 @@ export const ApplicantModal = ({
       <div className="rounded-2xl w-full max-w-9/12 relative shadow-x">
         <CardForm
           type="applicant"
-          totalStep={3}
+          totalStep={2}
           totalFund={programAmount}
           totalParticipant={totalParticipant || 1}
           rate={rate}

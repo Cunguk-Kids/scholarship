@@ -39,6 +39,7 @@ export function useGetProgramCreatorProfile() {
                   },
                 },
               },
+              milestoneType: true,
             },
           },
         },

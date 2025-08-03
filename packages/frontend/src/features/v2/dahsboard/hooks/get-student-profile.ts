@@ -31,6 +31,7 @@ export function useGetStudentProfile() {
                 blockchainId: true,
                 creator: true,
                 name: true,
+                milestoneType: true,
               },
               milestones: {
                 select: {

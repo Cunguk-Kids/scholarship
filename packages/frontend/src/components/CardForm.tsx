@@ -127,11 +127,11 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   }, [show]);
 
   useEffect(() => {
-    popperRefs.current = Array(milestones.length).fill(null);
-  }, [milestones.length]);
+    popperRefs.current = Array(milestones?.length).fill(null);
+  }, [milestones?.length]);
   useEffect(() => {
-    referenceRefs.current = Array(milestones.length).fill(null);
-  }, [milestones.length]);
+    referenceRefs.current = Array(milestones?.length).fill(null);
+  }, [milestones?.length]);
 
   const { fields, append, remove } = useFieldArray({
     control,
