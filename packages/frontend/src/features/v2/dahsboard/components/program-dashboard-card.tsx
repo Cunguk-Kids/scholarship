@@ -91,8 +91,8 @@ export function ProgramDashboardCard(props: {
             alt={props.programCreator}
           />
           <h3 className="block">
-            {props.programCreator.slice(0, 7)}...
-            {props.programCreator.slice(-4)}
+            {props.programCreator?.slice(0, 7)}...
+            {props.programCreator?.slice(-4)}
           </h3>
         </div>
         <div className="h-px bg-black/10"></div>
