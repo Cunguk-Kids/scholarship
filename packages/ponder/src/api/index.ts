@@ -7,6 +7,7 @@ import { serverHealthRoute } from "./routes/server.health.route";
 import { voteRoute } from "./routes/vote.route";
 import { cors } from "hono/cors";
 import { sseRoute } from "./routes/sse.route";
+import { sendSseToAll } from "./controller/sse.controller";
 
 const app = new Hono();
 
@@ -22,7 +23,7 @@ app.use(
   cors({
     origin: "*",
     allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    credentials: false,
   })
 );
 
@@ -38,6 +39,10 @@ app.route('/ipfs', ipfsRoute);
 app.route('/health-server-indexer', serverHealthRoute);
 app.route('/vote', voteRoute);
 app.route('/sse', sseRoute);
+app.get('/trigger', async (c) => {
+  await sendSseToAll('main', { hello: 'world', timestamp: Date.now() });
+  return c.text('Triggered');
+});
 
 export default app;
 export type AppType = typeof app;

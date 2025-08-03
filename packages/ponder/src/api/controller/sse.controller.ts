@@ -1,48 +1,75 @@
-import { Context } from "hono";
+import { Hono, Context } from 'hono';
+import { streamSSE } from 'hono/streaming';
+type SSEStream = {
+  write: (payload: { event?: string; data: string; id?: string; }) => Promise<void>;
+};
 
-const sseClients: WritableStreamDefaultWriter[] = [];
+const clients: SSEStream[] = [];
 
-export const sseController = async (c: Context) => {
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-
-  sseClients.push(writer);
-
+export const sseController = (c: Context) => {
   c.header('Access-Control-Allow-Origin', '*');
   c.header('Content-Type', 'text/event-stream');
   c.header('Cache-Control', 'no-cache');
   c.header('Connection', 'keep-alive');
 
-  await writer.write(`retry: 10000\n\n`);
+  return streamSSE(c, async (stream) => {
+    const sseClient: SSEStream = {
+      write: (data) => stream.writeSSE(data),
+    };
 
-  c.executionCtx.waitUntil(
-    readable.pipeTo(new WritableStream({
-      close() {
-        const i = sseClients.indexOf(writer);
-        if (i !== -1) sseClients.splice(i, 1);
-      },
-      abort() {
-        const i = sseClients.indexOf(writer);
-        if (i !== -1) sseClients.splice(i, 1);
-      }
-    }))
-  );
+    clients.push(sseClient);
 
-  return new Response(readable, {
-    headers: c.res.headers,
+    const heartbeat = setInterval(() => {
+      void stream.writeSSE({ data: '💓 heartbeat' });
+    }, 30000);
+
+    c.req.raw.signal?.addEventListener('abort', () => {
+      const i = clients.indexOf(sseClient);
+      if (i !== -1) clients.splice(i, 1);
+      clearInterval(heartbeat);
+    });
   });
 };
 
-export const sendSseToAll = (event: string, data: any) => {
-  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-
-  for (const client of sseClients) {
-    try {
-      void client.write(payload).catch((err) => {
-        console.error('SSE client write error:', err);
-      });
-    } catch (err) {
-      console.error('SSE client write error:', err);
-    }
+export const sendSseToAll = async (event: string, data: unknown) => {
+  for (const client of clients) {
+    await client.write({
+      data: JSON.stringify(data),
+      event: event,
+      id: String(Date.now()),
+    });
   }
 };
+
+export const minSseController = async (c: Context) => {
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(`retry: 10000\n\n`));
+      const interval = setInterval(() => {
+        controller.enqueue(new TextEncoder().encode(`event: ping\ndata: ${Date.now()}\n\n`));
+      }, 3000);
+
+      c.executionCtx.waitUntil(
+        new Promise((resolve) => {
+          stream.cancel = () => {
+            clearInterval(interval);
+            resolve(undefined);
+            return Promise.resolve();
+          };
+        })
+      );
+    }
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    }
+  });
+};
+
+
+

@@ -43,7 +43,7 @@ export const serverHealthController = async (c: Context) => {
     dbStatus = 'error';
   }
 
-  sendSseToAll('main', {
+  await sendSseToAll('main', {
     step: 'Health', data: {
       cpuLoadAvg: {
         '1min': cpuLoad[0],

@@ -65,7 +65,7 @@ export const scholarship = () => {
       logger.info({ result }, "Result Insert Data Program");
 
       await insertBlock({ event, eventName: "scholarship:ProgramCreated" });
-      sendSseToAll('main', {
+      await sendSseToAll('main', {
         step: 'ProgramCreated', data: cleanedData, status: true, blockHash: event.block.hash
       });
 
@@ -128,7 +128,7 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:ApplicantRegistered" });
 
-      sendSseToAll('main', {
+      await sendSseToAll('main', {
         step: 'ApplicantRegistered', data: cleanedData, status: true, blockHash: event.block.hash
       });
       logger.info({ id }, " Student Created");
@@ -183,7 +183,7 @@ export const scholarship = () => {
       });
 
       await insertBlock({ event, eventName: "scholarship:OnVoted" });
-      sendSseToAll('main', {
+      await sendSseToAll('main', {
         step: 'OnVoted', data: {
           address: String(voter),
           programId: student.programId,
@@ -254,8 +254,6 @@ export const scholarship = () => {
         estimation: 0,
         type: "Others" as InferEnum<typeof MilestoneTypeEnum>,
         proveCID: "",
-        isCollected: false,
-        isApproved: false
       };
 
       if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
@@ -285,7 +283,7 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:MilestoneAdded" });
 
-      sendSseToAll('main', {
+      await sendSseToAll('main', {
         step: 'MilestoneAdded', data: cleanedData, status: true, blockHash: event.block.hash
       });
 
@@ -338,7 +336,7 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:WithdrawMilestone" });
 
-      sendSseToAll('main', {
+      await sendSseToAll('main', {
         step: 'MilestoneAdded', data: {
           applicantId, programId,
           isCollected: true,
@@ -377,7 +375,7 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:SubmitMilestone" });
 
-      sendSseToAll('main', {
+      await sendSseToAll('main', {
         step: 'SubmitMilestone', data: {
           milestoneId,
           proveCID: proveCID,
@@ -418,7 +416,7 @@ export const scholarship = () => {
       await insertBlock({ event, eventName: "scholarship:ApproveMilestone" });
 
 
-      sendSseToAll('main', {
+      await sendSseToAll('main', {
         step: 'ApproveMilestone', data: {
           milestoneId,
           updatedAt: new Date(),
