@@ -7,6 +7,7 @@ import { logger } from "@/utils/logger";
 import { insertBlock } from "@/services/block.log.service";
 import moment from "moment";
 import { isEmpty } from "lodash";
+import { sendSseToAll } from "@/api/controller/sse.controller";
 export const scholarship = () => {
 
   ponder.on("scholarship:ProgramCreated", async ({ event }) => {
@@ -64,6 +65,9 @@ export const scholarship = () => {
       logger.info({ result }, "Result Insert Data Program");
 
       await insertBlock({ event, eventName: "scholarship:ProgramCreated" });
+      sendSseToAll('main', {
+        step: 'ProgramCreated', data: cleanedData, status: true, blockHash: event.block.hash
+      });
 
       logger.info({ id, eventName: "scholarship:ProgramCreated" }, "Program Created");
     } catch (error) {
@@ -124,6 +128,9 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:ApplicantRegistered" });
 
+      sendSseToAll('main', {
+        step: 'ApplicantRegistered', data: cleanedData, status: true, blockHash: event.block.hash
+      });
       logger.info({ id }, " Student Created");
     } catch (error) {
       logger.info({ error }, " Student Created Error");
@@ -176,7 +183,17 @@ export const scholarship = () => {
       });
 
       await insertBlock({ event, eventName: "scholarship:OnVoted" });
-
+      sendSseToAll('main', {
+        step: 'OnVoted', data: {
+          address: String(voter),
+          programId: student.programId,
+          studentId: student.id,
+          blockchainProgramId: Number(programId),
+          blockchainStudentId: Number(student.blockchainId)
+        },
+        status: true,
+        blockHash: event.block.hash
+      });
 
       logger.info({ voter }, " Voter Created");
     } catch (error) {
@@ -268,6 +285,10 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:MilestoneAdded" });
 
+      sendSseToAll('main', {
+        step: 'MilestoneAdded', data: cleanedData, status: true, blockHash: event.block.hash
+      });
+
       logger.info({ id }, " Milestones Created");
     } catch (error) {
       logger.error({ error }, "Create Milestone Error");
@@ -317,6 +338,13 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:WithdrawMilestone" });
 
+      sendSseToAll('main', {
+        step: 'MilestoneAdded', data: {
+          applicantId, programId,
+          isCollected: true,
+          updatedAt: new Date(),
+        }, status: true, blockHash: event.block.hash
+      });
       logger.info({ applicantId, programId }, " Milestones Withdraw");
     } catch (error) {
       logger.error({ error }, "Milestones Withdraw Error");
@@ -349,6 +377,14 @@ export const scholarship = () => {
 
       await insertBlock({ event, eventName: "scholarship:SubmitMilestone" });
 
+      sendSseToAll('main', {
+        step: 'SubmitMilestone', data: {
+          milestoneId,
+          proveCID: proveCID,
+          updatedAt: new Date(),
+        }, status: true, blockHash: event.block.hash
+      });
+
       logger.info({ milestoneId, proveCID }, " Milestones Submited");
     } catch (error) {
       logger.error({ error }, "Milestones Submited Error");
@@ -379,8 +415,15 @@ export const scholarship = () => {
         })
         .where(eq(milestones.id, milestone.id));
 
-      await insertBlock({ event, eventName: "scholarship:SubmitMilestone" });
+      await insertBlock({ event, eventName: "scholarship:ApproveMilestone" });
 
+
+      sendSseToAll('main', {
+        step: 'ApproveMilestone', data: {
+          milestoneId,
+          updatedAt: new Date(),
+        }, status: true, blockHash: event.block.hash
+      });
       logger.info({ milestoneId }, " Milestones Approved");
     } catch (error) {
       logger.error({ error }, "Milestones Approved Error");

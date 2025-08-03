@@ -6,6 +6,7 @@ import { ipfsRoute } from "./routes/upload.route";
 import { serverHealthRoute } from "./routes/server.health.route";
 import { voteRoute } from "./routes/vote.route";
 import { cors } from "hono/cors";
+import { sseRoute } from "./routes/sse.route";
 
 const app = new Hono();
 
@@ -36,6 +37,7 @@ app.use("/graphql", graphql({ db: db as unknown as ReadonlyDrizzle<typeof schema
 app.route('/ipfs', ipfsRoute);
 app.route('/health-server-indexer', serverHealthRoute);
 app.route('/vote', voteRoute);
+app.route('/sse', sseRoute);
 
 export default app;
 export type AppType = typeof app;
