@@ -1,7 +1,6 @@
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
 import { formatCurrency, formatUSDC } from "@/util/currency";
-import gsap from "gsap";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -33,9 +32,6 @@ export function Milestones(props: {
     value: { proveImage: File; description: string }
   ) => unknown;
 }) {
-  useEffect(() => {
-    gsap.fromTo(".milestone", { scaleY: 0 }, { scaleY: 1, stagger: 0.5 });
-  }, [props.programId]);
   return (
     <div className="h-full w-full relative isolate">
       {props.isLoading && (
