@@ -84,11 +84,13 @@ export const ScholarshipsPage = () => {
   const ref = useRef<HTMLDivElement>(null);
   // hooks sse
   const { data: main } = useSSE<{ step: string; percent: number }>({
-    url: '/sse',
+    url: `${import.meta.env.VITE_BACKEND_HOST}/sse`,
     event: 'main',
   });
 
-  console.log(main, '-----main-----');
+  useEffect(() => {
+    console.log(main, '-----main-----');
+  }, [main]);
 
   const { applicants } = useApplicant('');
   const { data } = usePrograms();

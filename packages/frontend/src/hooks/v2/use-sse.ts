@@ -15,6 +15,10 @@ export function useSSE<T = any>({ url, event, initialData }: UseSSEOptions<T>) {
     const eventSource = new EventSource(url);
     eventSourceRef.current = eventSource;
 
+    eventSource.onopen = (e) => {
+      console.log('SSE connected:', e);
+    };
+
     eventSource.addEventListener(event, (e: MessageEvent) => {
       try {
         const parsed = JSON.parse(e.data);
