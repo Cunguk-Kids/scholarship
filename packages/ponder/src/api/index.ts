@@ -10,14 +10,18 @@ import { cors } from "hono/cors";
 const app = new Hono();
 
 // CORS middleware
+const allowedOrigins = [
+  "https://skoolcein.netlify.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000"
+];
+
 app.use(
   "*",
   cors({
-    origin: (origin, _c) => {
-      return /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin) ? origin : "http://localhost:3000";
-    },
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: allowedOrigins,
     allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
