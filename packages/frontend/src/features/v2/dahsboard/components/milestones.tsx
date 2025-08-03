@@ -1,6 +1,7 @@
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
 import { formatCurrency, formatUSDC } from "@/util/currency";
+import gsap from "gsap";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -28,6 +29,9 @@ export function Milestones(props: {
     value: { proveImage: File; description: string }
   ) => unknown;
 }) {
+  useEffect(() => {
+    gsap.fromTo(".milestone", { scaleY: 0 }, { scaleY: 1, stagger: 0.5 });
+  }, [props.milestones]);
   return (
     <div className="h-full w-full relative isolate">
       {props.isLoading && (
@@ -42,10 +46,10 @@ export function Milestones(props: {
         {props.milestones.map((mile, index) => (
           <div
             key={index}
-            className={`${mile.type == "pending" ? "grow grid-rows-[min-content_1fr]" : ""} grid grid-cols-[16px_repeat(11,1fr)] gap-2 w-full relative isolate before:absolute before:w-1 before:top-0 ${props.milestones.length - 1 == index ? "" : "before:bottom-0"} py-2 before:left-1 before:-z-1 ${mile.type === "disbursed" ? "before:bg-green-500" : "before:bg-[#CCC]"} before:translate-y-4`}
+            className={`origin-top milestone ${mile.type == "pending" ? "grow grid-rows-[min-content_1fr]" : ""} grid grid-cols-[16px_repeat(11,1fr)] gap-2 w-full relative isolate before:absolute before:w-1 before:top-0 ${props.milestones.length - 1 == index ? "" : "before:bottom-0"} py-2 before:left-1 before:-z-1 ${mile.type === "disbursed" ? "before:bg-green-500" : "before:bg-[#CCC]"} before:translate-y-4`}
           >
             <div
-              className={`${types[mile.type]} rounded-full size-3 relative before:absolute before:inset-0 self-start mt-[5px]`}
+              className={`milestone-point ${types[mile.type]} rounded-full size-3 relative before:absolute before:inset-0 self-start mt-[5px]`}
             ></div>
             <div className="col-span-1 w-max">Milestone #{index + 1}</div>
             <div className="col-span-4 font-bold max-md:col-[2/13]">
