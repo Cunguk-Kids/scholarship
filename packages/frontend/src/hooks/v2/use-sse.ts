@@ -22,6 +22,8 @@ export function useSSE<T = any>({ url, event, initialData }: UseSSEOptions<T>) {
     eventSource.addEventListener(event, (e: MessageEvent) => {
       try {
         const parsed = JSON.parse(e.data);
+        console.log(parsed, "-----data-----", e);
+
         setData(parsed);
       } catch (err) {
         console.error(`Error parsing event data "${event}"`, err);
