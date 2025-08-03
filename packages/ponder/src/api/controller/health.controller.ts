@@ -5,6 +5,7 @@ import checkDiskSpace from "check-disk-space";
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { logger } from "@/utils/logger";
+import { sendSseToAll } from "./sse.controller";
 
 export const serverHealthController = async (c: Context) => {
   const cpuLoad = os.loadavg();
@@ -41,6 +42,26 @@ export const serverHealthController = async (c: Context) => {
     logger.error({ e }, "database error");
     dbStatus = 'error';
   }
+
+  sendSseToAll('main', {
+    step: 'Health', data: {
+      cpuLoadAvg: {
+        '1min': cpuLoad[0],
+        '5min': cpuLoad[1],
+        '15min': cpuLoad[2],
+      },
+      memory: {
+        total: totalMem,
+        used: usedMem,
+        free: freeMem,
+        usedPercent: +(usedMem / totalMem * 100).toFixed(2),
+      },
+      disk,
+      portStatus,
+      database: dbStatus,
+      status: 'ok',
+    }, status: true
+  });
 
   return c.json({
     cpuLoadAvg: {
