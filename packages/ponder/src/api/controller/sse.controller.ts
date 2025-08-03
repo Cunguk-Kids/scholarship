@@ -16,18 +16,21 @@ export const sseController = (c: Context) => {
     const sseClient: SSEStream = {
       write: (data) => stream.writeSSE(data),
     };
-
     clients.push(sseClient);
 
+    await stream.writeSSE({ event: 'init', data: 'connected' });
+
     const heartbeat = setInterval(() => {
-      void stream.writeSSE({ data: '💓 heartbeat' });
-    }, 30000);
+      void stream.writeSSE({ data: '💓' });
+    }, 15000);
 
     c.req.raw.signal?.addEventListener('abort', () => {
       const i = clients.indexOf(sseClient);
       if (i !== -1) clients.splice(i, 1);
       clearInterval(heartbeat);
     });
+
+    await new Promise(() => { });
   });
 };
 
