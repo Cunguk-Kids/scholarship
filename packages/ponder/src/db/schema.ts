@@ -60,6 +60,7 @@ export const milestones = pgTable("milestones", {
   metadataCID: varchar("metadata_cid", { length: 255 }).default(""),
   proveCID: varchar("prove_cid", { length: 255 }).default(""),
   isCollected: boolean("is_collected").default(false),
+  isApproved: boolean("is_collected").default(false),
   type: MilestoneTypeEnum("type"),
   description: text("description").default(""),
   estimation: integer("estimation").default(0),
