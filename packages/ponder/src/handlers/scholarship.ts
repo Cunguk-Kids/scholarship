@@ -228,7 +228,7 @@ export const scholarship = () => {
 
       const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
       let baseData: InferInsertModel<typeof milestones> = {
-        amount: Math.round(parseFloat(String(amount)) / 1_000_000),
+        amount: String(amount),
         blockchainId: Number(id),
         studentId: student?.id!,
         programId: program.id,
@@ -260,7 +260,10 @@ export const scholarship = () => {
 
       logger.info({ cleanedData, baseData }, "Cleaned Data Milestone");
 
-      await db.insert(milestones).values(cleanedData).onConflictDoNothing();
+      await db.insert(milestones).values(cleanedData).onConflictDoUpdate({
+        target: [milestones.blockchainId, milestones.programId, milestones.studentId],
+        set: cleanedData
+      });
 
       await insertBlock({ event, eventName: "scholarship:MilestoneAdded" });
 

@@ -54,7 +54,7 @@ export const achievements = pgTable("achievements", {
 export const milestones = pgTable("milestones", {
   id: uuid('id').defaultRandom().primaryKey(),
   blockchainId: integer("blockchain_id").unique(),
-  amount: integer("amount").default(0),
+  amount: numeric("amount").default("0"),
   studentId: uuid("student_id").references(() => students.id),
   programId: uuid("program_id").references(() => programs.id),
   metadataCID: varchar("metadata_cid", { length: 255 }).default(""),
@@ -65,7 +65,9 @@ export const milestones = pgTable("milestones", {
   estimation: integer("estimation").default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
-});
+}, (milestone) => ({
+  uniqVote: unique().on(milestone.blockchainId, milestone.programId, milestone.studentId),
+}));
 
 // Table Votes
 export const votes = pgTable("votes", {
