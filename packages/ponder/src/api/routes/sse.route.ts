@@ -3,4 +3,4 @@ import { sseController } from '../controller/sse.controller';
 
 export const sseRoute = new Hono();
 
-sseRoute.post('/', sseController);
+sseRoute.get('/', sseController);
