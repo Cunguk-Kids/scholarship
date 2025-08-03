@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const AmountTypeSchema = z.enum(['FIXED', 'USER_DEFINED']);
+
 export const applicantSchema = z.object({
   fullName: z.string().min(2, 'Required'),
   email: z.string().optional(),
@@ -22,5 +24,7 @@ export const providerSchema = z.object({
   recipientCount: z.string().refine((val) => Number(val) > 0, 'Must be > 0'),
   totalFund: z.string().min(1, 'Required'),
   distributionMethod: z.string().optional(),
-  selectionMethod: z.enum(['dao', 'jury', 'hybrid']),
+  selectionMethod: AmountTypeSchema,
 });
+
+export type AmountType = z.infer<typeof AmountTypeSchema>;
