@@ -97,6 +97,8 @@ export const ScholarshipsPage = () => {
   const handleApplyNow = (id: string, item?: Record<string, any>) => {
     setProgramId(id);
 
+    console.log(program, '----program----');
+
     if (!isEmpty(item)) {
       setProgram(item);
     }
@@ -229,6 +231,7 @@ export const ScholarshipsPage = () => {
         programAmount={program.totalFund || 0}
         totalParticipant={program.totalRecipients || 1}
         rate={rate || 1}
+        programType={program.milestoneType}
       />
     </>
   );

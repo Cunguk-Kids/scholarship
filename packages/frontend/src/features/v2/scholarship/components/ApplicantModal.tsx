@@ -1,5 +1,6 @@
 import { CardForm } from '@/components/CardForm';
 import { useApplyApplicantV2 } from '../hooks/apply-applicant';
+import type { AmountType } from '../validations/schemas';
 
 type Props = {
   ref: React.RefObject<HTMLDivElement | null>;
@@ -9,6 +10,7 @@ type Props = {
   programAmount?: number;
   totalParticipant?: number;
   rate: number;
+  programType?: AmountType;
 };
 
 export const ApplicantModal = ({
@@ -19,6 +21,7 @@ export const ApplicantModal = ({
   rate,
   programAmount,
   totalParticipant,
+  programType = 'FIXED',
 }: Props) => {
   const { mutate } = useApplyApplicantV2(programId);
   if (!isOpen) return null;
@@ -33,6 +36,7 @@ export const ApplicantModal = ({
           totalStep={2}
           totalFund={programAmount}
           totalParticipant={totalParticipant || 1}
+          programType={programType}
           rate={rate}
           onSubmit={(data) => {
             mutate(data);

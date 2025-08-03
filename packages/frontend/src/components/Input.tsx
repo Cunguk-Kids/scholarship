@@ -37,6 +37,7 @@ type InputProps = {
   error?: boolean;
   helperText?: string;
   isCurrency?: boolean;
+  isDisabled?: boolean;
 };
 
 export const Input = forwardRef<HTMLDivElement | null, InputProps>((param, ref) => {
@@ -56,6 +57,7 @@ export const Input = forwardRef<HTMLDivElement | null, InputProps>((param, ref) 
     error,
     helperText,
     onClickNote = () => null,
+    isDisabled = false,
   } = param;
   const inputId = 'upload-file';
   const inputClass =
@@ -129,6 +131,7 @@ export const Input = forwardRef<HTMLDivElement | null, InputProps>((param, ref) 
           thousandSeparator="."
           decimalSeparator=","
           prefix="Rp "
+          disabled={isDisabled}
           allowNegative={false}
           placeholder="e.g., Rp 3.000.000"
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
