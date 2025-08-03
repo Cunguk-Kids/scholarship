@@ -117,7 +117,10 @@ export const scholarship = () => {
       logger.info({ cleanedData }, "Cleaned Data Milestone");
 
 
-      await db.insert(students).values(cleanedData).onConflictDoNothing();
+      await db.insert(students).values(cleanedData).onConflictDoUpdate({
+        target: [students.studentAddress, students.programId],
+        set: cleanedData
+      });
 
       await insertBlock({ event, eventName: "scholarship:ApplicantRegistered" });
 
@@ -196,7 +199,7 @@ export const scholarship = () => {
         return;
       }
 
-      const [student] = await db
+      let studentRecord = await db
         .select()
         .from(students)
         .where(and(
@@ -204,15 +207,30 @@ export const scholarship = () => {
           eq(students.programId, program.id)
         ));
 
+      let student = studentRecord[0];
+
       if (!student) {
-        return;
+        const [insertedStudent] = await db
+          .insert(students)
+          .values({
+            studentAddress: creator,
+            programId: program.id,
+          })
+          .onConflictDoUpdate({
+            target: [students.studentAddress, students.programId],
+            set: {
+              updatedAt: new Date()
+            }
+          })
+          .returning();
+        student = insertedStudent;
       }
 
       const trimmedCID = metadataCID?.replace(/^['"]+|['"]+$/g, '')?.trim();
       let baseData: InferInsertModel<typeof milestones> = {
         amount: Math.round(parseFloat(String(amount)) / 1_000_000),
         blockchainId: Number(id),
-        studentId: student.id,
+        studentId: student?.id!,
         programId: program.id,
         metadataCID: metadataCID,
         description: '',
@@ -223,9 +241,9 @@ export const scholarship = () => {
       };
 
       if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
-        logger.info({ trimmedCID }, "CID Data Program");
+        logger.info({ trimmedCID }, "CID Data Milestone");
         const ipfsData = await fetchFromIPFS(trimmedCID);
-        logger.info({ ipfsData }, "IPFS Data Program");
+        logger.info({ ipfsData }, "IPFS Data Milestone");
 
         if (!isEmpty(ipfsData)) {
           baseData = {
@@ -240,7 +258,7 @@ export const scholarship = () => {
         Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
       );
 
-      logger.info({ cleanedData }, "Cleaned Data Milestone");
+      logger.info({ cleanedData, baseData }, "Cleaned Data Milestone");
 
       await db.insert(milestones).values(cleanedData).onConflictDoNothing();
 
