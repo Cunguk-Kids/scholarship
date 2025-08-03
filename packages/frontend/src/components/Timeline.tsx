@@ -1,4 +1,4 @@
-import { getLocalValue } from '@/util/localCurrency';
+import { formatCurrency, formatUSDC } from '@/util/currency';
 import React from 'react';
 
 export interface TimelineItem {
@@ -37,7 +37,7 @@ const Timeline: React.FC<TimelineProps> = ({ title, items, className = '', rate 
               <div className="ml-4 flex-1 flex justify-between items-center">
                 <span className={`text-sm font-bold`}>{item.description}</span>
                 <span className={`text-sm font-bold`}>
-                  {getLocalValue(item?.amount ? item.amount : 0, rate || 1)}
+                  {formatCurrency(formatUSDC(item.amount ?? 0), "USD")}
                 </span>
               </div>
             </div>

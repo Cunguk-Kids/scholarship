@@ -26,7 +26,11 @@ export function StudentDashboardPage() {
   };
   const item = data?.studentss?.items?.[index];
   const totalFund = useMemo(
-    () => item?.milestones.items.reduce((a, b) => a + (b.amount ?? 0), 0) ?? 0,
+    () =>
+      item?.milestones.items.reduce(
+        (a, b) => a + (b.isCollected ? +(b.amount ?? 0) : 0),
+        0
+      ) ?? 0,
     [item]
   );
   const milestones = useMemo(() => {
@@ -42,6 +46,9 @@ export function StudentDashboardPage() {
         if (!item.proveCID) usedPending = true;
         return {
           ...item,
+          isApproved: item.isApproved ?? false,
+          isCollected: item.isCollected ?? false,
+          amount: +(item.amount ?? 0),
           type,
         } as const;
       });
@@ -63,9 +70,9 @@ export function StudentDashboardPage() {
           programCreator={item?.program?.creator ?? "0x0"}
           programCreatorImage={`https://api.dicebear.com/9.x/thumbs/svg?seed=${item?.program.creator}`}
           programTitle={item?.program.name ?? "No Name"}
-          // USDC with 6 decimals
           totalFund={totalFund}
           clickNext={next}
+          totalVotes={(item?.votes as never as { totalCount: 0 })?.totalCount}
           milestoneProgress={
             <div>
               Disbursment:
@@ -99,6 +106,8 @@ export function StudentDashboardPage() {
           <div className="h-px bg-black/40"></div>
           {isExist && !isLoading ? (
             <Milestones
+              programType={item?.program.milestoneType ?? ""}
+              programId={item?.program.blockchainId ?? 0}
               isLoading={isLoading}
               isPending={isPending}
               onSubmit={(milestone, prove) => {

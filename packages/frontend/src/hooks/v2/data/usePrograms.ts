@@ -27,6 +27,8 @@ export function usePrograms(initialFilter?: Filter) {
             creator: true,
             endAt: true,
             startAt: true,
+            votingAt: true,
+            ongoingAt: true,
             totalRecipients: true,
             totalFund: true,
           },

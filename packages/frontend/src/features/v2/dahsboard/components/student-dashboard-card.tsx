@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/util/currency";
+import { formatCurrency, formatUSDC } from "@/util/currency";
 import { BaseCard } from "./base-card";
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
@@ -21,6 +21,7 @@ export function StudentDashboardCard(props: {
   isLoading: boolean;
   milestoneType: string;
   clickNext?: () => unknown;
+  totalVotes: 0;
 }) {
   const { mutate: withdraw } = useWithdrawMilestoneV2();
   const { mutate, isPending } = useMintApplicantNFTV2();
@@ -94,7 +95,10 @@ export function StudentDashboardCard(props: {
         }}
       >
         <p>Active Scholarship:</p>
-        <h2 className="text-2xl font-bold">{props.programTitle}</h2>
+        <div>
+          <h2 className="text-2xl font-bold">{props.programTitle}</h2>
+          <p className="text-xs">Votes: {props.totalVotes}</p>
+        </div>
         <div className="flex items-center gap-2">
           <img
             className="size-5 rounded-full font-semibold"
@@ -113,7 +117,7 @@ export function StudentDashboardCard(props: {
             src="https://assets.coingecko.com/coins/images/6319/standard/usdc.png?1696506694"
             alt="usd"
           />
-          <p>{formatCurrency(props.totalFund / 10 ** 6, "USD")}</p>
+          <p>{formatCurrency(formatUSDC(props.totalFund), "USD")}</p>
         </div>
         {props.milestoneProgress}
         <div className="flex justify-between gap-2 mt-5">

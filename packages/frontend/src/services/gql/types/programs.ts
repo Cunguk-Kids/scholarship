@@ -9,6 +9,7 @@ export const programSchema = `
   startAt: String
   endAt: String
   votingAt: String
+  ongoingAt: String
   rules: String
   totalRecipients: Int
   totalFund: Int

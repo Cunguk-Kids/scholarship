@@ -8,6 +8,7 @@ export const milestoneSchema = `
   metadataCID: String
   proveCID: String
   isCollected: Boolean
+  isApproved: Boolean
   type: String
   description: String
   estimation: Int
