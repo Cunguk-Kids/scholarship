@@ -35,6 +35,10 @@ export const parseIDR = (val: string): number => {
   return Number(val.replace(/\D/g, ''));
 };
 
+export const usdcToIdr = (usdc: number, rate = 16000) => {
+  return usdc * rate;
+};
+
 export const formatToIDR = (value: number): string => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',

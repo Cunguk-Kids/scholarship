@@ -1,4 +1,6 @@
 import { formatToUSD, getLocalValue } from '@/util/localCurrency';
+import { twMerge } from 'tailwind-merge';
+import type { AmountType } from '../validations/schemas';
 
 interface CurrencyConverterProps {
   usdAmount: number;
@@ -6,6 +8,7 @@ interface CurrencyConverterProps {
   exchangeRate: number;
   totalParticipant: number;
   participantSpend: number;
+  programType: AmountType;
 }
 
 export const CurrencyConverter = ({
@@ -13,6 +16,7 @@ export const CurrencyConverter = ({
   exchangeRate,
   totalParticipant,
   participantSpend,
+  programType,
 }: CurrencyConverterProps) => {
   // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const value = parseFloat(e.target.value) || 0;
@@ -24,7 +28,12 @@ export const CurrencyConverter = ({
 
   return (
     <>
-      <div className="px-4  ">
+      <div className="px-4 flex flex-col gap-y-2 ">
+        <label className="italic font-bold text-sm">
+          {programType === 'FIXED'
+            ? 'The total fund will be evenly divided across all milestones. You cannot manually set the amount per milestone.'
+            : 'You are free to define the amount for each milestone manually. Make sure the total matches the allocated fund.'}
+        </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div className="text-center">
             <p className="text-gray-600">Total Budget</p>
@@ -47,14 +56,20 @@ export const CurrencyConverter = ({
           <div className="text-center">
             <p className="text-gray-600">Your Spend</p>
             <p className="font-bold text-gray-800">
-              {getLocalValue(participantSpend, exchangeRate * 1_000_000)} IDR
+              {getLocalValue(participantSpend / 1_000_000, exchangeRate * 1_000_000)} IDR
             </p>
           </div>
           <div className="text-center">
-            <p className="text-gray-600">Your Spend</p>
-            <p className="font-bold text-gray-800">
+            <p className="text-gray-600">Your Spend Left</p>
+            <p
+              className={twMerge(
+                'font-bold text-gray-800',
+                usdAmount / totalParticipant - participantSpend / 1_000_000 < 0
+                  ? 'text-red-500'
+                  : 'text-green-500',
+              )}>
               {getLocalValue(
-                usdAmount / totalParticipant - participantSpend,
+                usdAmount / totalParticipant - participantSpend / 1_000_000,
                 exchangeRate * 1_000_000,
               )}
               IDR

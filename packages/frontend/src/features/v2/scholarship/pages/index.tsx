@@ -229,6 +229,7 @@ export const ScholarshipsPage = () => {
         programAmount={program.totalFund || 0}
         totalParticipant={program.totalRecipients || 1}
         rate={rate || 1}
+        programType={program.milestoneType}
       />
     </>
   );

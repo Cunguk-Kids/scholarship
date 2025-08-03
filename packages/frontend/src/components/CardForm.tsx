@@ -4,10 +4,14 @@ import { Input } from './Input';
 import { ConfirmationModal } from './ConfirmationModal';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { applicantSchema, providerSchema } from '@/features/v2/scholarship/validations/schemas';
+import {
+  applicantSchema,
+  providerSchema,
+  type AmountType,
+} from '@/features/v2/scholarship/validations/schemas';
 import { CurrencyConverter } from '@/features/v2/scholarship/components/CurrencyConverter';
 import { sumBy } from 'lodash';
-import { idrToUsdc } from '@/util/localCurrency';
+import { idrToUsdc, usdcToIdr } from '@/util/localCurrency';
 import { createPopper } from '@popperjs/core';
 
 interface CardFormProps<T extends 'applicant' | 'provider'> {
@@ -15,6 +19,7 @@ interface CardFormProps<T extends 'applicant' | 'provider'> {
   type: T;
   totalFund?: number;
   totalParticipant?: number;
+  programType: AmountType;
   rate?: number;
   onSubmit: (formData: T extends 'applicant' ? FormData : FormDataProvider) => void;
   onClose?: () => void;
@@ -43,10 +48,10 @@ export type FormDataProvider = {
   selectionMethod: 'dao' | 'jury' | 'hybrid';
 };
 
-const createEmptyMilestone = (): MilestoneData => ({
+const createEmptyMilestone = (amount: string = ''): MilestoneData => ({
   type: '',
   description: '',
-  amount: '',
+  amount: amount || '',
 });
 
 export const CardForm = <T extends 'applicant' | 'provider'>({
@@ -54,9 +59,10 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   onSubmit,
   onClose = () => {},
   type,
-  totalFund,
+  totalFund = 1,
   rate,
   totalParticipant,
+  programType,
 }: CardFormProps<T>) => {
   // ref
   const referenceRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -67,8 +73,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   const [step, setStep] = useState(1);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
+  const [totalMilestone, setTotalMilestone] = useState(0);
 
   const schema = type === 'applicant' ? applicantSchema : providerSchema;
 
@@ -77,6 +82,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
     control,
     watch,
     formState: { errors },
+    getValues,
   } = useForm({
     mode: 'onChange',
     resolver: zodResolver(schema),
@@ -86,7 +92,13 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
             fullName: '',
             email: '',
             studentId: '',
-            milestones: [createEmptyMilestone()],
+            milestones: [
+              createEmptyMilestone(
+                programType === 'FIXED'
+                  ? String(totalFund / (totalParticipant || 1) / (totalMilestone || 1))
+                  : '0',
+              ),
+            ],
           }
         : {
             scholarshipName: '',
@@ -95,11 +107,9 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
             recipientCount: '5',
             totalFund: '',
             distributionMethod: 'milestone',
-            selectionMethod: 'dao',
+            selectionMethod: 'USER_DEFINED',
           },
   });
-
-  const milestones = watch('milestones');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -126,14 +136,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
     return () => clearTimeout(timer);
   }, [show]);
 
-  useEffect(() => {
-    popperRefs.current = Array(milestones?.length).fill(null);
-  }, [milestones?.length]);
-  useEffect(() => {
-    referenceRefs.current = Array(milestones?.length).fill(null);
-  }, [milestones?.length]);
-
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, replace } = useFieldArray({
     control,
     name: 'milestones',
   });
@@ -144,6 +147,9 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
     setStep((prev) => prev - 1);
   };
 
+  const milestones = watch('milestones');
+  const totalSpend = sumBy(milestones, (m) => parseFloat(m.amount) || 0);
+
   const handleClickForward = () => {
     if (step === totalStep) {
       setShowSubmitModal(true);
@@ -152,9 +158,53 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
     setStep((prev) => prev + 1);
   };
 
-  const handleAddMilestone = () => append(createEmptyMilestone());
+  const handleAddMilestone = () => {
+    const current = getValues('milestones') || [];
 
-  const totalSpend = sumBy(watch('milestones'), 'amount');
+    const next = [...current, createEmptyMilestone('0')];
+
+    if (programType === 'FIXED') {
+      const totalAmount = totalFund / (totalParticipant || 1);
+      const perMilestone = totalAmount / next.length;
+
+      const updatedMilestones = next.map((m) => ({
+        ...m,
+        amount: String(perMilestone),
+      }));
+
+      replace(updatedMilestones);
+      // trigger('milestones');
+    } else {
+      append(createEmptyMilestone('0'));
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recalculateMilestones = (milestones: any[], fixed = false) => {
+    if (!fixed) return milestones;
+
+    const totalAmount = totalFund / (totalParticipant || 1);
+    const perMilestone = totalAmount / milestones?.length;
+
+    return milestones.map((m) => ({
+      ...m,
+      amount: String(perMilestone),
+    }));
+  };
+
+  const handleRemoveMilestone = (i: number) => {
+    const current = getValues('milestones') || [];
+    current.splice(i, 1);
+    const updated = recalculateMilestones(current, programType === 'FIXED');
+    replace(updated);
+  };
+
+  useEffect(() => {
+    popperRefs.current = Array(milestones?.length).fill(null);
+  }, [milestones?.length]);
+  useEffect(() => {
+    referenceRefs.current = Array(milestones?.length).fill(null);
+  }, [milestones?.length]);
 
   useEffect(() => {
     if (bottomRef.current && bottomRef.current.parentElement) {
@@ -166,8 +216,10 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   }, [fields.length]);
 
   useEffect(() => {
-    console.log(errors, '----errors-----');
-  }, [errors]);
+    setTotalMilestone(milestones?.length);
+
+    console.log(milestones, '-----milestone after-----');
+  }, [milestones]);
 
   return (
     <div className="flex p-12 items-start gap-6 self-stretch rounded-2xl bg-skbw w-full">
@@ -344,15 +396,15 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
           {step === 2 &&
             (type === 'applicant' ? (
               <div>
-                {fields.map((_m, i) => (
+                {milestones.map((_m, i) => (
                   <div
                     key={i}
                     className="flex flex-col bg-skbw rounded-xl w-full relative gap-4 p-4">
                     <div className="flex justify-between items-center">
                       <div className="text-lg font-semibold">Milestone {i + 1}</div>
-                      {fields.length > 1 && (
+                      {milestones.length > 1 && (
                         <button
-                          onClick={() => remove(i)}
+                          onClick={() => handleRemoveMilestone(i)}
                           className="text-skred text-sm hover:underline">
                           Remove
                         </button>
@@ -365,6 +417,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                         }}
                         className="z-10 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-2 border-black p-2 rounded-lg">
                         <CurrencyConverter
+                          programType={programType}
                           exchangeRate={rate || 1}
                           usdAmount={(totalFund || 1) / 1_000_000}
                           totalParticipant={totalParticipant || 1}
@@ -404,32 +457,40 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                       )}
                     />
                     <Controller
+                      key={`${i}-${watch(`milestones.${i}.amount`)}`}
+                      defaultValue=""
                       name={`milestones.${i}.amount`}
                       control={control}
-                      render={({ field, fieldState }) => (
-                        <Input
-                          ref={(el) => {
-                            referenceRefs.current[i] = el;
-                          }}
-                          isCurrency
-                          type="input"
-                          label="Requested Amount (Rp)"
-                          placeholder="e.g., Rp 3,000,000"
-                          value={String(parseIdr)}
-                          onChange={(values) => {
-                            const idr = Number(values) || 0;
-                            const usdc = idrToUsdc(idr);
-                            field.onChange(String(usdc));
-                          }}
-                          error={!!fieldState.error}
-                          helperText={fieldState.error?.message}
-                          note="How much do you need for this specific milestone?"
-                          onClickNote={() => {
-                            setSelectedIndex(i);
-                            setShow(!show);
-                          }}
-                        />
-                      )}
+                      render={({ field, fieldState }) => {
+                        const idrValue = usdcToIdr(Number(field.value || 0) / 1_000_000, rate);
+                        const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
+
+                        return (
+                          <Input
+                            isDisabled={programType === 'FIXED'}
+                            ref={(el) => {
+                              referenceRefs.current[i] = el;
+                            }}
+                            isCurrency
+                            type="input"
+                            label={`Requested Amount (Rp)`}
+                            placeholder="e.g., Rp 3,000,000"
+                            value={programType !== 'FIXED' ? String(parseIdr) : String(idrValue)}
+                            onChange={(values) => {
+                              const idr = Number(values) || 0;
+                              const usdc = idrToUsdc(idr);
+                              field.onChange(String(usdc));
+                            }}
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                            note="How much do you need for this specific milestone?"
+                            onClickNote={() => {
+                              setSelectedIndex(i);
+                              setShow(!show);
+                            }}
+                          />
+                        );
+                      }}
                     />
                   </div>
                 ))}
@@ -491,21 +552,14 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                         label="Who selects the recipients?"
                         options={[
                           {
-                            label: 'Public DAO Vote',
-                            value: 'dao',
+                            label: 'Fixed Milestone',
+                            value: 'FIXED',
                             description: '(recommended for transparency)',
                           },
                           {
-                            label: 'Private Jury',
-                            value: 'jury',
+                            label: 'User Defined Milestone',
+                            value: 'USER_DEFINED',
                             description: '(you decide)',
-                            disabled: true,
-                          },
-                          {
-                            label: 'Hybrid',
-                            value: 'hybrid',
-                            description: '(your jury shortlist + DAO votes final)',
-                            disabled: true,
                           },
                         ]}
                         value={field.value}
