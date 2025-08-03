@@ -23,6 +23,7 @@ export const voteSchema = `
   }
 
   type votesPage {
+    totalCount: Int
     items: [votes!]!
     next: String
     prev: String

@@ -97,7 +97,7 @@ export function ProgramDashboardCard(props: {
         </div>
         <div className="h-px bg-black/10"></div>
         <div className="">
-          <p>Total Fund Recieved:</p>
+          <p>Total Fund:</p>
           <div className="flex items-center gap-2">
             <img
               className="size-4"

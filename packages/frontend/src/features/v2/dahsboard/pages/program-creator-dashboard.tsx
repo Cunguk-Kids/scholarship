@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useGetProgramCreatorProfile } from "../hooks/get-program-creator-profile";
 import { MessageCard } from "../components/message-from-program-creator-card";
 import {
@@ -29,6 +29,12 @@ export function ProgramCreatorDashboard() {
   const item = data?.programss?.items?.[index];
 
   const isExist = Boolean(data?.programss?.items?.length);
+
+  const milestones = useMemo(
+    () =>
+      item?.milestones.items.sort((a, b) => a.blockchainId! - b.blockchainId!),
+    [item?.milestones.items]
+  );
   return (
     <>
       <div className="lg:max-w-[24rem] space-y-6">
@@ -76,7 +82,7 @@ export function ProgramCreatorDashboard() {
                 toast.success("Coming Soon");
               }}
               isLoading={isLoading}
-              milestones={item?.milestones.items ?? []}
+              milestones={milestones ?? []}
             />
           )}
           {!isExist && !isLoading && <NotFoundStudentFallback />}

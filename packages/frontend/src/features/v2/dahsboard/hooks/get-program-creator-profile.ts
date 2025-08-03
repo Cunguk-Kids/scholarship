@@ -26,6 +26,8 @@ export function useGetProgramCreatorProfile() {
               milestones: {
                 select: {
                   items: {
+                    isApproved: true,
+                    isCollected: true,
                     blockchainId: true,
                     proveCID: true,
                     student: {
@@ -33,6 +35,11 @@ export function useGetProgramCreatorProfile() {
                       fullName: true,
                       email: true,
                       studentAddress: true,
+                      votes: {
+                        select: {
+                          totalCount: true,
+                        },
+                      },
                     },
                     description: true,
                     amount: true,
