@@ -37,7 +37,7 @@ const Timeline: React.FC<TimelineProps> = ({ title, items, className = '', rate 
               <div className="ml-4 flex-1 flex justify-between items-center">
                 <span className={`text-sm font-bold`}>{item.description}</span>
                 <span className={`text-sm font-bold`}>
-                  {getLocalValue(item?.amount ? item.amount * 1000000 : 0, rate || 1)}
+                  {getLocalValue(item?.amount ? item.amount : 0, rate || 1)}
                 </span>
               </div>
             </div>
