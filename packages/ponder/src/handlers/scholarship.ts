@@ -238,6 +238,7 @@ export const scholarship = () => {
         type: "Others" as InferEnum<typeof MilestoneTypeEnum>,
         proveCID: "",
         isCollected: false,
+        isApproved: false
       };
 
       if (trimmedCID && trimmedCID !== "''" && isValidCID(trimmedCID)) {
@@ -353,5 +354,38 @@ export const scholarship = () => {
       logger.error({ error }, "Milestones Submited Error");
     }
   });
+
+  ponder.on("scholarship:ApproveMilestone", async ({ event }) => {
+    try {
+      const { milestoneId } = event.args;
+
+      logger.info({ milestoneId }, "Approved Milestone Param");
+
+
+      const [milestone] = await db
+        .select()
+        .from(milestones)
+        .where(eq(milestones.blockchainId, Number(milestoneId)));
+
+      if (!milestone) {
+        return;
+      }
+
+
+      await db.update(milestones)
+        .set({
+          isApproved: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(milestones.id, milestone.id));
+
+      await insertBlock({ event, eventName: "scholarship:SubmitMilestone" });
+
+      logger.info({ milestoneId }, " Milestones Approved");
+    } catch (error) {
+      logger.error({ error }, "Milestones Approved Error");
+    }
+  });
+
 
 };
