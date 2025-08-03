@@ -6,6 +6,7 @@ import { useState } from "react";
 import { NftMinting } from "./nft-minting";
 import { useMintApplicantNFTV2 } from "../hooks/mint-applicant-nft";
 import { useWithdrawMilestoneV2 } from "../hooks/withdraw-milestone";
+import toast from "react-hot-toast";
 
 export function StudentDashboardCard(props: {
   name: string;
@@ -22,6 +23,8 @@ export function StudentDashboardCard(props: {
   milestoneType: string;
   clickNext?: () => unknown;
   totalVotes: 0;
+  alreadyWithdraw: boolean;
+  isCanWithdraw: boolean;
 }) {
   const { mutate: withdraw } = useWithdrawMilestoneV2();
   const { mutate, isPending } = useMintApplicantNFTV2();
@@ -121,11 +124,13 @@ export function StudentDashboardCard(props: {
         </div>
         {props.milestoneProgress}
         <div className="flex justify-between gap-2 mt-5">
-          {props.milestoneType === "FIXED" && (
+          {props.milestoneType === "FIXED" && !props.alreadyWithdraw && (
             <Button
               className="w-full !bg-skgreen !text-black"
               wrapperClassName="grow"
               onClick={() => {
+                if (!props.isCanWithdraw)
+                  return toast.error("Only withdraw when milestone are approved");
                 withdraw({ programId: props.programId });
               }}
               label="Withdraw"

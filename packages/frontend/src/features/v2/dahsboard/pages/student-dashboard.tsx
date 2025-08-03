@@ -55,11 +55,25 @@ export function StudentDashboardPage() {
   }, [item]);
 
   const isExist = Boolean(data?.studentss?.items?.length);
+
+  const isAlreadyWithdraw = useMemo(
+    () =>
+      item?.milestones.items.every((milestone) => milestone.isCollected) ??
+      true,
+    [item?.milestones.items]
+  );
+
+  const isCanWithdraw = useMemo(
+    () => item?.milestones.items.every((milestone) => milestone.isApproved),
+    [item?.milestones.items]
+  );
   return (
     <>
       <div className="lg:max-w-[24rem] space-y-6">
         <SwitchDashboard />
         <StudentDashboardCard
+          isCanWithdraw={isCanWithdraw ?? true}
+          alreadyWithdraw={isAlreadyWithdraw}
           isLoading={isLoading || !isExist}
           studentId={item?.blockchainId ?? 0}
           milestoneType={item?.program.milestoneType ?? ""}
