@@ -35,7 +35,9 @@ export const students = pgTable("students", {
   scholarshipMotivation: text("scholarship_motivation").default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
-});
+}, (student) => ({
+  uniqVote: unique().on(student.studentAddress, student.programId,),
+}));
 
 // Table Achievements
 export const achievements = pgTable("achievements", {
