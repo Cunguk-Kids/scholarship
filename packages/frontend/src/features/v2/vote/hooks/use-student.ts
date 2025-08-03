@@ -1,14 +1,14 @@
 import { mobius } from "@/services/gql/schema";
 import { useQuery } from "@tanstack/react-query";
 
-export function useStudents(programId: number) {
+export function useStudents(programId: string) {
   return useQuery({
     queryKey: ["students", programId],
     queryFn: async () => {
       const result = await mobius.query({
         studentss: {
           where: {
-            where: { blockchainId: programId } as never
+            where: { programId } as never
           },
           select: {
             items: {

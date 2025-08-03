@@ -15,7 +15,7 @@ type Props = {
   onClose: () => void;
 };
 
-export const ApplicantListModal = ({ programId, onClose }: Props) => {
+export const ApplicantListModal = ({ programId, onClose, programIndexerId }: Props) => {
   // ref
   const cardsRef = useRef<HTMLDivElement>(null);
 
@@ -24,7 +24,7 @@ export const ApplicantListModal = ({ programId, onClose }: Props) => {
   const [applicant, setApplicant] = useState<string | null>(null);
   // hooks
   const { rate } = useTokenRate();
-  const { data, isLoading } = useStudents(programId ?? 0);
+  const { data, isLoading } = useStudents(programIndexerId ?? "");
   const account = useAccount();
   const voteApi = useVoteApplicantApiV2();
 
