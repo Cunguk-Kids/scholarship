@@ -8,6 +8,7 @@ export const sseController = async (c: Context) => {
 
   sseClients.push(writer);
 
+  c.header('Access-Control-Allow-Origin', '*');
   c.header('Content-Type', 'text/event-stream');
   c.header('Cache-Control', 'no-cache');
   c.header('Connection', 'keep-alive');
@@ -33,10 +34,15 @@ export const sseController = async (c: Context) => {
 };
 
 export const sendSseToAll = (event: string, data: any) => {
-  const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-  for (const writer of sseClients) {
-    writer.write(message).catch((err) => {
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+
+  for (const client of sseClients) {
+    try {
+      void client.write(payload).catch((err) => {
+        console.error('SSE client write error:', err);
+      });
+    } catch (err) {
       console.error('SSE client write error:', err);
-    });
+    }
   }
 };
