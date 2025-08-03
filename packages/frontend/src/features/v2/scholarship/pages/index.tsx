@@ -12,6 +12,7 @@ import { usePrograms } from '@/hooks/v2/data/usePrograms';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useTokenRate } from '@/context/token-rate-context';
 import { isEmpty } from 'lodash';
+import { useSSE } from '@/hooks/v2/use-sse';
 const messages = [
   'Looking for a fair, transparent way to fund your education?',
   'Ready to turn your funds into real student success stories?',
@@ -81,6 +82,13 @@ const Title = memo(function Title() {
 
 export const ScholarshipsPage = () => {
   const ref = useRef<HTMLDivElement>(null);
+  // hooks sse
+  const { data: main } = useSSE<{ step: string; percent: number }>({
+    url: '/sse',
+    event: 'main',
+  });
+
+  console.log(main, '-----main-----');
 
   const { applicants } = useApplicant('');
   const { data } = usePrograms();
