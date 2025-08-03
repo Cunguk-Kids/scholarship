@@ -457,7 +457,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                       )}
                     />
                     <Controller
-                      key={`${i}-${watch(`milestones.${i}.amount`)}`}
+                      key={`${programType !== 'FIXED' ? `` : `${i}-${watch(`milestones.${i}.amount`)}`}`}
                       defaultValue=""
                       name={`milestones.${i}.amount`}
                       control={control}
@@ -473,7 +473,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                             }}
                             isCurrency
                             type="input"
-                            label={`Requested Amount (Rp)`}
+                            label={`Requested Amount (Rp) ${programType}`}
                             placeholder="e.g., Rp 3,000,000"
                             value={programType !== 'FIXED' ? String(parseIdr) : String(idrValue)}
                             onChange={(values) => {

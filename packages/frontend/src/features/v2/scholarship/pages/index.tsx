@@ -97,6 +97,8 @@ export const ScholarshipsPage = () => {
   const handleApplyNow = (id: string, item?: Record<string, any>) => {
     setProgramId(id);
 
+    console.log(program, '----program----');
+
     if (!isEmpty(item)) {
       setProgram(item);
     }
