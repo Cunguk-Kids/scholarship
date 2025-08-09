@@ -27,6 +27,8 @@ app.use(
   })
 );
 
+app.options("*", cors());
+
 // ponder graphql and sql
 
 app.use("/sql/*", client({ db: db as unknown as ReadonlyDrizzle<typeof schema>, schema }));
