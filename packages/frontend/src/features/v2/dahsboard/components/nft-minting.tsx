@@ -1,12 +1,6 @@
 import { Button } from "@/components/Button";
-import ProviderCard from "./nft-card/provider-card";
-import StudentCard from "./nft-card/student-card";
 import { useMemo, useRef } from "react";
-
-const templates = {
-  student: StudentCard,
-  provider: ProviderCard,
-};
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 function convertToPNG(el: HTMLImageElement): Promise<File> {
   const resolution = 2.5;
@@ -47,18 +41,27 @@ export function NftMinting(props: {
   onBack?: () => unknown;
   onMint?: (file: File) => unknown;
   disabled?: boolean;
-  template: keyof typeof templates;
+  template: "student" | "provider";
 }) {
+  const {data: generateTemplate} = useSuspenseQuery({
+    queryKey: ["nft-template", props.template],
+    async queryFn() {
+      switch(props.template) {
+        case "student": return import("./nft-card/student-card").then(x => x.default)
+        case "provider": return import("./nft-card/provider-card").then(x => x.default)
+      }
+    }
+  });
   const ref = useRef<HTMLImageElement>(null);
   const svg = useMemo(
     () =>
-      templates[props.template]({
+      generateTemplate?.({
         id: `#${props.id.toString().padStart(3, "0")}`,
         name: props.name,
         programName: props.programName,
         ...starFills,
-      }),
-    [props.name, props.id, props.programName, props.template]
+      }) ?? "",
+    [props.name, props.id, props.programName, generateTemplate]
   );
 
   const svgUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;

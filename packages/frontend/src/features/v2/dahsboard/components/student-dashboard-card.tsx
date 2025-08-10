@@ -2,11 +2,16 @@ import { formatCurrency, formatUSDC } from "@/util/currency";
 import { BaseCard } from "./base-card";
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
-import { useState } from "react";
-import { NftMinting } from "./nft-minting";
+import { lazy, Suspense, useState } from "react";
 import { useMintApplicantNFTV2 } from "../hooks/mint-applicant-nft";
 import { useWithdrawMilestoneV2 } from "../hooks/withdraw-milestone";
 import toast from "react-hot-toast";
+
+const NftMinting = lazy(() =>
+  import("./nft-minting").then((x) => ({
+    default: x.NftMinting,
+  }))
+);
 
 export function StudentDashboardCard(props: {
   name: string;
@@ -30,21 +35,29 @@ export function StudentDashboardCard(props: {
   const { mutate, isPending } = useMintApplicantNFTV2();
   const [isOnMintNFT, setIsOnMintNFT] = useState(false);
   return isOnMintNFT ? (
-    <NftMinting
-      disabled={isPending}
-      template="student"
-      name={props.name}
-      id={props.studentId}
-      programName={props.programTitle}
-      onMint={(file) => {
-        mutate({
-          studentId: props.studentId + "",
-          file,
-          programId: props.programId + "",
-        });
-      }}
-      onBack={() => setIsOnMintNFT(false)}
-    />
+    <Suspense
+      fallback={
+        <BaseCard className="items-center justify-center flex">
+          <Loader className="size-10" />
+        </BaseCard>
+      }
+    >
+      <NftMinting
+        disabled={isPending}
+        template="student"
+        name={props.name}
+        id={props.studentId}
+        programName={props.programTitle}
+        onMint={(file) => {
+          mutate({
+            studentId: props.studentId + "",
+            file,
+            programId: props.programId + "",
+          });
+        }}
+        onBack={() => setIsOnMintNFT(false)}
+      />
+    </Suspense>
   ) : (
     <BaseCard className="space-y-3 relative isolate">
       {props.isLoading && (
@@ -130,7 +143,9 @@ export function StudentDashboardCard(props: {
               wrapperClassName="grow"
               onClick={() => {
                 if (!props.isCanWithdraw)
-                  return toast.error("Only withdraw when milestone are approved");
+                  return toast.error(
+                    "Only withdraw when milestone are approved"
+                  );
                 withdraw({ programId: props.programId });
               }}
               label="Withdraw"
