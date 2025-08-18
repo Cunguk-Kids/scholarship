@@ -8,6 +8,7 @@ import { voteRoute } from "./routes/vote.route";
 import { cors } from "hono/cors";
 import { sseRoute } from "./routes/sse.route";
 import { sendSseToAll } from "./controller/sse.controller";
+import { faucetRoute } from "./routes/faucet.route";
 
 const app = new Hono();
 
@@ -41,6 +42,7 @@ app.route('/ipfs', ipfsRoute);
 app.route('/health-server-indexer', serverHealthRoute);
 app.route('/vote', voteRoute);
 app.route('/sse', sseRoute);
+app.route('/faucet', faucetRoute);
 app.get('/trigger', async (c) => {
   await sendSseToAll('main', { hello: 'world', timestamp: Date.now() });
   return c.text('Triggered');

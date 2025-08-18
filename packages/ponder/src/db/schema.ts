@@ -93,6 +93,18 @@ export const indexedBlocks = pgTable("indexed_blocks", {
   timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow()
 });
 
+// table faucet
+export const faucetData = pgTable("indexed_blocks", {
+  id: uuid('id').defaultRandom().primaryKey(),
+  address: varchar("address", { length: 255 }).default(""),
+  ipAddress: varchar("ip_address", { length: 45 }).default(""),
+  timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
+}, (faucet) => ({
+  uniqFaucet: unique().on(faucet.address, votes.ipAddress),
+}));
+
 
 // Program → Students, Milestones, Votes
 export const programRelations = relations(programs, ({ many }) => ({
