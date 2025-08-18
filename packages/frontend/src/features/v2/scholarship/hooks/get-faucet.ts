@@ -9,18 +9,20 @@ export function useGetFaucet() {
   const config = useConfig();
   return useMutation({
     onMutate: () => {
-        toast.loading("Getting Faucet..", { id: "get-faucet"});
+      toast.loading("Getting Faucet..", { id: "get-faucet" });
     },
 
     onSuccess: () => {
-        toast.success("Faucet Transfered", { id: "get-faucet" });
+      toast.success("Faucet Transfered", { id: "get-faucet" });
     },
 
     onError: () => {
-        toast.error("Faucet error", { id: "get-faucet" });
+      toast.error("Faucet error", { id: "get-faucet" });
     },
     mutationFn: async (address: Address) => {
-      const response = await api.post<{ address: Address; txHash: Address }>(
+      const response = await api.post<{
+        data: { address: Address; txHash: Address };
+      }>(
         "/faucet",
         {
           address,
@@ -32,7 +34,7 @@ export function useGetFaucet() {
         }
       );
 
-      await waitForTransactionReceipt(config, { hash: response.data.txHash });
+      await waitForTransactionReceipt(config, { hash: response.data.data.txHash });
 
       return response;
     },
