@@ -3,9 +3,14 @@ import { BaseCard } from "./base-card";
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
 import { useMintProgramCreatorNFTV2 } from "../hooks/mint-program-creator-nft";
-import { useState } from "react";
-import { NftMinting } from "./nft-minting";
+import { lazy, Suspense, useState } from "react";
 import { useAccount } from "wagmi";
+
+const NftMintingLazy = lazy(() =>
+  import("./nft-minting").then((x) => ({
+    default: x.NftMinting,
+  }))
+);
 
 export function ProgramDashboardCard(props: {
   programTitle: string;
@@ -21,20 +26,28 @@ export function ProgramDashboardCard(props: {
   const { mutate, isPending } = useMintProgramCreatorNFTV2();
   const [isOnMintNFT, setIsOnMintNFT] = useState(false);
   return isOnMintNFT ? (
-    <NftMinting
-      disabled={isPending}
-      template="provider"
-      name={`${account.address!.slice(0, 6)}...${account.address!.slice(-4, account.address!.length)}`}
-      id={props.programId}
-      programName={props.programTitle}
-      onMint={(file) => {
-        mutate({
-          file,
-          programId: props.programId + "",
-        });
-      }}
-      onBack={() => setIsOnMintNFT(false)}
-    />
+    <Suspense
+      fallback={
+        <BaseCard className="items-center justify-center flex">
+          <Loader className="size-10" />
+        </BaseCard>
+      }
+    >
+      <NftMintingLazy
+        disabled={isPending}
+        template="provider"
+        name={`${account.address?.slice(0, 6)}...${account.address?.slice(-4, account.address?.length)}`}
+        id={props.programId}
+        programName={props.programTitle}
+        onMint={(file) => {
+          mutate({
+            file,
+            programId: props.programId + "",
+          });
+        }}
+        onBack={() => setIsOnMintNFT(false)}
+      />
+    </Suspense>
   ) : (
     <BaseCard className="space-y-3 relative isolate">
       {props.isLoading && (
