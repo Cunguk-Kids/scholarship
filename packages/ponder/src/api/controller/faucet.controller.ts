@@ -4,7 +4,7 @@ import { faucetData, programs, students, votes } from "@/db/schema";
 import { and, eq, gt } from "drizzle-orm";
 import { getClientIP } from "@/utils/getClientIP";
 import { faucetSchemaType } from "../validators/faucet.validation";
-import { contractAddress, walletClient } from "../constants/config";
+import { walletClient } from "../constants/config";
 import { scholarshipAbi } from "abis/abi";
 import { parseEther } from "viem";
 
@@ -57,10 +57,11 @@ export const faucetController = async (c: Context) => {
       },
     });
 
-  const txHash = await walletClient.sendTransaction({
-    account: contractAddress,
-    to: address as `0x0`,
-    value: parseEther("0.01"),
+  const txHash = await walletClient.sendRawTransaction({
+    serializedTransaction: await walletClient.signTransaction({
+      to: address as "0x0",
+      value: parseEther("0.01"),
+    }),
   });
 
   return c.json({

@@ -4,9 +4,10 @@ import { uploadToIPFS } from "@/services/api/ipfs.service";
 import { cleanCID } from "@/util/cleanCID";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { ContractFunctionExecutionError } from "viem";
-import { useConfig, useWriteContract } from "wagmi";
+import { ContractFunctionExecutionError, parseEther } from "viem";
+import { useAccount, useBalance, useConfig, useWriteContract } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
+import { useGetFaucet } from "./get-faucet";
 
 const mutationKey = "apply-applicant";
 
@@ -24,6 +25,9 @@ type ApplicantFormData = {
 };
 
 export function useApplyApplicantV2(programId: string) {
+  const faucet = useGetFaucet();
+  const balance = useBalance();
+  const account = useAccount();
   const { writeContractAsync } = useWriteContract({
     mutation: {
       onMutate: () => {
@@ -52,6 +56,11 @@ export function useApplyApplicantV2(programId: string) {
     },
     mutationKey: [mutationKey, programId],
     mutationFn: async (data: ApplicantFormData) => {
+
+      if ((balance.data?.value ?? 0n) < parseEther("0.0001")) {
+       await faucet.mutateAsync(account.address ?? "0x0"); 
+      }
+
       const milestones = await Promise.all(
         data.milestones.map(async (mile) => {
           const ipfs = await uploadToIPFS({ meta: mile });
