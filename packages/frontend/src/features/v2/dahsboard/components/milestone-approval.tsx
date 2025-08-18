@@ -2,6 +2,9 @@ import { formatCurrency, formatUSDC } from "@/util/currency";
 import type { useGetProgramCreatorProfile } from "../hooks/get-program-creator-profile";
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
+import { Dialog } from "@/components/ui/dialog";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 type MilestoneApprovalItem = NonNullable<
   ReturnType<typeof useGetProgramCreatorProfile>["data"]
@@ -13,8 +16,24 @@ export function MilestoneApproval(props: {
   onApprove?: (mile: MilestoneApprovalItem) => unknown;
   isLoading: boolean;
 }) {
+  const [prove, setProve] = useState(null as MilestoneApprovalItem | null);
+
+  const loadedProve = useQuery({
+    queryKey: ["prove", prove?.proveCID],
+    enabled: Boolean(prove),
+    queryFn: async () => {
+      const response: {
+        attributes: [{ proveImage: string; description: string }];
+      } = await (await fetch(prove?.proveCID ?? "")).json();
+
+      return {
+        image: response.attributes[0].proveImage,
+        description: response.attributes[0].description,
+      };
+    },
+  });
   const onSeeProve = (mile: MilestoneApprovalItem) => {
-    console.log(mile.proveCID);
+    setProve(mile);
   };
 
   const onDeny = (mile: MilestoneApprovalItem) => {
@@ -26,6 +45,23 @@ export function MilestoneApproval(props: {
 
   return (
     <div className="@container relative grow">
+      <Dialog
+        open={Boolean(prove)}
+        onOpenChange={(value) => !value && setProve(null)}
+        className="space-y-4"
+      >
+        {loadedProve.isLoading ? (
+          <Loader />
+        ) : (
+          <>
+            <h2 className="font-paytone text-4xl">See Proof</h2>
+            <img src={loadedProve.data?.image} className="rounded-2xl h-96 aspect-video object-contain bg-white" />
+            <div className="h-20 bg-white rounded-2xl p-4 font-nunito">
+              {loadedProve.data?.description}
+            </div>
+          </>
+        )}
+      </Dialog>
       {props.isLoading && (
         <Loader className="absolute top-0 inset-0 m-auto size-10" />
       )}
