@@ -409,6 +409,7 @@ export const scholarship = () => {
       await db.update(milestones)
         .set({
           isApproved: true,
+          isCollected: true,
           updatedAt: new Date(),
         })
         .where(eq(milestones.id, milestone.id));
