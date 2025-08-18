@@ -94,7 +94,7 @@ export const indexedBlocks = pgTable("indexed_blocks", {
 });
 
 // table faucet
-export const faucetData = pgTable("indexed_blocks", {
+export const faucetData = pgTable("faucet_data", {
   id: uuid('id').defaultRandom().primaryKey(),
   address: varchar("address", { length: 255 }).default(""),
   ipAddress: varchar("ip_address", { length: 45 }).default(""),
