@@ -7,6 +7,7 @@ import { faucetSchemaType } from "../validators/faucet.validation";
 import { walletClient } from "../constants/config";
 import { scholarshipAbi } from "abis/abi";
 import { parseEther } from "viem";
+import { add } from "lodash";
 
 export const faucetController = async (c: Context) => {
   const body = await c.req.parseBody();
@@ -42,6 +43,11 @@ export const faucetController = async (c: Context) => {
     }
   }
 
+  const txHash = await walletClient.sendTransaction({
+    to: address as "0x0",
+    value: parseEther("0.001"),
+  });
+
   await db
     .insert(faucetData)
     .values({
@@ -56,13 +62,6 @@ export const faucetController = async (c: Context) => {
         updatedAt: new Date(),
       },
     });
-
-  const txHash = await walletClient.sendRawTransaction({
-    serializedTransaction: await walletClient.signTransaction({
-      to: address as "0x0",
-      value: parseEther("0.01"),
-    }),
-  });
 
   return c.json({
     data: {
