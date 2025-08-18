@@ -13,4 +13,7 @@ export default defineConfig({
     // port: 5432,
     url: process.env.DATABASE_URL!,
   },
+  migrations: {
+    schema: "public",
+  },
 });
