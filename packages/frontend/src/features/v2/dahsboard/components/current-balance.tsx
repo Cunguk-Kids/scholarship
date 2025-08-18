@@ -2,7 +2,7 @@ import { usdcAddress } from "@/constants/contractAddress";
 import { useMemo } from "react";
 import { erc20Abi } from "viem";
 import { useAccount, useReadContract } from "wagmi";
-import { formatCurrency } from "@/util/currency";
+import { formatCurrency, formatUSDC } from "@/util/currency";
 import { Loader } from "@/components/fallback/loader";
 
 export function CurrentBalance(props: { className?: string }) {
@@ -17,8 +17,10 @@ export function CurrentBalance(props: { className?: string }) {
     },
   });
 
+  console.log(balance.data);
+
   const converted = useMemo(
-    () => Number(balance.data ?? 0) / 6 ** 10,
+    () => formatUSDC(balance.data ?? 0n),
     [balance.data]
   );
 
