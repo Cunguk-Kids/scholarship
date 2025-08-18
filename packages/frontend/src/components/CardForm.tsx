@@ -473,7 +473,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                             }}
                             isCurrency
                             type="input"
-                            label={`Requested Amount (Rp) ${programType}`}
+                            label={`Requested Amount (Rp)`}
                             placeholder="e.g., Rp 3,000,000"
                             value={programType !== 'FIXED' ? String(parseIdr) : String(idrValue)}
                             onChange={(values) => {
