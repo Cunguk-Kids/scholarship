@@ -26,8 +26,9 @@ type ApplicantFormData = {
 
 export function useApplyApplicantV2(programId: string) {
   const faucet = useGetFaucet();
-  const balance = useBalance();
   const account = useAccount();
+  const balance = useBalance({ address: account.address });
+
   const { writeContractAsync } = useWriteContract({
     mutation: {
       onMutate: () => {
@@ -57,7 +58,7 @@ export function useApplyApplicantV2(programId: string) {
     mutationKey: [mutationKey, programId],
     mutationFn: async (data: ApplicantFormData) => {
 
-      if ((balance.data?.value ?? 0n) < parseEther("0.0001")) {
+      if ((balance.data?.value ?? 0n) < parseEther("0.0001") && faucet.isIdle) {
        await faucet.mutateAsync(account.address ?? "0x0"); 
       }
 
