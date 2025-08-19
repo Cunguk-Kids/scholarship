@@ -7,7 +7,7 @@ interface TextPayload {
 }
 
 export const geminiService = async (text: string) => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const prompt = `apakah server berjalan normal berdasarkan data ini ${text}`;
 
