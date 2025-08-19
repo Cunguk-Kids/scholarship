@@ -11,7 +11,7 @@ import {
   type AmountType,
 } from '@/features/v2/scholarship/validations/schemas';
 import { CurrencyConverter } from '@/features/v2/scholarship/components/CurrencyConverter';
-import { sumBy } from 'lodash';
+import { isEmpty, sumBy } from 'lodash';
 import { idrToUsdc, usdcToIdr } from '@/util/localCurrency';
 import { createPopper } from '@popperjs/core';
 
@@ -22,6 +22,7 @@ interface CardFormProps<T extends 'applicant' | 'provider'> {
   totalParticipant?: number;
   programType?: AmountType;
   rate?: number;
+  milestonesData?: MilestoneData[];
   onSubmit: (formData: T extends 'applicant' ? FormData : FormDataProvider) => void;
   onClose?: () => void;
 }
@@ -64,6 +65,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   totalParticipant: tmpTotalParticipant,
   programType: tmpProgramType = 'FIXED', // 'FIXED'
   rate,
+  milestonesData,
 }: CardFormProps<T>) => {
   // ref
   const referenceRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -236,17 +238,30 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
 
   useEffect(() => {
     setTotalMilestone(milestones?.length);
-
-    console.log(milestones, '-----milestone after-----');
   }, [milestones]);
+
+  useEffect(() => {
+    if (milestonesData && !isEmpty(milestonesData) && type === 'applicant') {
+      const next = [...milestonesData];
+
+      const totalAmount = totalFund / (totalParticipant || 1);
+      const perMilestone = totalAmount / next.length;
+
+      const updatedMilestones = next.map((m) => ({
+        ...m,
+        amount: String(perMilestone),
+      }));
+
+      replace(updatedMilestones);
+      // trigger('milestones');
+    }
+  }, []);
 
   useEffect(() => {
     if (type === 'provider' && programType) {
       replace([]);
     }
   }, [programType]);
-
-  console.log(milestones, '-----milestones-----');
 
   return (
     <div className="flex p-12 items-start gap-6 self-stretch rounded-2xl bg-skbw w-full">
@@ -429,13 +444,13 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                     className="flex flex-col bg-skbw rounded-xl w-full relative gap-4 p-4">
                     <div className="flex justify-between items-center">
                       <div className="text-lg font-semibold">Milestone {i + 1}</div>
-                      {milestones.length > 1 && (
+                      {/* {milestones.length > 1 && (
                         <button
                           onClick={() => handleRemoveMilestone(i)}
                           className="text-skred text-sm hover:underline">
                           Remove
                         </button>
-                      )}
+                      )} */}
                     </div>
                     {show && selectedIndex === i && (
                       <div
@@ -472,6 +487,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                       control={control}
                       render={({ field, fieldState }) => (
                         <Input
+                          isDisabled
                           type="input"
                           label="Milestone Description"
                           placeholder="Milestone Description"
@@ -489,20 +505,22 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                       name={`milestones.${i}.amount`}
                       control={control}
                       render={({ field, fieldState }) => {
-                        const idrValue = usdcToIdr(Number(field.value || 0) / 1_000_000, rate);
-                        const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
+                        const idrValue = usdcToIdr(
+                          Number(field.value || 0) / 1_000_000,
+                          rate,
+                        ).toFixed(1);
+                        // const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
 
                         return (
                           <Input
-                            isDisabled={programType === 'FIXED'}
+                            isDisabled
                             ref={(el) => {
                               referenceRefs.current[i] = el;
                             }}
-                            isCurrency
                             type="input"
                             label={`Requested Amount (Rp)`}
                             placeholder="e.g., Rp 3,000,000"
-                            value={programType !== 'FIXED' ? String(parseIdr) : String(idrValue)}
+                            value={String(idrValue)}
                             onChange={(values) => {
                               const idr = Number(values) || 0;
                               const usdc = idrToUsdc(idr);
@@ -515,6 +533,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                               setSelectedIndex(i);
                               setShow(!show);
                             }}
+                            isCurrency
                           />
                         );
                       }}
@@ -704,7 +723,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
         </div>
 
         {/* ACTION BUTTONS */}
-        {((type === 'applicant' && step === 2) || (type === 'provider' && step === 4)) && (
+        {type === 'provider' && step === 4 && (
           <div className="flex flex-col gap-4 w-full mt-4">
             <button
               type="button"

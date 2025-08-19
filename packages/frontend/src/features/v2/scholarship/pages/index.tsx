@@ -243,6 +243,7 @@ export const ScholarshipsPage = () => {
         totalParticipant={program.totalRecipients || 1}
         rate={rate || 1}
         programType={program.milestoneType}
+        milestones={JSON.parse(program.milestonesProgram || '[]') || []}
       />
     </>
   );

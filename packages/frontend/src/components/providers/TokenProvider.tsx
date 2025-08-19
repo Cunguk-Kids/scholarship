@@ -28,6 +28,7 @@ export function TokenRateProvider({ children }: TokenRateProviderProps) {
         setRate(data['usd-coin'].idr);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Unknown error'));
+        setRate(16000);
       } finally {
         setLoading(false);
       }

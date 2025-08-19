@@ -37,7 +37,7 @@ const Timeline: React.FC<TimelineProps> = ({ title, items, className = '', rate 
               <div className="ml-4 flex-1 flex justify-between items-center">
                 <span className={`text-sm font-bold`}>{item.description}</span>
                 <span className={`text-sm font-bold`}>
-                  {formatCurrency(formatUSDC(item.amount ?? 0), "USD")}
+                  {formatCurrency(formatUSDC(item.amount ? item.amount / 1_000_000 : 0), 'USD')}
                 </span>
               </div>
             </div>
