@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { logger } from "@/utils/logger";
 import { sendSseToAll } from "./sse.controller";
+import { geminiService } from "../service/gemini.service";
 
 export const serverHealthController = async (c: Context) => {
   const cpuLoad = os.loadavg();
@@ -63,6 +64,24 @@ export const serverHealthController = async (c: Context) => {
     }, status: true
   });
 
+  const geminiResponse = geminiService(JSON.stringify({
+    cpuLoadAvg: {
+      '1min': cpuLoad[0],
+      '5min': cpuLoad[1],
+      '15min': cpuLoad[2],
+    },
+    memory: {
+      total: totalMem,
+      used: usedMem,
+      free: freeMem,
+      usedPercent: +(usedMem / totalMem * 100).toFixed(2),
+    },
+    disk,
+    portStatus,
+    database: dbStatus,
+    status: 'ok',
+  }));
+
   return c.json({
     cpuLoadAvg: {
       '1min': cpuLoad[0],
@@ -79,6 +98,7 @@ export const serverHealthController = async (c: Context) => {
     portStatus,
     database: dbStatus,
     status: 'ok',
+    geminiResponse
   });
 
 };
