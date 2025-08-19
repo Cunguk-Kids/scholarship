@@ -64,7 +64,7 @@ export const serverHealthController = async (c: Context) => {
     }, status: true
   });
 
-  const geminiResponse = geminiService(JSON.stringify({
+  const geminiResponse = await geminiService(JSON.stringify({
     cpuLoadAvg: {
       '1min': cpuLoad[0],
       '5min': cpuLoad[1],
@@ -98,7 +98,7 @@ export const serverHealthController = async (c: Context) => {
     portStatus,
     database: dbStatus,
     status: 'ok',
-    geminiResponse
+    geminiResponse: geminiResponse
   });
 
 };
