@@ -1,1 +1,0 @@
-ALTER TABLE "milestones" ADD COLUMN "is_approved" boolean DEFAULT false;

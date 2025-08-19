@@ -1,1 +1,0 @@
-ALTER TABLE "programs" ADD COLUMN "ongoing_at" timestamp DEFAULT now();
