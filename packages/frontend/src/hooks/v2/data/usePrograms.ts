@@ -31,7 +31,8 @@ export function usePrograms(initialFilter?: Filter) {
             ongoingAt: true,
             totalRecipients: true,
             totalFund: true,
-            milestoneType: true
+            milestoneType: true,
+            milestonesProgram: true
           },
         },
       },

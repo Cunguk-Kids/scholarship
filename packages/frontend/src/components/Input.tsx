@@ -115,6 +115,7 @@ export const Input = forwardRef<HTMLDivElement | null, InputProps>((param, ref) 
       {/* INPUT TEXT */}
       {type === 'input' && !isCurrency && (
         <input
+          disabled={isDisabled}
           type="text"
           className={inputClass}
           placeholder={placeholder}

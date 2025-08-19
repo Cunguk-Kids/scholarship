@@ -26,6 +26,8 @@ export const CurrencyConverter = ({
   //   }
   // };
 
+  console.log((usdAmount * 1_000_000) / totalParticipant - participantSpend);
+
   return (
     <>
       <div className="px-4 flex flex-col gap-y-2 ">
@@ -56,7 +58,7 @@ export const CurrencyConverter = ({
           <div className="text-center">
             <p className="text-gray-600">Your Spend</p>
             <p className="font-bold text-gray-800">
-              {getLocalValue(participantSpend, exchangeRate * 1_000_000)}
+              {getLocalValue(participantSpend, exchangeRate)}
             </p>
           </div>
           <div className="text-center">
@@ -64,14 +66,11 @@ export const CurrencyConverter = ({
             <p
               className={twMerge(
                 'font-bold text-gray-800',
-                usdAmount / totalParticipant - participantSpend < 0
+                usdAmount / totalParticipant - participantSpend < -1
                   ? 'text-red-500'
                   : 'text-green-500',
               )}>
-              {getLocalValue(
-                usdAmount / totalParticipant - participantSpend,
-                exchangeRate * 1_000_000,
-              )}
+              {getLocalValue(usdAmount / totalParticipant - participantSpend, exchangeRate)}
               IDR
             </p>
           </div>

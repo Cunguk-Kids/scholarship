@@ -11,6 +11,7 @@ type Props = {
   totalParticipant?: number;
   rate: number;
   programType?: AmountType;
+  milestones?: [];
 };
 
 export const ApplicantModal = ({
@@ -22,6 +23,7 @@ export const ApplicantModal = ({
   programAmount,
   totalParticipant,
   programType = 'FIXED',
+  milestones = [],
 }: Props) => {
   const { mutate } = useApplyApplicantV2(programId);
   if (!isOpen) return null;
@@ -42,6 +44,7 @@ export const ApplicantModal = ({
             mutate(data);
           }}
           onClose={() => onClose()}
+          milestonesData={milestones}
         />
       </div>
     </div>

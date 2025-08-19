@@ -1,6 +1,7 @@
 export const programSchema = `
   type programs {
   id: String!
+  milestonesProgram: String!
   blockchainId: Int
   name: String
   creator: String
