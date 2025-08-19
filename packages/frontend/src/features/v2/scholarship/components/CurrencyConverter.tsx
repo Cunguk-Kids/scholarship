@@ -26,8 +26,6 @@ export const CurrencyConverter = ({
   //   }
   // };
 
-  console.log((usdAmount * 1_000_000) / totalParticipant - participantSpend);
-
   return (
     <>
       <div className="px-4 flex flex-col gap-y-2 ">

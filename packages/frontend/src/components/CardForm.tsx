@@ -167,8 +167,8 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
     [formTotalParticipant, tmpTotalParticipant, tmpType],
   );
   const programType: any = useMemo(
-    () => (tmpType === 'applicant' ? tmpType : formProgramType),
-    [formProgramType, tmpType],
+    () => (tmpType === 'applicant' ? tmpProgramType : formProgramType),
+    [formProgramType, tmpProgramType],
   );
 
   const handleClickForward = () => {
@@ -241,7 +241,14 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   }, [milestones]);
 
   useEffect(() => {
-    if (milestonesData && !isEmpty(milestonesData) && type === 'applicant') {
+    console.log(programType, '-----programType-----', milestonesData);
+
+    if (
+      milestonesData &&
+      !isEmpty(milestonesData) &&
+      type === 'applicant' &&
+      programType === 'FIXED'
+    ) {
       const next = [...milestonesData];
 
       const totalAmount = totalFund / (totalParticipant || 1);
@@ -444,13 +451,13 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                     className="flex flex-col bg-skbw rounded-xl w-full relative gap-4 p-4">
                     <div className="flex justify-between items-center">
                       <div className="text-lg font-semibold">Milestone {i + 1}</div>
-                      {/* {milestones.length > 1 && (
+                      {milestones.length > 1 && programType !== 'FIXED' && (
                         <button
                           onClick={() => handleRemoveMilestone(i)}
                           className="text-skred text-sm hover:underline">
                           Remove
                         </button>
-                      )} */}
+                      )}
                     </div>
                     {show && selectedIndex === i && (
                       <div
@@ -463,7 +470,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                           exchangeRate={rate || 1}
                           usdAmount={(totalFund || 1) / 1_000_000}
                           totalParticipant={totalParticipant || 1}
-                          participantSpend={totalSpend}
+                          participantSpend={totalSpend * 1_000_000}
                         />
                       </div>
                     )}
@@ -487,7 +494,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                       control={control}
                       render={({ field, fieldState }) => (
                         <Input
-                          isDisabled
+                          isDisabled={programType === 'FIXED'}
                           type="input"
                           label="Milestone Description"
                           placeholder="Milestone Description"
@@ -509,18 +516,19 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                           Number(field.value || 0) / 1_000_000,
                           rate,
                         ).toFixed(1);
-                        // const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
+                        const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
 
                         return (
                           <Input
-                            isDisabled
+                            isDisabled={programType === 'FIXED'}
                             ref={(el) => {
                               referenceRefs.current[i] = el;
                             }}
                             type="input"
                             label={`Requested Amount (Rp)`}
                             placeholder="e.g., Rp 3,000,000"
-                            value={String(idrValue)}
+                            // value={String(idrValue)}
+                            value={programType !== 'FIXED' ? String(idrValue) : String(idrValue)}
                             onChange={(values) => {
                               const idr = Number(values) || 0;
                               const usdc = idrToUsdc(idr);
@@ -724,7 +732,8 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
         </div>
 
         {/* ACTION BUTTONS */}
-        {type === 'provider' && step === 4 && (
+        {((type === 'applicant' && step === 2 && programType !== 'FIXED') ||
+          (type === 'provider' && step === 4)) && (
           <div className="flex flex-col gap-4 w-full mt-4">
             <button
               type="button"
