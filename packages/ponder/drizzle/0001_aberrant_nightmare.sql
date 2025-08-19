@@ -1,0 +1,2 @@
+ALTER TABLE "programs" RENAME COLUMN "milestones" TO "milestonesProgram";--> statement-breakpoint
+ALTER TABLE "programs" ADD CONSTRAINT "programs_creator_blockchain_id_unique" UNIQUE("creator","blockchain_id");
