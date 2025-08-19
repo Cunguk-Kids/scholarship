@@ -33,7 +33,9 @@ export async function uploadERCToIPFS(file: File, metadata: IMetadata) {
   if (file) {
     const buffer = await file.arrayBuffer();
     const imageResult = await ipfs.add(Buffer.from(buffer), { pin: true });
+
     imageCID = imageResult.cid.toString();
+    await ipfs.pin.add(imageCID);
     imageURL = `${ipfsHost}/${imageCID}`;
   }
 
@@ -47,6 +49,7 @@ export async function uploadERCToIPFS(file: File, metadata: IMetadata) {
 
   const metaResult = await ipfs.add(JSON.stringify(finalMeta), { pin: true });
   const metaCID = metaResult.cid.toString();
+  await ipfs.pin.add(metaCID);
 
   return {
     imageCID,
