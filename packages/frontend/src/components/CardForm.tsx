@@ -238,8 +238,6 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
 
   useEffect(() => {
     setTotalMilestone(milestones?.length);
-
-    console.log(milestones, '-----milestone after-----');
   }, [milestones]);
 
   useEffect(() => {
@@ -446,13 +444,13 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                     className="flex flex-col bg-skbw rounded-xl w-full relative gap-4 p-4">
                     <div className="flex justify-between items-center">
                       <div className="text-lg font-semibold">Milestone {i + 1}</div>
-                      {milestones.length > 1 && (
+                      {/* {milestones.length > 1 && (
                         <button
                           onClick={() => handleRemoveMilestone(i)}
                           className="text-skred text-sm hover:underline">
                           Remove
                         </button>
-                      )}
+                      )} */}
                     </div>
                     {show && selectedIndex === i && (
                       <div
@@ -511,13 +509,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                           Number(field.value || 0) / 1_000_000,
                           rate,
                         ).toFixed(1);
-                        const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
-                        console.log(
-                          field.value,
-                          '-----field-----',
-                          idrValue,
-                          parseIdr(String(idrValue)),
-                        );
+                        // const parseIdr = (value: string) => Number(value?.replace(/[^\d]/g, ''));
 
                         return (
                           <Input
@@ -731,7 +723,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
         </div>
 
         {/* ACTION BUTTONS */}
-        {((type === 'applicant' && step === 2) || (type === 'provider' && step === 4)) && (
+        {type === 'provider' && step === 4 && (
           <div className="flex flex-col gap-4 w-full mt-4">
             <button
               type="button"
