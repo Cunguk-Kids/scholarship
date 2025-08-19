@@ -51,6 +51,7 @@ export const scholarship = () => {
             votingAt: moment.unix(Number(ipfsData?.attributes?.[0]?.votingAt)).format('YYYY-MM-DD HH:mm:ss'),
             ongoingAt: moment.unix(Number(ipfsData?.attributes?.[0]?.ongoingAt)).format('YYYY-MM-DD HH:mm:ss'),
             endAt: moment.unix(Number(ipfsData?.attributes?.[0]?.closedAt)).format('YYYY-MM-DD HH:mm:ss'),
+            milestonesJson: JSON.stringify(ipfsData?.attributes?.[0]?.milestones || [])
           };
         }
       }

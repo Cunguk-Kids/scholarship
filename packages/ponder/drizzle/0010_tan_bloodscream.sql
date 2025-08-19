@@ -1,0 +1,1 @@
+ALTER TABLE "programs" ADD COLUMN "milestone" text DEFAULT '';

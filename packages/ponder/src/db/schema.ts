@@ -20,6 +20,7 @@ export const programs = pgTable("programs", {
   totalRecipients: integer("total_recipients").default(0),
   totalFund: integer("total_fund").default(0),
   milestoneType: MilestoneAllocationEnum("milestone_type_enum"),
+  milestonesJson: text("milestone").default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 });
