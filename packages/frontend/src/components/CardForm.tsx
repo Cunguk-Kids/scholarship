@@ -644,8 +644,9 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
                         exchangeRate={rate || 1}
                         usdAmount={(totalFund || 1) / 1_000_000}
                         totalParticipant={totalParticipant || 1}
-                        participantSpend={totalSpend}
+                        participantSpend={totalSpend * 1_000_000}
                       />
+                      <p>{totalSpend}</p>
                     </div>
                   )}
                   {/* <Input
