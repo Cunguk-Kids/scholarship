@@ -1,5 +1,5 @@
 {
-  "id": "d3f84a9c-00ac-4f4f-8729-5273bfaa96a3",
+  "id": "9bea73f1-cf6c-4015-bc9b-663e4337b405",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -86,6 +86,70 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.faucet_data": {
+      "name": "faucet_data",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "faucet_data_address_ip_address_unique": {
+          "name": "faucet_data_address_ip_address_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "address",
+            "ip_address"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.indexed_blocks": {
       "name": "indexed_blocks",
       "schema": "",
@@ -154,10 +218,10 @@
         },
         "amount": {
           "name": "amount",
-          "type": "integer",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false,
-          "default": 0
+          "default": "'0'"
         },
         "student_id": {
           "name": "student_id",
@@ -187,6 +251,13 @@
         },
         "is_collected": {
           "name": "is_collected",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "is_approved": {
+          "name": "is_approved",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
@@ -265,6 +336,15 @@
           "columns": [
             "blockchain_id"
           ]
+        },
+        "milestones_blockchain_id_program_id_student_id_unique": {
+          "name": "milestones_blockchain_id_program_id_student_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "blockchain_id",
+            "program_id",
+            "student_id"
+          ]
         }
       },
       "policies": {},
@@ -334,6 +414,13 @@
           "notNull": false,
           "default": "now()"
         },
+        "ongoing_at": {
+          "name": "ongoing_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
         "rules": {
           "name": "rules",
           "type": "text",
@@ -361,6 +448,13 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
+        },
+        "milestones": {
+          "name": "milestones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
         },
         "created_at": {
           "name": "created_at",
@@ -490,6 +584,14 @@
           "columns": [
             "blockchain_id"
           ]
+        },
+        "students_student_address_program_id_unique": {
+          "name": "students_student_address_program_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "student_address",
+            "program_id"
+          ]
         }
       },
       "policies": {},
@@ -526,8 +628,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "blockchain_id": {
-          "name": "blockchain_id",
+        "blockchain_program_id": {
+          "name": "blockchain_program_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blockchain_student_id": {
+          "name": "blockchain_student_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -584,7 +692,17 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "votes_address_program_id_student_id_unique": {
+          "name": "votes_address_program_id_student_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "address",
+            "program_id",
+            "student_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

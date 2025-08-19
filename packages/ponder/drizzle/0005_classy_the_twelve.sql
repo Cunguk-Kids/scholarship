@@ -1,1 +1,0 @@
-ALTER TABLE "milestones" ALTER COLUMN "amount" SET DATA TYPE double precision;

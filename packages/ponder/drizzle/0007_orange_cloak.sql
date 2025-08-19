@@ -1,1 +1,0 @@
-ALTER TABLE "milestones" ADD CONSTRAINT "milestones_blockchain_id_program_id_student_id_unique" UNIQUE("blockchain_id","program_id","student_id");

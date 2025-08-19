@@ -5,71 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1753803824989,
-      "tag": "0000_old_liz_osborn",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1753886438979,
-      "tag": "0001_tearful_lenny_balinger",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1753889351793,
-      "tag": "0002_fearless_katie_power",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1754148702128,
-      "tag": "0003_whole_sheva_callister",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1754207314443,
-      "tag": "0004_sturdy_sister_grimm",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1754210964451,
-      "tag": "0005_classy_the_twelve",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1754211615322,
-      "tag": "0006_careful_rhino",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1754211922185,
-      "tag": "0007_orange_cloak",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1754227489297,
-      "tag": "0008_certain_roland_deschain",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1755530827578,
-      "tag": "0009_violet_power_pack",
+      "when": 1755604626290,
+      "tag": "0000_lucky_nightcrawler",
       "breakpoints": true
     }
   ]

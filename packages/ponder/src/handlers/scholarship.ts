@@ -32,6 +32,7 @@ export const scholarship = () => {
         totalRecipients: 1,
         endAt: moment().format("YYYY-MM-DD"),
         rules: "",
+        milestones: "[]",
         startAt: moment().add(2, 'days').format("YYYY-MM-DD"),
         votingAt: moment().add(2, 'days').format("YYYY-MM-DD"),
         ongoingAt: moment().add(2, 'days').format("YYYY-MM-DD"),
@@ -51,6 +52,7 @@ export const scholarship = () => {
             votingAt: moment.unix(Number(ipfsData?.attributes?.[0]?.votingAt)).format('YYYY-MM-DD HH:mm:ss'),
             ongoingAt: moment.unix(Number(ipfsData?.attributes?.[0]?.ongoingAt)).format('YYYY-MM-DD HH:mm:ss'),
             endAt: moment.unix(Number(ipfsData?.attributes?.[0]?.closedAt)).format('YYYY-MM-DD HH:mm:ss'),
+            milestones: ipfsData?.attributes?.[0]?.milestones as string || "[]"
           };
         }
       }
@@ -60,7 +62,10 @@ export const scholarship = () => {
 
       logger.info({ cleanedData }, "Cleaned Data Program");
 
-      const result = await db.insert(programs).values(cleanedData).onConflictDoNothing();
+      const result = await db.insert(programs).values(cleanedData).onConflictDoUpdate({
+        target: [programs?.blockchainId],
+        set: cleanedData
+      });
 
       logger.info({ result }, "Result Insert Data Program");
 
