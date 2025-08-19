@@ -8,6 +8,7 @@ import { insertBlock } from "@/services/block.log.service";
 import moment from "moment";
 import { isEmpty } from "lodash";
 import { sendSseToAll } from "@/api/controller/sse.controller";
+import { geminiProgramService } from "@/api/service/gemini.service";
 export const scholarship = () => {
 
   ponder.on("scholarship:ProgramCreated", async ({ event }) => {
@@ -274,8 +275,13 @@ export const scholarship = () => {
             estimation: ipfsData?.attributes?.[0]?.estimation as number || 0,
             type: ipfsData?.attributes?.[0]?.type as InferEnum<typeof MilestoneTypeEnum>,
           };
+
         }
       }
+      const response = await geminiProgramService({ programDescription: program.description || '', programName: program.name || '', userMilestone: [{ value: String(amount), description: baseData.description }] });
+
+      baseData.score = String(response.score);
+      baseData.summary = response.summary;
       const cleanedData = Object.fromEntries(
         Object.entries(baseData).filter(([_, v]) => v !== undefined && v !== null && v !== '')
       );

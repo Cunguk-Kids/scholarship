@@ -15,6 +15,27 @@
       "when": 1755607917978,
       "tag": "0001_aberrant_nightmare",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1755645220184,
+      "tag": "0002_careless_crusher_hogan",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1755645283038,
+      "tag": "0003_flashy_bill_hollister",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1755645437637,
+      "tag": "0004_overjoyed_switch",
+      "breakpoints": true
     }
   ]
 }

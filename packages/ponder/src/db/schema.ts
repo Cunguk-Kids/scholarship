@@ -37,6 +37,8 @@ export const students = pgTable("students", {
   email: varchar("email", { length: 255 }).default(""),
   financialSituation: text("financial_situation").default(""),
   scholarshipMotivation: text("scholarship_motivation").default(""),
+  score: numeric("score").default("0"),
+  summary: text("summary").default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 }, (student) => ({
@@ -68,6 +70,8 @@ export const milestones = pgTable("milestones", {
   type: MilestoneTypeEnum("type"),
   description: text("description").default(""),
   estimation: integer("estimation").default(0),
+  score: numeric("score").default("0"),
+  summary: text("summary").default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
 }, (milestone) => ({
