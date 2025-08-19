@@ -25,6 +25,15 @@ export const providerSchema = z.object({
   totalFund: z.string().min(1, 'Required'),
   distributionMethod: z.string().optional(),
   selectionMethod: AmountTypeSchema,
+  milestones: z
+    .array(
+      z.object({
+        type: z.string().optional(),
+        description: z.string().min(1, 'Required'),
+        amount: z.string().min(1, 'Required'),
+      })
+    )
+    .min(1, 'At least one milestone'),
 });
 
 export type AmountType = z.infer<typeof AmountTypeSchema>;

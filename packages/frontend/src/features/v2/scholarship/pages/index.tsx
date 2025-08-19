@@ -231,6 +231,7 @@ export const ScholarshipsPage = () => {
         ref={ref}
         isOpen={openScholarshipModal}
         onClose={() => setOpenScholarshipModal(false)}
+        rate={rate || 1}
       />
 
       <ApplicantModal
