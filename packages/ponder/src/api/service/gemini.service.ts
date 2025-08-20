@@ -52,7 +52,7 @@ export const geminiProgramService = async ({ userMilestone, programName, program
         Berikan respons Anda hanya dalam format JSON berikut, tanpa teks atau penjelasan tambahan di luar JSON:
         
         {
-          "summary": "Tulis ringkasan singkat (maksimal 2 kalimat) tentang seberapa cocok program dengan milestone.",
+          "summary": "Tulis ringkasan singkat (maksimal 2 kalimat) tentang seberapa cocok program dengan milestone dalam bahasa inggris.",
           "score": 10
         }
         `;
