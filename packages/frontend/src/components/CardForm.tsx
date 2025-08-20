@@ -241,7 +241,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   }, [milestones]);
 
   useEffect(() => {
-    console.log(programType, '-----programType-----', milestonesData);
+    console.log(programType, '-----programType-----');
 
     if (
       milestonesData &&
