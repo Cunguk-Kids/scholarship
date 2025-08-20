@@ -64,7 +64,8 @@ export const geminiProgramService = async ({ userMilestone, programName, program
 
     let jsonResponse;
     try {
-      jsonResponse = JSON.parse(geminiResponse);
+      const responseText = geminiResponse.replace(/```json\n|```/g, '');
+      jsonResponse = JSON.parse(responseText);
     } catch (parseError) {
       console.error('Gagal parsing JSON dari Gemini:', geminiResponse);
       return {

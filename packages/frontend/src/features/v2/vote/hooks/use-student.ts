@@ -28,6 +28,8 @@ export function useStudents(programId: string) {
                     blockchainId: true,
                     estimation: true,
                     description: true,
+                    score: true,
+                    summary: true
                   },
                 },
               },

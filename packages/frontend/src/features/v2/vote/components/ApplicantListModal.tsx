@@ -24,7 +24,7 @@ export const ApplicantListModal = ({ programId, onClose, programIndexerId }: Pro
   const [applicant, setApplicant] = useState<string | null>(null);
   // hooks
   const { rate } = useTokenRate();
-  const { data, isLoading } = useStudents(programIndexerId ?? "");
+  const { data, isLoading } = useStudents(programIndexerId ?? '');
   const account = useAccount();
   const voteApi = useVoteApplicantApiV2();
 
