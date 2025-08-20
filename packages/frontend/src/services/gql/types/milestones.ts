@@ -1,6 +1,8 @@
 export const milestoneSchema = `
   type milestones {
   id: String!
+  score: String
+  summary: String
   blockchainId: Int
   amount: Int
   studentId: String
