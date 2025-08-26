@@ -1,5 +1,6 @@
+import { wait } from "@/util/supense";
 import { createInjection } from "../../util/create-inject";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type LState = {
   type: "confirmation" | "proccessing" | "none" | "error" | "success";
@@ -8,9 +9,13 @@ type LState = {
 
 function useLoading() {
   const [loading, setLoading] = useState<LState>({ type: "none" });
+  const isFirstTime = useRef(false);
+
   return {
     loading,
     setLoading,
+    isFirstTime,
+    open,
   };
 }
 

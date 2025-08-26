@@ -1,7 +1,7 @@
 import { appStateInjection } from "@/hooks/inject/app-state";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../Button";
 
 function WaitWallet() {
@@ -163,7 +163,7 @@ function Success() {
         {loading.message ?? "No message"}
       </div>
       <div className="flex justify-end">
-        <Button onClick={() => setLoading({ type: "none" })} label="Close"/>
+        <Button onClick={() => setLoading({ type: "none" })} label="Close" />
       </div>
     </>
   );
@@ -179,7 +179,7 @@ function Error() {
         {loading.message ?? "No message"}
       </div>
       <div className="flex justify-end">
-        <Button onClick={() => setLoading({ type: "none" })} label="Close"/>
+        <Button onClick={() => setLoading({ type: "none" })} label="Close" />
       </div>
     </>
   );
@@ -190,20 +190,78 @@ export function LoadingState() {
     loading: { loading },
   } = appStateInjection.use();
 
+  const backdropRef = useRef(null);
+  const modalRef = useRef(null);
+  const [shouldRender, setShouldRender] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Handle mount animation
   useEffect(() => {
-    gsap.to(".loading-state-back", { opacity: 0 }).then(() => {
-      gsap.to(".loading-state-back", { opacity: 1 });
-    });
-    gsap.to(".loading-state", { y: "100%" }).then(() => {
-      gsap.to(".loading-state", { y: "0%" });
-    });
-  }, [loading]);
+    if (loading.type !== "none" && !shouldRender) {
+      setShouldRender(true);
+      setIsVisible(true);
+    }
+  }, [loading.type, shouldRender]);
+
+  // Handle unmount animation
+  useEffect(() => {
+    if (loading.type === "none" && shouldRender) {
+      setIsVisible(false);
+      // Delay the actual unmount until animation completes
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [loading.type, shouldRender]);
+
+  // GSAP fade animations
+  useEffect(() => {
+    if (backdropRef.current && modalRef.current) {
+      if (isVisible) {
+        // Fade in animation
+        gsap.set([backdropRef.current, modalRef.current], { 
+          opacity: 0,
+          scale: 0.9 
+        });
+        
+        gsap.to(backdropRef.current, {
+          opacity: 1,
+          duration: 0.3,
+          scale: 1,
+          ease: "power2.out",
+        });
+        
+        gsap.to(modalRef.current, {
+          opacity: 1,
+          scale: 1,
+          duration: 0.3,
+          ease: "back.out(1.7)"
+        });
+      } else {
+        // Fade out animation
+        gsap.to(backdropRef.current, {
+          opacity: 0,
+          duration: 0.3,
+          scale: 0.9,
+          ease: "power2.in"
+        });
+        
+        gsap.to(modalRef.current, {
+          opacity: 0,
+          scale: 0.9,
+          duration: 0.3,
+          ease: "back.in(1.7)"
+        });
+      }
+    }
+  }, [isVisible]);
 
   return (
-    loading.type !== "none" &&
+    shouldRender &&
     createPortal(
-      <div className="backdrop-blur-sm inset-0 fixed z-10 grid place-content-center loading-state-back">
-        <div className="bg-white rounded-2xl p-6 space-y-4 neo-shadow loading-state">
+      <div ref={backdropRef} className="backdrop-blur-sm inset-0 fixed z-10 grid place-content-center loading-state-back h-screen w-screen">
+        <div ref={modalRef} className="bg-white rounded-2xl p-6 space-y-4 neo-shadow loading-state">
           {loading.type === "proccessing" ? (
             <WaitWallet />
           ) : loading.type === "confirmation" ? (
