@@ -18,7 +18,7 @@ const messages = [
 
 const Title = memo(function Title() {
   return (
-    <div className="z-20 max-lg:text-4xl">
+    <div className="z-20 max-lg:text-4xl max-sm:text-[32px]">
       <h1>
         <SplitText
           text="Empower the Future."
@@ -47,7 +47,7 @@ const Title = memo(function Title() {
           textAlign="center"
         />
       </h1>
-      <div className="font-nunito text-2xl">
+      <div className="font-nunito text-2xl max-sm:text-sm">
         <SplitText
           text="All scholarships are powered by smart contracts. "
           delay={50}
@@ -130,9 +130,9 @@ export const ScholarshipsPage = () => {
           </div>
         </div>
         <div className="h-0">
-          <div className="relative z-10 -top-80 max-lg:-top-40">
-            <div className="flex justify-between">
-              <ApproachableWrapper className="relative -left-8 w-[8.625rem] h-40">
+          <div className="relative z-10 -top-80 max-lg:-top-40 max-sm:-top-0">
+            <div className="flex justify-between relative max-sm:-top-20">
+              <ApproachableWrapper className="relative -left-8 w-[8.625rem] h-40 max-sm:w-[117.277px] max-sm:h-[130px]">
                 <img
                   src="/img/Flower.svg"
                   alt="flower"
@@ -141,25 +141,31 @@ export const ScholarshipsPage = () => {
               </ApproachableWrapper>
 
               <ApproachableWrapper className="relative -right-1">
-                <img src="/img/Party.svg" alt="party" />
+                <img
+                  src="/img/Party.svg"
+                  alt="party"
+                  className="max-sm:size-[117px]"
+                />
               </ApproachableWrapper>
             </div>
-            <div className="relative -top-36 flex w-full justify-between">
+            <div className="relative -top-36 flex w-full justify-between max-sm:-top-36">
               <ApproachableWrapper className="relative -left-1">
                 <img
+                  className="max-sm:size-[180px]"
                   src="/img/Illustration Provider.svg"
                   alt="Illustration Provider"
                 />
               </ApproachableWrapper>
               <ApproachableWrapper className="relative -right-1">
                 <img
+                  className="max-sm:size-[180px]"
                   src="/img/Illustration Student.svg"
                   alt="Illustration Student"
                 />
               </ApproachableWrapper>
             </div>
           </div>
-          <div className="relative z-1 -top-150">
+          <div className="relative z-1 -top-150 max-sm:-top-40">
             <img
               src="/img/Ellipse 1.svg"
               alt="ellipse 1"
@@ -168,28 +174,24 @@ export const ScholarshipsPage = () => {
             <div className="relative w-screen -top-1 bg-skyellow h-[33rem]"></div>
           </div>
         </div>
-        <div className="relative z-10 inline-flex flex-col items-center justify-center gap-5 m-44">
-          {/* <div className="flex flex-col gap-2 text-2xl font-bold mx-auto">
-            <p>Looking for a fair, transparent way to fund your education?</p>
-            <p>Ready to turn your funds into real student success stories?</p>
-          </div> */}
-          <div className="relative h-12 w-full flex justify-center items-center overflow-hidden">
+        <div className="relative z-10 inline-flex flex-col items-center justify-center gap-5 m-44 max-sm:m-0 max-sm:mt-50">
+          <div className="relative h-12 w-full flex justify-center items-center overflow-hidden text-2xl max-sm:text-sm">
             {prevMessagesIndex !== null && (
               <span
                 key={`prev-${prevMessagesIndex}`}
-                className="absolute text-2xl font-bold text-center animate-slideDown-fadeOut"
+                className="absolute font-bold text-center animate-slideDown-fadeOut"
               >
                 {messages[prevMessagesIndex]}
               </span>
             )}
             <span
               key={`curr-${messagesIndex}`}
-              className="absolute text-2xl font-bold text-center animate-slideUp-fadeIn"
+              className="absolute font-bold text-center animate-slideUp-fadeIn"
             >
               {messages[messagesIndex]}
             </span>
           </div>
-          <div className="flex items-center justify-center gap-7 self-stretch">
+          <div className="flex items-center justify-center gap-7 self-stretch [&_button]:max-sm:text-sm max-sm:flex-col max-sm:gap-4">
             <Button
               label="Open Scholarships"
               size="large"
@@ -207,10 +209,10 @@ export const ScholarshipsPage = () => {
             />
           </div>
         </div>
-        <div id="find-scholarship" className="px-9 py-12 z-2">
+        <div id="find-scholarship" className="px-9 py-12 z-2 max-sm:px-3">
           <div className="inline-flex flex-col justify-center items-start gap-3.5">
-            <h2 className="font-paytone text-5xl">Find a Scholarship...</h2>
-            <p className="text-2xl">Your Next Opportunity Starts Here</p>
+            <h2 className="font-paytone text-5xl max-sm:text-[24px]">Find a Scholarship...</h2>
+            <p className="text-2xl max-sm:text-xs">Your Next Opportunity Starts Here</p>
           </div>
           <div className="py-7">
             <Tabbing

@@ -42,7 +42,7 @@ export const CardScholarship = ({
     endAt: program.endAt,
   });
 
-  const {switchChain}  = useSwitchChain();
+  const { switchChain } = useSwitchChain();
 
   return (
     <div className="flex flex-col items-center">
@@ -64,13 +64,13 @@ export const CardScholarship = ({
                   <p
                     className={`${getTextSize(size, "text-base", "text-xs")} truncate`}
                   >
-                    {program.initiatorAddress}
+                    {size === "small" ? `${program.initiatorAddress.slice(0, 6)}...${program.initiatorAddress.slice(-4, program.initiatorAddress.length)}` : program.initiatorAddress}
                   </p>
                 </div>
               </div>
 
               {/* Info: Time & Quota */}
-              <div className="flex items-start gap-4 self-stretch justify-between">
+              <div className={`flex items-start ${size === "small" ? "gap-1" : "gap-4"} self-stretch justify-between`}>
                 <div className="flex flex-col gap-1">
                   <p className={getTextSize(size, "text-sm", "text-xs")}>
                     Registration close in...
@@ -167,15 +167,18 @@ export const CardScholarship = ({
               </div>
             </div>
           </div>
-
           {withButton && (
             <div
               className={`absolute w-max ${size === "small" ? "top-[14rem] left-[15.5rem]" : "top-[16.5rem] left-[20rem]"}`}
             >
               {!account.address ? (
                 <Button label="Connect Wallet" type="connect" />
-              ) : !account.chain ? 
-              <Button label="Switch Network" onClick={() => switchChain({ chainId: liskSepolia.id })}/> : (
+              ) : !account.chain ? (
+                <Button
+                  label="Switch Network"
+                  onClick={() => switchChain({ chainId: liskSepolia.id })}
+                />
+              ) : (
                 <Button
                   label={labelButton}
                   onClick={onClickButton}

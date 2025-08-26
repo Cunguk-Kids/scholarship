@@ -1,7 +1,7 @@
 export const tabbingData = [
   {
     id: "active",
-    label: "Active Scholarships",
+    label: <span>Active <span className="max-sm:sr-only">Scholarships</span></span>,
     color: "bg-skpurple",
   },
   {

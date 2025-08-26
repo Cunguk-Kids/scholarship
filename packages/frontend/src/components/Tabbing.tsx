@@ -3,16 +3,17 @@ import { useState } from "react";
 import { CardScholarship } from "./CardScholarship";
 import { CardVote } from "./CardVote";
 import { useTokenRate } from "@/context/token-rate-context";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 
 type Tab = {
   id: string;
-  label: string;
+  label: React.ReactNode;
   color: string;
 };
 
 type TabButtonProps = {
   id: string;
-  label: string;
+  label: React.ReactNode;
   color: string;
   isActive: boolean;
   onClick: () => void;
@@ -20,8 +21,8 @@ type TabButtonProps = {
 
 const TabButton = ({ label, isActive, color, onClick }: TabButtonProps) => {
   const baseStyle =
-    "gap-[0.625rem] items-end rounded-t-3xl px-6 text-2xl font-normal border-l-4 border-t-4 border-r-4 border-black text-black font-paytone";
-  const activeStyle = "bg-skbw py-6";
+    "gap-[0.625rem] items-end rounded-t-3xl px-6 text-2xl font-normal border-l-4 border-t-4 border-r-4 border-black text-black font-paytone max-sm:text-sm";
+  const activeStyle = "bg-skbw py-6 max-sm:py-4 max-sm:pb-6 z-1";
   const inactiveStyle = `${color} border-b-4 py-4`;
 
   return (
@@ -52,6 +53,7 @@ export const Tabbing = <T,>({
   participants?: any[];
 }) => {
   const [activeTab, setActiveTab] = useState<string>(tabs[0]?.id ?? "");
+  const breakpoint = useBreakpoint();
   const { rate } = useTokenRate();
 
   // const onClickAction = (item: Record<string, T>, activeTab: string) => {
@@ -67,7 +69,7 @@ export const Tabbing = <T,>({
   return (
     <div className="grow">
       {/* Tabs */}
-      <div className="relative -left-2 -top-1 shrink-0 z-10 flex items-end -space-x-1">
+      <div className="relative -left-2 -top-1 shrink-0 z-10 flex items-end -space-x-1 max-sm:-space-x-2">
         {tabs.map((tab) => (
           <TabButton
             key={tab.id}
@@ -83,7 +85,7 @@ export const Tabbing = <T,>({
       <div className="shrink-0 bg-black rounded-3xl w-full">
         <div className="relative w-full bg-skbw rounded-e-3xl rounded-bl-3xl border-4 -left-2 -top-2">
           {type.toLowerCase() === "program" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[3.75rem] p-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[3.75rem] p-20 max-sm:p-5 max-sm:gap-5">
               {/* <CardVote
                 onSubmit={() => {
                   if (onClickTabbing) onClickTabbing({ participantAddress: 'aa' }, activeTab);
@@ -127,6 +129,8 @@ export const Tabbing = <T,>({
                       handleClickItemButton(item.blockchainId, item)
                     }
                     liskToIDR={rate || 0}
+                    size={breakpoint.isLessThan("sm") ? "small" : "large"}
+                    sizeButton={breakpoint.isLessThan("sm") ? "small" : "large"}
                   />
                 ))}
             </div>
