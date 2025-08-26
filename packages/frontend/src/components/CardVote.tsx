@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { orderBy } from 'lodash';
-import React from 'react';
 import { Button } from './Button';
 import { StatusBadge } from './StatusBadge';
 import Timeline, { type TimelineItem } from './Timeline';
