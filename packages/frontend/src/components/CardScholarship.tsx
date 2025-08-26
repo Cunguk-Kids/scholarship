@@ -3,7 +3,8 @@ import { Button } from "./Button";
 import { StatusBadge } from "./StatusBadge";
 import { getProgramStatus } from "@/util/programStatus";
 import { getLocalValue } from "@/util/localCurrency";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
+import { liskSepolia } from "wagmi/chains";
 
 const getTextSize = (size: string, base: string, small: string) =>
   size === "small" ? small : base;
@@ -40,6 +41,8 @@ export const CardScholarship = ({
     startAt: program.startAt,
     endAt: program.endAt,
   });
+
+  const {switchChain}  = useSwitchChain();
 
   return (
     <div className="flex flex-col items-center">
@@ -169,9 +172,10 @@ export const CardScholarship = ({
             <div
               className={`absolute w-max ${size === "small" ? "top-[14rem] left-[15.5rem]" : "top-[16.5rem] left-[20rem]"}`}
             >
-              {!account.address || !account.chain ? (
+              {!account.address ? (
                 <Button label="Connect Wallet" type="connect" />
-              ) : (
+              ) : !account.chain ? 
+              <Button label="Switch Network" onClick={() => switchChain({ chainId: liskSepolia.id })}/> : (
                 <Button
                   label={labelButton}
                   onClick={onClickButton}

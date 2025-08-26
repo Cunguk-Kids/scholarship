@@ -3,7 +3,6 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/Button';
 import { ScholarshipModal } from '../components/ScholarshipModal';
 import { ApplicantModal } from '../components/ApplicantModal';
-import { useApplicant } from '@/hooks/@programs/applicant/use-list-applicant';
 import { Tabbing } from '@/components/Tabbing';
 import { tabbingData } from '../constants/ScholarshipConstants';
 import SplitText from '@/components/ui/split-text';
@@ -92,7 +91,6 @@ export const ScholarshipsPage = () => {
     console.log(main, '-----main-----');
   }, [main]);
 
-  const { applicants } = useApplicant('');
   const { data } = usePrograms();
   const { rate } = useTokenRate();
 
@@ -202,11 +200,6 @@ export const ScholarshipsPage = () => {
           </div>
           <div className="py-7">
             <Tabbing
-              participants={
-                applicants?.[0]?.map((x) => {
-                  return { participantAddress: x };
-                }) as never
-              }
               programs={
                 data?.map((x) => {
                   // @ts-expect-error ytta
@@ -222,7 +215,6 @@ export const ScholarshipsPage = () => {
               onClickTabbing={() => {}}
               onClickButtonItem={handleApplyNow}
             />
-            {/* <Tabbing programs={[]} /> */}
           </div>
         </div>
       </div>

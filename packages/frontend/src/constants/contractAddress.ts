@@ -1,4 +1,3 @@
-export const skoolchainAddress = import.meta.env.VITE_CONTRACT_ADDRESS as `0x0`;
 export const skoolchainV2Address =
   "0xA5aC7aA1d96B7Aa58a565F8eAAC89575ddD19eb7" as const;
 export const usdcAddress =
