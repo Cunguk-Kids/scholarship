@@ -14,7 +14,6 @@ export function Dialog(props: {
     props.onOpenChange?.(false);
   });
 
-  console.log(props.open);
   return props.open
     ? createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center backdrop-blur-xs">

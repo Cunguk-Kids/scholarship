@@ -11,7 +11,6 @@ import {
   type AmountType,
 } from '@/features/v2/scholarship/validations/schemas';
 import { CurrencyConverter } from '@/features/v2/scholarship/components/CurrencyConverter';
-import { isEmpty, sumBy } from 'lodash';
 import { idrToUsdc, usdcToIdr } from '@/util/localCurrency';
 import { createPopper } from '@popperjs/core';
 
@@ -155,7 +154,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
   const formProgramType = watch('selectionMethod');
   const formTotalFund = watch('totalFund');
   const formTotalParticipant = watch('recipientCount');
-  const totalSpend = sumBy(milestones, (m) => parseFloat(m.amount) || 0);
+  const totalSpend = milestones.reduce((a, b) => a + parseFloat(b.amount), 0);
 
   const type = useMemo(() => tmpType, [tmpType]);
   const totalFund: number = useMemo(
@@ -245,7 +244,7 @@ export const CardForm = <T extends 'applicant' | 'provider'>({
 
     if (
       milestonesData &&
-      !isEmpty(milestonesData) &&
+      milestonesData.length &&
       type === 'applicant' &&
       programType === 'FIXED'
     ) {

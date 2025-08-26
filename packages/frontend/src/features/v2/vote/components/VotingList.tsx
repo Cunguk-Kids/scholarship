@@ -1,13 +1,13 @@
 import { CardScholarship } from '@/components/CardScholarship';
 import { useTokenRate } from '@/context/token-rate-context';
-import { usePrograms } from '@/hooks/v2/data/usePrograms';
+import { useProgramsV2 } from '@/hooks/v2/data/usePrograms';
 
 export const VotingList = ({
   onClickVote,
 }: {
   onClickVote: (id: number | null, indexerId: string | null) => void;
 }) => {
-  const { data: programs } = usePrograms();
+  const { data: programs } = useProgramsV2();
   const { rate } = useTokenRate();
 
   if (!programs?.length)

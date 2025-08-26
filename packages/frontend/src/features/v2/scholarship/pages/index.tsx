@@ -1,20 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { memo, useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/Button';
-import { ScholarshipModal } from '../components/ScholarshipModal';
-import { ApplicantModal } from '../components/ApplicantModal';
-import { Tabbing } from '@/components/Tabbing';
-import { tabbingData } from '../constants/ScholarshipConstants';
-import SplitText from '@/components/ui/split-text';
-import { ApproachableWrapper } from '@/components/ornaments/approachable-wrapper';
-import { usePrograms } from '@/hooks/v2/data/usePrograms';
-import { useClickOutside } from '@/hooks/useClickOutside';
-import { useTokenRate } from '@/context/token-rate-context';
-import { isEmpty } from 'lodash';
-import { useSSE } from '@/hooks/v2/use-sse';
+import { memo, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/Button";
+import { ScholarshipModal } from "../components/ScholarshipModal";
+import { ApplicantModal } from "../components/ApplicantModal";
+import { Tabbing } from "@/components/Tabbing";
+import { tabbingData } from "../constants/ScholarshipConstants";
+import SplitText from "@/components/ui/split-text";
+import { ApproachableWrapper } from "@/components/ornaments/approachable-wrapper";
+import { useProgramsV2 } from "@/hooks/v2/data/usePrograms";
+import { useClickOutside } from "@/hooks/useClickOutside";
+import { useTokenRate } from "@/context/token-rate-context";
+import { useSSE } from "@/hooks/v2/use-sse";
 const messages = [
-  'Looking for a fair, transparent way to fund your education?',
-  'Ready to turn your funds into real student success stories?',
+  "Looking for a fair, transparent way to fund your education?",
+  "Ready to turn your funds into real student success stories?",
 ];
 
 const Title = memo(function Title() {
@@ -84,32 +83,31 @@ export const ScholarshipsPage = () => {
   // hooks sse
   const { data: main } = useSSE<{ step: string; percent: number }>({
     url: `${import.meta.env.VITE_BACKEND_HOST}/sse`,
-    event: 'main',
+    event: "main",
   });
 
   useEffect(() => {
-    console.log(main, '-----main-----');
+    console.log(main, "-----main-----");
   }, [main]);
 
-  const { data } = usePrograms();
+  const { data } = useProgramsV2();
   const { rate } = useTokenRate();
 
   const [openScholarshipModal, setOpenScholarshipModal] = useState(false);
-  const [programId, setProgramId] = useState('');
+  const [programId, setProgramId] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [program, setProgram] = useState<Record<string, any>>({});
 
   const [messagesIndex, setMessagesIndex] = useState(0);
-  const [prevMessagesIndex, setPrevMessagesIndex] = useState<number | null>(null);
+  const [prevMessagesIndex, setPrevMessagesIndex] = useState<number | null>(
+    null
+  );
 
-  const handleApplyNow = (id: string, item?: Record<string, any>) => {
+  const handleApplyNow = (id: string, item: Record<string, any>) => {
     setProgramId(id);
 
-    console.log(program, '----program----');
-
-    if (!isEmpty(item)) {
-      setProgram(item);
-    }
+    console.log(program, "----program----");
+    setProgram(item);
   };
 
   useEffect(() => {
@@ -135,7 +133,11 @@ export const ScholarshipsPage = () => {
           <div className="relative z-10 -top-80 max-lg:-top-40">
             <div className="flex justify-between">
               <ApproachableWrapper className="relative -left-8 w-[8.625rem] h-40">
-                <img src="/img/Flower.svg" alt="flower" className="w-full h-full" />
+                <img
+                  src="/img/Flower.svg"
+                  alt="flower"
+                  className="w-full h-full"
+                />
               </ApproachableWrapper>
 
               <ApproachableWrapper className="relative -right-1">
@@ -144,15 +146,25 @@ export const ScholarshipsPage = () => {
             </div>
             <div className="relative -top-36 flex w-full justify-between">
               <ApproachableWrapper className="relative -left-1">
-                <img src="/img/Illustration Provider.svg" alt="Illustration Provider" />
+                <img
+                  src="/img/Illustration Provider.svg"
+                  alt="Illustration Provider"
+                />
               </ApproachableWrapper>
               <ApproachableWrapper className="relative -right-1">
-                <img src="/img/Illustration Student.svg" alt="Illustration Student" />
+                <img
+                  src="/img/Illustration Student.svg"
+                  alt="Illustration Student"
+                />
               </ApproachableWrapper>
             </div>
           </div>
           <div className="relative z-1 -top-150">
-            <img src="/img/Ellipse 1.svg" alt="ellipse 1" className="w-screen" />
+            <img
+              src="/img/Ellipse 1.svg"
+              alt="ellipse 1"
+              className="w-screen"
+            />
             <div className="relative w-screen -top-1 bg-skyellow h-[33rem]"></div>
           </div>
         </div>
@@ -165,13 +177,15 @@ export const ScholarshipsPage = () => {
             {prevMessagesIndex !== null && (
               <span
                 key={`prev-${prevMessagesIndex}`}
-                className="absolute text-2xl font-bold text-center animate-slideDown-fadeOut">
+                className="absolute text-2xl font-bold text-center animate-slideDown-fadeOut"
+              >
                 {messages[prevMessagesIndex]}
               </span>
             )}
             <span
               key={`curr-${messagesIndex}`}
-              className="absolute text-2xl font-bold text-center animate-slideUp-fadeIn">
+              className="absolute text-2xl font-bold text-center animate-slideUp-fadeIn"
+            >
               {messages[messagesIndex]}
             </span>
           </div>
@@ -185,9 +199,9 @@ export const ScholarshipsPage = () => {
               label="Explore Scholarships"
               size="large"
               onClick={() => {
-                const section = document.getElementById('find-scholarship');
+                const section = document.getElementById("find-scholarship");
                 if (section) {
-                  section.scrollIntoView({ behavior: 'smooth' });
+                  section.scrollIntoView({ behavior: "smooth" });
                 }
               }}
             />
@@ -203,9 +217,9 @@ export const ScholarshipsPage = () => {
               programs={
                 data?.map((x) => {
                   // @ts-expect-error ytta
-                  x.endDate = new Date(x.endAt ?? '').getTime();
+                  x.endDate = new Date(x.endAt ?? "").getTime();
                   // @ts-expect-error ytta
-                  x.startDate = new Date(x.startAt ?? '').getTime();
+                  x.startDate = new Date(x.startAt ?? "").getTime();
                   // @ts-expect-error ytta
                   x.initiatorAddress = x.creator;
                   return x;
@@ -230,12 +244,12 @@ export const ScholarshipsPage = () => {
         ref={ref}
         programId={programId}
         isOpen={Boolean(programId)}
-        onClose={() => setProgramId('')}
+        onClose={() => setProgramId("")}
         programAmount={program.totalFund || 0}
         totalParticipant={program.totalRecipients || 1}
         rate={rate || 1}
         programType={program.milestoneType}
-        milestones={JSON.parse(program.milestonesProgram || '[]') || []}
+        milestones={JSON.parse(program.milestonesProgram || "[]") || []}
       />
     </>
   );

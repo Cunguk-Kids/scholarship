@@ -17,8 +17,6 @@ export function CurrentBalance(props: { className?: string }) {
     },
   });
 
-  console.log(balance.data);
-
   const converted = useMemo(
     () => formatUSDC(balance.data ?? 0n),
     [balance.data]

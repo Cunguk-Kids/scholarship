@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { orderBy } from 'lodash';
 import { Button } from './Button';
 import { StatusBadge } from './StatusBadge';
 import Timeline, { type TimelineItem } from './Timeline';
@@ -55,7 +54,7 @@ export const CardVote = ({
       <div className="mt-4">
         <p className="font-bold text-gray-700">Relevant Milestones:</p>
         <ul className="list-disc list-inside ml-4 mt-2">
-          {orderBy(milestones || [], 'blockchainId', 'asc')
+          {milestones?.sort((a,b) => a.blockchainId! - b.blockchainId!)
             ?.filter((item) => {
               const scoreValue = item.score ? parseInt(item.score, 10) : 0;
               return scoreValue > 7;
@@ -104,7 +103,7 @@ export const CardVote = ({
               <p className="text-xs">Milestone Plan:</p>
               <div className="flex flex-col items-start gap-2 self-stretch">
                 <Timeline
-                  items={orderBy(milestones, 'blockchainId', 'asc') || []}
+                  items={milestones?.sort((a, b) => a.blockchainId! - b.blockchainId!) || []}
                   title=""
                   rate={rate}
                 />

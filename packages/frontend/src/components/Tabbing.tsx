@@ -47,7 +47,7 @@ export const Tabbing = <T,>({
   tabs: Tab[];
   type?: string;
   onClickTabbing?: (item: Record<string, T>, activeTab: string) => void;
-  onClickButtonItem?: (id: string, item?: Record<string, T>) => void;
+  onClickButtonItem?: (id: string, item: Record<string, T>) => void;
   currentBalance?: string;
   participants?: any[];
 }) => {
