@@ -5,6 +5,7 @@ import { Loader } from "@/components/fallback/loader";
 import { Dialog } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type MilestoneApprovalItem = NonNullable<
   ReturnType<typeof useGetProgramCreatorProfile>["data"]
@@ -43,6 +44,8 @@ export function MilestoneApproval(props: {
     props.onApprove?.(mile);
   };
 
+  const debouncedProve = useDebounce(loadedProve.data, { delay: 1000 });
+
   return (
     <div className="@container relative grow">
       <Dialog
@@ -50,14 +53,14 @@ export function MilestoneApproval(props: {
         onOpenChange={(value) => !value && setProve(null)}
         className="space-y-4"
       >
-        {loadedProve.isLoading ? (
+        {(loadedProve.isLoading) || !debouncedProve ? (
           <Loader />
         ) : (
           <>
             <h2 className="font-paytone text-4xl">See Proof</h2>
-            <img src={loadedProve.data?.image} className="rounded-2xl h-96 aspect-video object-contain bg-white" />
+            <img src={debouncedProve?.image} className="rounded-2xl h-96 aspect-video object-contain bg-white" />
             <div className="h-20 bg-white rounded-2xl p-4 font-nunito">
-              {loadedProve.data?.description}
+              {debouncedProve?.description}
             </div>
           </>
         )}
@@ -90,7 +93,7 @@ export function MilestoneApproval(props: {
                     <div className="flex flex-col">
                       <p>{mile.student.email}</p>
                       <p className="text-xs border px-2 w-max text-white rounded-full bg-skpurple">
-                        Vote: {mile.student.votes.totalCount}
+                        Vote: {mile.student.votes?.totalCount}
                       </p>
 
                       <div className="@max-[730px]:flex hidden flex-col justify-center">

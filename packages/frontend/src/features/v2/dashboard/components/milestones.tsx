@@ -128,24 +128,6 @@ export function Milestones(props: {
     </div>
   );
 }
-// eslint-disable-next-line react-refresh/only-export-components
-export function useDebounce<T>(
-  value: T,
-  opts: {
-    delay: number;
-  } = { delay: 1_000 }
-) {
-  const [debounceValue, setDebounceValue] = useState(value);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebounceValue(value), opts.delay);
-
-    return () => clearTimeout(timeout);
-  }, [opts.delay, value]);
-
-  return debounceValue;
-}
-
 function UploadDropzone(props: {
   name: string;
   onDrop?: (acceptedFiles: FileList | null) => void;
