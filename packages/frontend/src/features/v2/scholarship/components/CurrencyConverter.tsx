@@ -29,7 +29,7 @@ export const CurrencyConverter = ({
 
   return (
     <>
-      <div className="px-4 flex flex-col gap-y-2 ">
+      <div className="px-4 flex flex-col gap-y-2 overflow-hidden">
         <label className="italic font-bold text-sm">
           {programType === "FIXED"
             ? "The total fund will be evenly divided across all milestones. You cannot manually set the amount per milestone."

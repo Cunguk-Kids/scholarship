@@ -4,10 +4,10 @@ import { createInjection } from "@/util/create-inject";
 import { formatCurrency, formatUSDC, usdToIdr } from "@/util/currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import type { Address } from "viem";
-import { applicantSchema } from "../validations/schemas";
+import { applicantSchema, type ApplicantSchema } from "../validations/schemas";
 import { Input } from "@/components/Input";
 import { UploadDropzone } from "@/components/ui/upload-dropzone";
 import { twMerge } from "tailwind-merge";
@@ -57,10 +57,8 @@ const applicantSubmitPageState = createInjection(
           rejectLabel: "Review Again",
           onAccept: async () => {
             setLoading({ type: "proccessing" });
-            await wait(1_000);
+            await wait(5_000);
             setLoading({ type: "confirmation" });
-            await wait(1_000);
-            setLoading({ type: "success" });
             toast.success("Form Submited!");
           },
           onReject: () => {
@@ -83,9 +81,10 @@ const applicantSubmitPageState = createInjection(
             type: "FIXED",
             description: "",
             amount: String(
-              scholarshipData.totalFund /
-                (scholarshipData.totalRecipients || 1) /
-                1
+              formatUSDC(
+                scholarshipData.totalFund /
+                  (scholarshipData.totalRecipients || 1)
+              ) / 1
             ),
           },
         ],
@@ -411,7 +410,10 @@ const steps = [
         }
       };
 
-      const recalculateMilestones = (milestones: any[], fixed = false) => {
+      const recalculateMilestones = (
+        milestones: ApplicantSchema["milestones"],
+        fixed = false
+      ) => {
         if (!fixed) return milestones;
 
         const totalAmount =

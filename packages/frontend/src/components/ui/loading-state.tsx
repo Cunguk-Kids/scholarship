@@ -1,15 +1,15 @@
 import { appStateInjection } from "@/hooks/inject/app-state";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../Button";
 import { RemoveScroll } from "react-remove-scroll";
 
 function WaitWallet() {
   return (
     <>
-      <h2 className="font-paytone text-2xl">Waiting for Wallet Confirmation</h2>
-      <div className="text-gray-500 w-100">
+      <h2 className="font-paytone text-2xl max-sm:text-xl">Waiting for Wallet Confirmation</h2>
+      <div className="text-gray-500 w-100 max-sm:w-fit max-sm:text-sm max-sm:max-w-60">
         Hold on! We’re waiting for your wallet to approve the transaction.
         Please check your wallet and confirm to continue.
       </div>
@@ -139,14 +139,14 @@ function WaitWallet() {
 function WaitConfirmation() {
   return (
     <>
-      <h2 className="font-paytone text-2xl w-100">
+      <h2 className="font-paytone text-2xl w-100 max-sm:text-xl max-sm:w-fit">
         Processing your scholarship on the blockchain…
       </h2>
-      <div className="text-gray-500 w-100">
+      <div className="text-gray-500 w-100 max-sm:text-sm max-sm:w-fit max-sm:max-w-60">
         This may take a few seconds. Think of it like printing the receipt—only
         smarter and on-chain.
       </div>
-      <div className="w-100 rounded-md h-5 neo-shadow">
+      <div className="w-100 rounded-md h-5 neo-shadow max-sm:w-full">
         <div className="w-full bg-skyellow rounded-md h-5 animate-pulse"></div>
       </div>
     </>
@@ -159,8 +159,8 @@ function Success({ description }: { description?: string }) {
   } = appStateInjection.use();
   return (
     <>
-      <h2 className="font-paytone text-2xl w-100 text-skgreen">Success…</h2>
-      <div className="text-gray-500 w-100">
+      <h2 className="font-paytone text-2xl w-100 text-skgreen max-sm:text-xl max-sm:w-fit">Success…</h2>
+      <div className="text-gray-500 w-100 max-sm:text-sm max-sm:w-fit">
         {description ?? "No message"}
       </div>
       <div className="flex justify-end">
@@ -176,8 +176,8 @@ function Error({ description }: { description?: string }) {
   } = appStateInjection.use();
   return (
     <>
-      <h2 className="font-paytone text-2xl w-100 text-skred">Error…</h2>
-      <div className="text-gray-500 w-100">
+      <h2 className="font-paytone text-2xl w-100 text-skred max-sm:text-xl max-sm:w-fit">Error…</h2>
+      <div className="text-gray-500 w-100 max-sm:text-sm max-sm:w-fit max-sm:max-w-60">
         {description ?? "No message"}
       </div>
       <div className="flex justify-end">
@@ -192,10 +192,10 @@ function AlertConfirmation({ data }: { data: Extract<LState, { type: "alert-conf
     <>
       <div className="flex items-start gap-2">
         <img src="/icons/warning-icon.svg" alt="warning" className="size-9 block mt-0.5" />
-        <h2 className="font-paytone text-3xl w-100">{data.title}</h2>
+        <h2 className="font-paytone text-3xl w-100 max-sm:text-xl max-sm:w-fit">{data.title}</h2>
       </div>
-      <div className="text-black w-100">{data.description}</div>
-      <div className="flex gap-5 justify-end mt-8">
+      <div className="text-black w-100 max-sm:text-sm max-sm:w-fit max-sm:max-w-60">{data.description}</div>
+      <div className="flex gap-5 justify-end mt-8 max-[322px]:flex-col">
         <Button
           wrapperClassName="grow"
           className="w-full bg-skred justify-center"
@@ -252,9 +252,12 @@ export function LoadingState() {
     if (backdropRef.current && modalRef.current) {
       if (isVisible) {
         // Fade in animation
-        gsap.set([backdropRef.current, modalRef.current], {
+        gsap.set([modalRef.current], {
           opacity: 0,
           scale: 0.9,
+        });
+        gsap.set([backdropRef.current], {
+          opacity: 0,
         });
 
         gsap.to(backdropRef.current, {
@@ -275,7 +278,6 @@ export function LoadingState() {
         gsap.to(backdropRef.current, {
           opacity: 0,
           duration: 0.3,
-          scale: 0.9,
           ease: "power2.in",
         });
 

@@ -50,3 +50,5 @@ export const providerSchema = z.object({
 });
 
 export type AmountType = z.infer<typeof AmountTypeSchema>;
+
+export type ApplicantSchema = z.infer<typeof applicantSchema>;
