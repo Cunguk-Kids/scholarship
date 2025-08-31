@@ -11,7 +11,7 @@ function RootComponent() {
   const provider = appStateInjection.init();
   return (
     <appStateInjection.provider value={provider}>
-      <main className="bg-skbw min-h-screen flex flex-col font-nunito w-full overflow-x-hidden isolate">
+      <main id="skoolcein-root" className="bg-skbw min-h-screen flex flex-col font-nunito w-full overflow-x-hidden isolate">
         <Header />
         <ReactFlowProvider>
           <Outlet />

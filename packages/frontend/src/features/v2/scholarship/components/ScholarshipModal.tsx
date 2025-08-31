@@ -24,7 +24,7 @@ export const ScholarshipModal = ({ ref, isOpen, onClose, rate }: Props) => {
         setLoading({ type: 'success' });
       },
       onError: (error) => {
-        setLoading({ type: 'error', message: '' + error.shortMessage });
+        setLoading({ type: 'error', description: '' + error.shortMessage });
       },
     });
   };

@@ -38,6 +38,7 @@ type InputProps = {
   helperText?: string;
   isCurrency?: boolean;
   isDisabled?: boolean;
+  onKeydown?: React.KeyboardEventHandler<HTMLInputElement>;
 };
 
 export const Input = forwardRef<HTMLDivElement | null, InputProps>((param, ref) => {
@@ -58,6 +59,7 @@ export const Input = forwardRef<HTMLDivElement | null, InputProps>((param, ref) 
     helperText,
     onClickNote = () => null,
     isDisabled = false,
+    onKeydown,
   } = param;
   const inputId = 'upload-file';
   const inputClass =
@@ -120,6 +122,7 @@ export const Input = forwardRef<HTMLDivElement | null, InputProps>((param, ref) 
           className={inputClass}
           placeholder={placeholder}
           value={value}
+          onKeyDown={onKeydown}
           onChange={(e) => onChange?.(e.target.value)}
         />
       )}

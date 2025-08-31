@@ -11,6 +11,7 @@ import { useProgramsV2 } from "@/hooks/v2/data/usePrograms";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useTokenRate } from "@/context/token-rate-context";
 import { useSSE } from "@/hooks/v2/use-sse";
+import { useNavigate } from "@tanstack/react-router";
 const messages = [
   "Looking for a fair, transparent way to fund your education?",
   "Ready to turn your funds into real student success stories?",
@@ -103,7 +104,14 @@ export const ScholarshipsPage = () => {
     null
   );
 
+  const navigate = useNavigate();
+
   const handleApplyNow = (id: string, item: Record<string, any>) => {
+    return navigate({
+      to: "/scholarships/$id/applicant-submit",
+      params: { id },
+      search: { scholarshipData: JSON.stringify(item) },
+    });
     setProgramId(id);
 
     console.log(program, "----program----");
@@ -211,8 +219,12 @@ export const ScholarshipsPage = () => {
         </div>
         <div id="find-scholarship" className="px-9 py-12 z-2 max-sm:px-3">
           <div className="inline-flex flex-col justify-center items-start gap-3.5">
-            <h2 className="font-paytone text-5xl max-sm:text-[24px]">Find a Scholarship...</h2>
-            <p className="text-2xl max-sm:text-xs">Your Next Opportunity Starts Here</p>
+            <h2 className="font-paytone text-5xl max-sm:text-[24px]">
+              Find a Scholarship...
+            </h2>
+            <p className="text-2xl max-sm:text-xs">
+              Your Next Opportunity Starts Here
+            </p>
           </div>
           <div className="py-7">
             <Tabbing
@@ -243,7 +255,6 @@ export const ScholarshipsPage = () => {
       />
 
       <ApplicantModal
-        ref={ref}
         programId={programId}
         isOpen={Boolean(programId)}
         onClose={() => setProgramId("")}

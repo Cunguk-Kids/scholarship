@@ -1,8 +1,9 @@
 import { appStateInjection } from "@/hooks/inject/app-state";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "../Button";
+import { RemoveScroll } from "react-remove-scroll";
 
 function WaitWallet() {
   return (
@@ -152,15 +153,15 @@ function WaitConfirmation() {
   );
 }
 
-function Success() {
+function Success({ description }: { description?: string }) {
   const {
-    loading: { loading, setLoading },
+    loading: { setLoading },
   } = appStateInjection.use();
   return (
     <>
       <h2 className="font-paytone text-2xl w-100 text-skgreen">Success…</h2>
       <div className="text-gray-500 w-100">
-        {loading.message ?? "No message"}
+        {description ?? "No message"}
       </div>
       <div className="flex justify-end">
         <Button onClick={() => setLoading({ type: "none" })} label="Close" />
@@ -168,18 +169,45 @@ function Success() {
     </>
   );
 }
-function Error() {
+
+function Error({ description }: { description?: string }) {
   const {
-    loading: { loading, setLoading },
+    loading: { setLoading },
   } = appStateInjection.use();
   return (
     <>
       <h2 className="font-paytone text-2xl w-100 text-skred">Error…</h2>
       <div className="text-gray-500 w-100">
-        {loading.message ?? "No message"}
+        {description ?? "No message"}
       </div>
       <div className="flex justify-end">
         <Button onClick={() => setLoading({ type: "none" })} label="Close" />
+      </div>
+    </>
+  );
+}
+
+function AlertConfirmation({ data }: { data: Extract<LState, { type: "alert-confirmation" }> }) {
+  return (
+    <>
+      <div className="flex items-start gap-2">
+        <img src="/icons/warning-icon.svg" alt="warning" className="size-9 block mt-0.5" />
+        <h2 className="font-paytone text-3xl w-100">{data.title}</h2>
+      </div>
+      <div className="text-black w-100">{data.description}</div>
+      <div className="flex gap-5 justify-end mt-8">
+        <Button
+          wrapperClassName="grow"
+          className="w-full bg-skred justify-center"
+          label={data.rejectLabel || "Reject"}
+          onClick={data.onReject}
+        />
+        <Button
+          wrapperClassName="grow"
+          className="w-full justify-center"
+          label={data.acceptLabel || "Accept"}
+          onClick={data.onAccept}
+        />
       </div>
     </>
   );
@@ -194,14 +222,18 @@ export function LoadingState() {
   const modalRef = useRef(null);
   const [shouldRender, setShouldRender] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [displayContent, setDisplayContent] = useState<LState>({ type: "none" });
 
-  // Handle mount animation
+  // Handle mount animation and content updates
   useEffect(() => {
-    if (loading.type !== "none" && !shouldRender) {
-      setShouldRender(true);
-      setIsVisible(true);
+    if (loading.type !== "none") {
+      setDisplayContent(loading);
+      if (!shouldRender) {
+        setShouldRender(true);
+        setIsVisible(true);
+      }
     }
-  }, [loading.type, shouldRender]);
+  }, [loading, shouldRender]);
 
   // Handle unmount animation
   useEffect(() => {
@@ -210,7 +242,7 @@ export function LoadingState() {
       // Delay the actual unmount until animation completes
       const timer = setTimeout(() => {
         setShouldRender(false);
-      }, 300); // Match animation duration
+      }, 400); // Slightly longer than animation duration to ensure completion
       return () => clearTimeout(timer);
     }
   }, [loading.type, shouldRender]);
@@ -220,23 +252,23 @@ export function LoadingState() {
     if (backdropRef.current && modalRef.current) {
       if (isVisible) {
         // Fade in animation
-        gsap.set([backdropRef.current, modalRef.current], { 
+        gsap.set([backdropRef.current, modalRef.current], {
           opacity: 0,
-          scale: 0.9 
+          scale: 0.9,
         });
-        
+
         gsap.to(backdropRef.current, {
           opacity: 1,
           duration: 0.3,
           scale: 1,
           ease: "power2.out",
         });
-        
+
         gsap.to(modalRef.current, {
           opacity: 1,
           scale: 1,
           duration: 0.3,
-          ease: "back.out(1.7)"
+          ease: "back.out(1.7)",
         });
       } else {
         // Fade out animation
@@ -244,14 +276,14 @@ export function LoadingState() {
           opacity: 0,
           duration: 0.3,
           scale: 0.9,
-          ease: "power2.in"
+          ease: "power2.in",
         });
-        
+
         gsap.to(modalRef.current, {
           opacity: 0,
           scale: 0.9,
           duration: 0.3,
-          ease: "back.in(1.7)"
+          ease: "back.in(1.7)",
         });
       }
     }
@@ -260,20 +292,26 @@ export function LoadingState() {
   return (
     shouldRender &&
     createPortal(
-      <div ref={backdropRef} className="backdrop-blur-sm inset-0 fixed z-10 grid place-content-center loading-state-back h-screen w-screen">
-        <div ref={modalRef} className="bg-white rounded-2xl p-6 space-y-4 neo-shadow loading-state">
-          {loading.type === "proccessing" ? (
-            <WaitWallet />
-          ) : loading.type === "confirmation" ? (
-            <WaitConfirmation />
-          ) : loading.type === "success" ? (
-            <Success />
-          ) : (
-            <Error />
-          )}
+      <RemoveScroll>
+        <div
+          ref={backdropRef}
+          className="backdrop-blur-sm inset-0 fixed z-10 grid place-content-center loading-state-back h-screen w-screen"
+        >
+          <div
+            ref={modalRef}
+            className="bg-white rounded-2xl p-6 space-y-4 neo-shadow loading-state"
+          >
+            {displayContent.type === "success" && <Success description={displayContent.description} />}
+            {displayContent.type === "error" && <Error description={displayContent.description} />}
+            {displayContent.type === "alert-confirmation" && <AlertConfirmation data={displayContent} />}
+            {displayContent.type === "confirmation" && <WaitConfirmation />}
+            {displayContent.type === "proccessing" && <WaitWallet />}
+          </div>
         </div>
-      </div>,
+      </RemoveScroll>,
       document.body
     )
   );
 }
+
+type LState = ReturnType<typeof appStateInjection.use>["loading"]["loading"];

@@ -1,8 +1,7 @@
 import { Button } from "@/components/Button";
 import { Loader } from "@/components/fallback/loader";
+import { UploadDropzone } from "@/components/ui/upload-dropzone";
 import { formatCurrency, formatUSDC } from "@/util/currency";
-import { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
 
 const types = {
   disbursed: "bg-skgreen border-2 border-green-500",
@@ -104,7 +103,21 @@ export function Milestones(props: {
                       />
                     </label>
                     <div className="h-px bg-black/10"></div>
-                    <UploadDropzone name="proveImage" />
+                    <UploadDropzone
+                      name="proveImage"
+                      title="Upload Proof"
+                      subtitle="Any receipts, screenshots, or assignments that show your milestone is done."
+                      upContent={
+                        <div className="flex items-center gap-2">
+                          <img
+                            alt="upload-square"
+                            src="/icons/upload-square.svg"
+                          />
+                          Upload invoice, receipts, or a short explanation of
+                          how the fund was used.
+                        </div>
+                      }
+                    />
                   </div>
                   <div className="self-end">
                     <Button type="submit" label="Submit" />
@@ -126,93 +139,5 @@ export function Milestones(props: {
         )}
       </div>
     </div>
-  );
-}
-function UploadDropzone(props: {
-  name: string;
-  onDrop?: (acceptedFiles: FileList | null) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [, setIsOnDrag] = useState(false);
-  const [files, setFiles] = useState<FileList | null>(null);
-  const rect = useRef<DOMRect>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const handleOnDrop: typeof props.onDrop = (files) => {
-    if (files && files.length > 1) {
-      return toast.error("You can't upload more than one file");
-    }
-    if (files) {
-      for (const file of files) {
-        if (!file.type.includes("image/")) {
-          return toast.error("You can only upload images");
-        }
-      }
-    }
-    props.onDrop?.(files);
-    setFiles(files);
-    inputRef.current!.files = files;
-  };
-
-  useEffect(() => {
-    rect.current = ref.current?.getBoundingClientRect() ?? null;
-  }, []);
-  return (
-    <label
-      onDragOver={(e) => {
-        e.preventDefault();
-        setIsOnDrag(true);
-      }}
-      onDragLeave={(e) => {
-        e.preventDefault();
-        setIsOnDrag(false);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsOnDrag(false);
-        handleOnDrop(e.dataTransfer.files);
-      }}
-      className="flex flex-col grow gap-4"
-    >
-      <input
-        required
-        name={props.name}
-        ref={inputRef}
-        onChange={(event) => {
-          handleOnDrop(event.target.files);
-        }}
-        type="file"
-        accept="image/*"
-        hidden
-      />
-      <div className="flex items-center gap-2">
-        <img alt="upload-square" src="/icons/upload-square.svg" />
-        Upload invoice, receipts, or a short explanation of how the fund was
-        used.
-      </div>
-      {files && files.length > 0 ? (
-        <img
-          src={URL.createObjectURL(files[0])}
-          alt={files[0].name}
-          className="object-contain rounded-xl shadow-box"
-          style={{
-            width: rect.current?.width,
-            height: rect.current?.height,
-          }}
-        />
-      ) : (
-        <div
-          ref={ref}
-          className="flex flex-col items-center grow justify-center"
-        >
-          <img alt="upload-cloud" src="/icons/upload-cloud.svg" />
-          <div className="text-lg font-semibold">Upload Proof</div>
-          <div className="text-gray-500 text-xs max-w-90 text-center">
-            Any receipts, screenshots, or assignments that show your milestone
-            is done.
-          </div>
-        </div>
-      )}
-    </label>
   );
 }

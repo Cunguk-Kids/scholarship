@@ -10,18 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VoteRouteImport } from './routes/vote'
-import { Route as ScholarshipsRouteImport } from './routes/scholarships'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ScholarshipsIndexRouteImport } from './routes/scholarships/index'
+import { Route as ScholarshipsIdApplicantSubmitRouteImport } from './routes/scholarships/$id.applicant-submit'
 
 const VoteRoute = VoteRouteImport.update({
   id: '/vote',
   path: '/vote',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ScholarshipsRoute = ScholarshipsRouteImport.update({
-  id: '/scholarships',
-  path: '/scholarships',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -34,39 +30,70 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScholarshipsIndexRoute = ScholarshipsIndexRouteImport.update({
+  id: '/scholarships/',
+  path: '/scholarships/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScholarshipsIdApplicantSubmitRoute =
+  ScholarshipsIdApplicantSubmitRouteImport.update({
+    id: '/scholarships/$id/applicant-submit',
+    path: '/scholarships/$id/applicant-submit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/scholarships': typeof ScholarshipsRoute
   '/vote': typeof VoteRoute
+  '/scholarships': typeof ScholarshipsIndexRoute
+  '/scholarships/$id/applicant-submit': typeof ScholarshipsIdApplicantSubmitRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/scholarships': typeof ScholarshipsRoute
   '/vote': typeof VoteRoute
+  '/scholarships': typeof ScholarshipsIndexRoute
+  '/scholarships/$id/applicant-submit': typeof ScholarshipsIdApplicantSubmitRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/scholarships': typeof ScholarshipsRoute
   '/vote': typeof VoteRoute
+  '/scholarships/': typeof ScholarshipsIndexRoute
+  '/scholarships/$id/applicant-submit': typeof ScholarshipsIdApplicantSubmitRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/scholarships' | '/vote'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/vote'
+    | '/scholarships'
+    | '/scholarships/$id/applicant-submit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/scholarships' | '/vote'
-  id: '__root__' | '/' | '/dashboard' | '/scholarships' | '/vote'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/vote'
+    | '/scholarships'
+    | '/scholarships/$id/applicant-submit'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/vote'
+    | '/scholarships/'
+    | '/scholarships/$id/applicant-submit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
-  ScholarshipsRoute: typeof ScholarshipsRoute
   VoteRoute: typeof VoteRoute
+  ScholarshipsIndexRoute: typeof ScholarshipsIndexRoute
+  ScholarshipsIdApplicantSubmitRoute: typeof ScholarshipsIdApplicantSubmitRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,13 +103,6 @@ declare module '@tanstack/react-router' {
       path: '/vote'
       fullPath: '/vote'
       preLoaderRoute: typeof VoteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scholarships': {
-      id: '/scholarships'
-      path: '/scholarships'
-      fullPath: '/scholarships'
-      preLoaderRoute: typeof ScholarshipsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -99,14 +119,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scholarships/': {
+      id: '/scholarships/'
+      path: '/scholarships'
+      fullPath: '/scholarships'
+      preLoaderRoute: typeof ScholarshipsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scholarships/$id/applicant-submit': {
+      id: '/scholarships/$id/applicant-submit'
+      path: '/scholarships/$id/applicant-submit'
+      fullPath: '/scholarships/$id/applicant-submit'
+      preLoaderRoute: typeof ScholarshipsIdApplicantSubmitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
-  ScholarshipsRoute: ScholarshipsRoute,
   VoteRoute: VoteRoute,
+  ScholarshipsIndexRoute: ScholarshipsIndexRoute,
+  ScholarshipsIdApplicantSubmitRoute: ScholarshipsIdApplicantSubmitRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
