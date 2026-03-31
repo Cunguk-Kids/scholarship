@@ -1,4 +1,4 @@
-type StatusType = "active" | "vote" | "soon";
+type StatusType = "active" | "vote" | "soon" | "pddikti" | "disbursed";
 
 interface StatusBadgeProps {
   status?: string;
@@ -10,7 +10,6 @@ const STATUS_STYLES: Record<StatusType, { bg: string; label: string }> = {
   pddikti: { bg: "bg-black", label: "PDDIKTI Verified" },
   vote: { bg: "bg-skred", label: "On Vote" },
   soon: { bg: "bg-skgreen", label: "Soon" },
-  // @ts-expect-error ytta
   disbursed: { bg: "bg-skgreen", label: "Disbursed" },
 };
 
