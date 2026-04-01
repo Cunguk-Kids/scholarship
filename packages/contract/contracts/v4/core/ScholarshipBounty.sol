@@ -230,8 +230,19 @@ contract ScholarshipBounty is
         bh.activeDisputeId                         = disputeId;
         activeDisputeForScholar[scholar][programId] = disputeId;
 
-        // Freeze the relevant milestone if this is a milestone-level dispute
+        // Freeze the relevant milestone if this is a milestone-level dispute.
+        // Validate that the milestone actually belongs to this scholar — prevents
+        // a BH from accidentally (or maliciously) freezing another scholar's milestone.
         if (milestoneId != 0) {
+            ScholarshipTypes.Milestone memory targetMilestone = core.getMilestone(milestoneId);
+            require(
+                targetMilestone.scholar == scholar,
+                "ScholarshipBounty: milestone does not belong to this scholar"
+            );
+            require(
+                targetMilestone.programId == programId,
+                "ScholarshipBounty: milestone not in this program"
+            );
             core.freezeMilestone(milestoneId);
         }
 
@@ -480,7 +491,7 @@ contract ScholarshipBounty is
         external onlyRole(DEFAULT_ADMIN_ROLE)
     {
         uint256 bal = usdc.balanceOf(address(this));
-        if (bal == 0) revert InsufficientDonation();
+        require(bal > 0, "ScholarshipBounty: nothing to withdraw");
         usdc.safeTransfer(recipient, bal);
         emit ForfeitedStakesWithdrawn(recipient, bal);
     }
@@ -489,6 +500,3 @@ contract ScholarshipBounty is
 
     function _authorizeUpgrade(address) internal override onlyRole(UPGRADER_ROLE) {}
 }
-
-// Inline import alias for error reuse
-error InsufficientDonation();

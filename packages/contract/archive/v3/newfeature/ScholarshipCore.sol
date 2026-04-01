@@ -7,31 +7,43 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ScholarshipTypes} from "../libraries/ScholarshipTypes.sol";
+
+import {ScholarshipTypes}     from "../libraries/ScholarshipTypes.sol";
 import {IScholarshipTreasury} from "../interfaces/IScholarship.sol";
 import {IScholarshipReputation} from "../interfaces/IScholarship.sol";
-import {ScholarshipTreasury} from "../finance/ScholarshipTreasury.sol";
+import {ScholarshipTreasury}  from "../finance/ScholarshipTreasury.sol";
 import {ScholarshipReputation} from "../tokens/ScholarshipReputation.sol";
 import {DonorNFT, StudentNFT} from "../tokens/ScholarshipNFTs.sol";
 
 /**
- * @title ScholarshipCore
- * @dev Central hub for the scholarship protocol.
+ * @title  ScholarshipCore
+ * @author Scholarship Protocol
+ * @notice Central hub of the scholarship protocol.
  *
- *  HANDLES:
- *  - Program creation and lifecycle management
- *  - Student application and screening (BY_COMMITTEE + BY_STUDENT)
- *  - Token-weighted voting with reputation integration
- *  - Confidence stake management
- *  - Milestone submission and auto-release
- *  - Scholar status and freeze tracking
- *  - NFT minting for donors and graduates
+ * @dev    HANDLES (in lifecycle order)
+ *         Phase 0 – Program creation and configuration
+ *         Phase 1 – Donor contributions (USDC → voting power)
+ *         Phase 2 – Student applications + two-path screening
+ *                   PATH A (BY_COMMITTEE): committee members submit scores
+ *                   PATH B (BY_STUDENT):   self-declare + 7-day dispute window
+ *         Phase 3 – Token-weighted voting with confidence-stake option
+ *         Phase 4 – Milestone execution: submit proof → dispute window → auto-release
+ *         Phase 6 – Completion: scholar NFT + donor yield distribution
  *
- *  DELEGATES TO:
- *  - ScholarshipTreasury   → all fund movements
- *  - ScholarshipBounty     → dispute resolution
- *  - ScholarshipReputation → REP token minting/burning
- *  - CommitteeGovernance   → committee score submission
+ *         DELEGATES TO
+ *         ScholarshipTreasury  – all USDC custody and movement
+ *         ScholarshipBounty    – dispute lifecycle (via BOUNTY_ROLE callbacks)
+ *         ScholarshipReputation – REP minting / burning / voting-power locks
+ *         CommitteeGovernance  – score submission and dispute voting
+ *
+ * UPGRADEABILITY
+ *   UUPS — only UPGRADER_ROLE may authorise an upgrade.
+ *
+ * ROLES
+ *   DEFAULT_ADMIN_ROLE – governance / multisig
+ *   UPGRADER_ROLE      – proxy admin
+ *   BOUNTY_ROLE        – ScholarshipBounty (freeze/release/slash callbacks)
+ *   COMMITTEE_ROLE     – CommitteeGovernance (score submission)
  */
 contract ScholarshipCore is
     Initializable,
@@ -40,72 +52,87 @@ contract ScholarshipCore is
     ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20;
-    using ScholarshipTypes for *;
+
+    // ── Roles ────────────────────────────────────────────────────────────────
 
     bytes32 public constant UPGRADER_ROLE  = keccak256("UPGRADER_ROLE");
-    bytes32 public constant BOUNTY_ROLE    = keccak256("BOUNTY_ROLE");   // ScholarshipBounty
-    bytes32 public constant COMMITTEE_ROLE = keccak256("COMMITTEE_ROLE");// CommitteeGovernance
+    bytes32 public constant BOUNTY_ROLE    = keccak256("BOUNTY_ROLE");
+    bytes32 public constant COMMITTEE_ROLE = keccak256("COMMITTEE_ROLE");
+
+    string  public constant VERSION        = "4.0.0";
 
     // ── External contracts ───────────────────────────────────────────────────
 
-    IERC20                  public usdc;
-    ScholarshipTreasury     public treasury;
-    ScholarshipReputation   public reputation;
-    DonorNFT                public donorNFT;
-    StudentNFT              public studentNFT;
+    IERC20               public usdc;
+    ScholarshipTreasury  public treasury;
+    ScholarshipReputation public reputation;
+    DonorNFT             public donorNFT;
+    StudentNFT           public studentNFT;
 
     // ── Storage ──────────────────────────────────────────────────────────────
 
     uint256 private _nextProgramId;
     uint256 private _nextMilestoneId;
 
+    // programId → Program
     mapping(uint256 => ScholarshipTypes.Program)  public programs;
+    // milestoneId → Milestone
     mapping(uint256 => ScholarshipTypes.Milestone) public milestones;
 
     // programId → applicant address → Applicant
     mapping(uint256 => mapping(address => ScholarshipTypes.Applicant)) public applicants;
-    // programId → list of all applicant addresses
+    // programId → ordered list of all applicant addresses
     mapping(uint256 => address[]) private _programApplicants;
-    // programId → shortlisted applicant addresses
+    // programId → shortlisted addresses
     mapping(uint256 => address[]) private _shortlist;
 
-    // Scholar records: wallet → programId → Scholar
+    // scholar wallet → programId → Scholar
     mapping(address => mapping(uint256 => ScholarshipTypes.Scholar)) public scholars;
 
-    // Global student status (across all programs)
+    // Global student status (spans ALL programs)
     mapping(address => ScholarshipTypes.StudentStatus) public globalStudentStatus;
-    mapping(address => uint256) public globalFreezeUntil;
+    mapping(address => uint256)                        public globalFreezeUntil;
 
-    // Score components: programId → applicant → ScoreComponents
+    // Screening scores: programId → applicant → ScoreComponents
     mapping(uint256 => mapping(address => ScholarshipTypes.ScoreComponents)) public scoreComponents;
 
     // Voter info: programId → voter → VoterInfo
+    // VoterInfo.votedFor tracks which scholar a voter backed (used for targeted REP rewards)
     mapping(uint256 => mapping(address => ScholarshipTypes.VoterInfo)) public voterInfo;
 
     // Retry tracking: programId → student → retry count
     mapping(uint256 => mapping(address => uint8)) public retryCount;
 
-    // Milestone ownership: milestoneId → scholar address
+    // milestoneId → scholar address (for ownership checks)
     mapping(uint256 => address) public milestoneOwner;
+
+    // BY_COMMITTEE programs → programId → assigned committee contract
+    mapping(uint256 => address) public programCommittee;
 
     // ── Events ───────────────────────────────────────────────────────────────
 
     event ProgramCreated(uint256 indexed programId, address indexed initiator, string metadataCID);
     event ProgramStatusChanged(uint256 indexed programId, ScholarshipTypes.ProgramStatus newStatus);
-    event StudentApplied(uint256 indexed programId, address indexed student);
+    event CommitteeAssigned(uint256 indexed programId, address committeeContract);
+
+    event DonationReceived(uint256 indexed programId, address indexed donor, uint256 grossAmount, uint256 netAmount);
+    event StudentApplied(uint256 indexed programId, address indexed student, uint8 retryCount);
+    event ScoreSubmitted(uint256 indexed programId, address indexed student, uint256 totalScore, address scoredBy);
     event StudentShortlisted(uint256 indexed programId, address indexed student, uint256 score);
-    event StudentScreenedOut(uint256 indexed programId, address indexed student, uint256 score);
-    event ScoreSubmitted(uint256 indexed programId, address indexed student, uint256 totalScore);
+    event StudentScreenedOut(uint256 indexed programId, address indexed student, uint256 score, bool locked);
+
     event VoteCast(uint256 indexed programId, address indexed voter, address indexed candidate, uint256 weight);
     event ConfidenceStaked(uint256 indexed programId, address indexed voter, address indexed scholar, uint256 amount);
     event ScholarSelected(uint256 indexed programId, address indexed scholar);
+
     event MilestoneSubmitted(uint256 indexed milestoneId, address indexed scholar, string proofCID);
     event MilestoneCompleted(uint256 indexed milestoneId, address indexed scholar, uint256 amount);
     event MilestoneFrozen(uint256 indexed milestoneId);
     event MilestoneReleased(uint256 indexed milestoneId);
+
     event ScholarSlashed(address indexed scholar, uint256 indexed programId, ScholarshipTypes.DisputeType dtype);
     event ScholarCompleted(uint256 indexed programId, address indexed scholar);
-    event DonationReceived(uint256 indexed programId, address indexed donor, uint256 amount);
+    event ProgramCompleted(uint256 indexed programId);
     event ProgramCancelled(uint256 indexed programId);
 
     // ── Errors ───────────────────────────────────────────────────────────────
@@ -120,19 +147,30 @@ contract ScholarshipCore is
     error InvalidScoreWeights();
     error InvalidCandidateRange();
     error InvalidSlashDistribution();
+    error InvalidTimeline();
+    error InvalidDisputeWindow();
+    error InsufficientFund();
     error InsufficientDonation();
     error AlreadyDonated();
     error VotingPowerLocked();
     error InsufficientVotingPower();
     error MilestoneNotFound();
-    error MilestoneNotSubmitted();
     error DisputeWindowStillOpen();
+    error MilestoneNotInDisputeWindow();
     error NotMilestoneOwner();
     error ScholarNotActive();
     error QuorumNotMet();
     error CandidateNotShortlisted();
     error ConfidenceStakeAlreadyExists();
-    error InvalidMilestoneAmount();
+    error InvalidSortOrder();
+    error TargetWinnersExceedsMax();
+    error OnlyInitiator();
+    error TooEarly();
+    error VotingNotEnded();
+    error ApplicantListIncomplete();
+    error ConfidenceStakeExceedsDonation();
+    error MustVoteBeforeStaking();
+    error ConfidenceStakeMismatch();
 
     // ── Modifiers ────────────────────────────────────────────────────────────
 
@@ -147,11 +185,26 @@ contract ScholarshipCore is
         _;
     }
 
-    // ── Initializer ──────────────────────────────────────────────────────────
+    modifier onlyInitiator(uint256 programId) {
+        if (msg.sender != programs[programId].initiator) revert OnlyInitiator();
+        _;
+    }
+
+    // ── Constructor / Initializer ────────────────────────────────────────────
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() { _disableInitializers(); }
 
+    /**
+     * @notice Proxy initializer. Deploy then call this once via the proxy.
+     *
+     * @param admin        Multisig or DAO address — owns all roles initially.
+     * @param _usdc        USDC contract address.
+     * @param _treasury    Deployed ScholarshipTreasury proxy address.
+     * @param _reputation  Deployed ScholarshipReputation proxy address.
+     * @param _donorNFT    Deployed DonorNFT address.
+     * @param _studentNFT  Deployed StudentNFT address.
+     */
     function initialize(
         address admin,
         address _usdc,
@@ -159,7 +212,7 @@ contract ScholarshipCore is
         address _reputation,
         address _donorNFT,
         address _studentNFT
-    ) public initializer {
+    ) external initializer {
         __AccessControl_init();
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
@@ -174,13 +227,28 @@ contract ScholarshipCore is
         studentNFT = StudentNFT(_studentNFT);
     }
 
-    // ════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════
     // PHASE 0 — PROGRAM CREATION
-    // ════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * @dev Create a new scholarship program.
-     *      Initiator must approve `totalFund` USDC to this contract first.
+     * @notice Create a new scholarship programme and lock the grant fund.
+     *
+     * @dev    Initiator must approve `totalFund` USDC to this contract
+     *         before calling.  Fund is immediately forwarded to the treasury.
+     *
+     * @param metadataCID           IPFS CID of programme description + essay questions.
+     * @param educationLevel        Target education level.
+     * @param screeningMode         BY_COMMITTEE or BY_STUDENT.
+     * @param weights               Score component weights (must sum to 100).
+     * @param slashDist             Slash distribution (must sum to 100).
+     * @param maxCandidates         Shortlist size (5–20).
+     * @param targetWinners         Number of scholars to select.
+     * @param timeline              [appStart, appEnd, voteStart, voteEnd] unix timestamps.
+     * @param milestoneDisputeWindow Seconds a milestone stays in dispute window (7–14 days).
+     * @param totalFund             USDC to lock (6-decimal).
+     * @param committeeContract     For BY_COMMITTEE mode: address of CommitteeGovernance.
+     *                              Pass address(0) for BY_STUDENT programmes.
      */
     function createProgram(
         string calldata metadataCID,
@@ -190,11 +258,14 @@ contract ScholarshipCore is
         ScholarshipTypes.SlashDistribution calldata slashDist,
         uint8   maxCandidates,
         uint8   targetWinners,
-        uint256[4] calldata timeline, // [appStart, appEnd, voteStart, voteEnd]
+        uint256[4] calldata timeline,
         uint256 milestoneDisputeWindow,
-        uint256 totalFund
+        uint256 totalFund,
+        address committeeContract
     ) external nonReentrant {
-        // Validate weights
+        // ── Validation ───────────────────────────────────────────────
+
+        // Weights must sum to 100
         uint256 wSum = uint256(weights.academicWeight)
             + weights.incomeWeight
             + weights.essayWeight
@@ -202,27 +273,41 @@ contract ScholarshipCore is
             + weights.extracurricWeight;
         if (wSum != 100) revert InvalidScoreWeights();
 
-        // Validate slash distribution
+        // Slash distribution must sum to 100
         uint256 sSum = uint256(slashDist.bountyHunterPercent)
             + slashDist.treasuryPercent
             + slashDist.protocolPercent;
         if (sSum != 100) revert InvalidSlashDistribution();
 
-        // Validate candidates range
+        // Candidate range
         if (maxCandidates < ScholarshipTypes.MIN_CANDIDATES ||
             maxCandidates > ScholarshipTypes.MAX_CANDIDATES)
             revert InvalidCandidateRange();
 
-        // Validate dispute window (7–14 days)
-        if (milestoneDisputeWindow < 7 days || milestoneDisputeWindow > 14 days)
-            milestoneDisputeWindow = 7 days;
+        if (targetWinners == 0 || targetWinners > maxCandidates)
+            revert TargetWinnersExceedsMax();
 
-        // Pull total fund from initiator
+        // Timeline must be coherent
+        if (timeline[0] >= timeline[1] || timeline[2] >= timeline[3] ||
+            timeline[1] >= timeline[2])
+            revert InvalidTimeline();
+
+        // Clamp dispute window to [7, 14] days
+        uint256 disputeWindow = milestoneDisputeWindow;
+        if (disputeWindow < 7 days || disputeWindow > 14 days)
+            disputeWindow = 7 days;
+
+        if (totalFund == 0) revert InsufficientFund();
+
+        // ── Pull fund ───────────────────────────────────────────────
         usdc.safeTransferFrom(msg.sender, address(treasury), totalFund);
-        treasury.depositProgramFund(++_nextProgramId, totalFund);
 
-        programs[_nextProgramId] = ScholarshipTypes.Program({
-            id:                     _nextProgramId,
+        uint256 programId = ++_nextProgramId;
+        treasury.depositProgramFund(programId, totalFund);
+
+        // ── Write program ───────────────────────────────────────────
+        programs[programId] = ScholarshipTypes.Program({
+            id:                     programId,
             initiator:              msg.sender,
             metadataCID:            metadataCID,
             educationLevel:         educationLevel,
@@ -236,7 +321,7 @@ contract ScholarshipCore is
             applicationEnd:         timeline[1],
             votingStart:            timeline[2],
             votingEnd:              timeline[3],
-            milestoneDisputeWindow: milestoneDisputeWindow,
+            milestoneDisputeWindow: disputeWindow,
             totalFund:              totalFund,
             allocatedFund:          0,
             spentFund:              0,
@@ -246,55 +331,98 @@ contract ScholarshipCore is
             activeScholarCount:     0
         });
 
-        emit ProgramCreated(_nextProgramId, msg.sender, metadataCID);
+        if (committeeContract != address(0)) {
+            programCommittee[programId] = committeeContract;
+            emit CommitteeAssigned(programId, committeeContract);
+        }
+
+        emit ProgramCreated(programId, msg.sender, metadataCID);
     }
 
-    // ════════════════════════════════════════════════════════════════
-    // PHASE 1 — DONATIONS
-    // ════════════════════════════════════════════════════════════════
+    // ── Status transitions ────────────────────────────────────────────────────
 
     /**
-     * @dev Donors contribute USDC to a program during APPLICATION_OPEN phase.
-     *      Voting power = net donated amount (token-weighted).
-     *      One donation per address (anti-Sybil).
+     * @notice Open applications. Transitions CREATED → APPLICATION_OPEN.
+     */
+    function openApplications(uint256 programId)
+        external programExists(programId) onlyInitiator(programId)
+    {
+        _requireStatus(programId, ScholarshipTypes.ProgramStatus.CREATED);
+        if (block.timestamp < programs[programId].applicationStart) revert TooEarly();
+        programs[programId].status = ScholarshipTypes.ProgramStatus.APPLICATION_OPEN;
+        emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN);
+    }
+
+    /**
+     * @notice Close applications and enter screening. APPLICATION_OPEN → SCREENING.
+     */
+    function openScreening(uint256 programId)
+        external programExists(programId) onlyInitiator(programId)
+    {
+        _requireStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN);
+        if (block.timestamp < programs[programId].applicationEnd) revert TooEarly();
+        programs[programId].status = ScholarshipTypes.ProgramStatus.SCREENING;
+        emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.SCREENING);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PHASE 1 — DONATIONS
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * @notice Donor contributes USDC to a programme during APPLICATION_OPEN phase.
+     *
+     *         Voting power = net donated amount (gross minus protocol fee).
+     *         One donation per address (anti-Sybil — prevents vote-splitting).
+     *         DonorNFT minted immediately as proof of contribution.
+     *
+     * @param programId      Target programme.
+     * @param grossAmount    USDC to send (must be ≥ MIN_DONATION).
+     * @param nftMetadataURI IPFS URI for the DonorNFT metadata.
      */
     function donate(
         uint256 programId,
-        uint256 amount,
+        uint256 grossAmount,
         string calldata nftMetadataURI
-    ) external nonReentrant programExists(programId) {
-        ScholarshipTypes.Program storage prog = programs[programId];
-        if (prog.status != ScholarshipTypes.ProgramStatus.APPLICATION_OPEN)
-            revert InvalidProgramStatus(ScholarshipTypes.ProgramStatus.APPLICATION_OPEN, prog.status);
-
-        if (amount < ScholarshipTypes.MIN_DONATION) revert InsufficientDonation();
+    ) external nonReentrant programExists(programId)
+      inStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN)
+    {
+        if (grossAmount < ScholarshipTypes.MIN_DONATION) revert InsufficientDonation();
 
         ScholarshipTypes.VoterInfo storage voter = voterInfo[programId][msg.sender];
         if (voter.donatedAmount > 0) revert AlreadyDonated();
 
-        // Pull USDC from donor
-        usdc.safeTransferFrom(msg.sender, address(treasury), amount);
+        usdc.safeTransferFrom(msg.sender, address(treasury), grossAmount);
 
-        uint256 netAmount = amount - ScholarshipTypes.TRANSACTION_FEE;
-        voter.donatedAmount         = netAmount;
-        voter.remainingVotingPower  = netAmount;
+        uint256 netAmount = grossAmount - ScholarshipTypes.TRANSACTION_FEE;
+        voter.donatedAmount        = netAmount;
+        voter.remainingVotingPower = netAmount;
 
-        // Record in treasury for yield distribution
         treasury.recordDonation(programId, msg.sender, netAmount);
-
-        // Mint Donor NFT
         donorNFT.mint(msg.sender, programId, nftMetadataURI);
 
-        emit DonationReceived(programId, msg.sender, amount);
+        emit DonationReceived(programId, msg.sender, grossAmount, netAmount);
     }
 
-    // ════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════
     // PHASE 2 — APPLICATION & SCREENING
-    // ════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * @dev Student submits application.
-     *      All document hashes are stored on-chain; actual documents on IPFS.
+     * @notice Student submits a scholarship application.
+     *
+     *         All heavy documents remain on IPFS; only CIDs stored on-chain.
+     *         In BY_STUDENT mode, self-declared scores are set immediately and
+     *         enter a 7-day optimistic challenge window.
+     *
+     * @param programId                  Target programme.
+     * @param profileCID                 IPFS: identity, photo, bio.
+     * @param documentCID                IPFS: transcripts, income proof.
+     * @param essayCID                   IPFS: essay answers.
+     * @param recommendCID               IPFS: recommendation letter.
+     * @param selfDeclaredAcademicScore  0–100 (ignored in BY_COMMITTEE mode).
+     * @param selfDeclaredIncomeScore    0–100 (ignored in BY_COMMITTEE mode).
+     * @param selfDeclaredRecommendScore 0–100 (ignored in BY_COMMITTEE mode).
      */
     function applyToProgram(
         uint256 programId,
@@ -302,30 +430,29 @@ contract ScholarshipCore is
         string calldata documentCID,
         string calldata essayCID,
         string calldata recommendCID,
-        uint256 selfDeclaredAcademicScore, // Used only in BY_STUDENT mode (0–100)
-        uint256 selfDeclaredIncomeScore,   // Used only in BY_STUDENT mode (0–100)
-        uint256 selfDeclaredRecommendScore // Used only in BY_STUDENT mode (0–100)
-    ) external nonReentrant programExists(programId) {
+        uint256 selfDeclaredAcademicScore,
+        uint256 selfDeclaredIncomeScore,
+        uint256 selfDeclaredRecommendScore
+    ) external nonReentrant programExists(programId)
+      inStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN)
+    {
         ScholarshipTypes.Program storage prog = programs[programId];
-        if (prog.status != ScholarshipTypes.ProgramStatus.APPLICATION_OPEN)
-            revert InvalidProgramStatus(ScholarshipTypes.ProgramStatus.APPLICATION_OPEN, prog.status);
 
-        // Global eligibility check
+        // Eligibility checks
         _requireStudentEligible(msg.sender);
-
-        // Cannot apply to own program
-        if (msg.sender == prog.initiator) revert CannotApplyToOwnProgram();
-
-        // Max retries per program
+        if (msg.sender == prog.initiator)             revert CannotApplyToOwnProgram();
         if (retryCount[programId][msg.sender] >= ScholarshipTypes.MAX_RETRY)
             revert MaxRetriesExceeded();
 
-        // Cannot re-apply if already shortlisted or locked
-        ScholarshipTypes.Applicant storage existing = applicants[programId][msg.sender];
-        if (existing.status == ScholarshipTypes.ApplicationStatus.SHORTLISTED)
+        // Cannot re-apply once shortlisted
+        ScholarshipTypes.ApplicationStatus existingStatus =
+            applicants[programId][msg.sender].status;
+        if (existingStatus == ScholarshipTypes.ApplicationStatus.SHORTLISTED)
             revert AlreadyApplied();
+        if (existingStatus == ScholarshipTypes.ApplicationStatus.LOCKED)
+            revert MaxRetriesExceeded();
 
-        retryCount[programId][msg.sender]++;
+        uint8 retry = ++retryCount[programId][msg.sender];
 
         applicants[programId][msg.sender] = ScholarshipTypes.Applicant({
             programId:      programId,
@@ -335,17 +462,21 @@ contract ScholarshipCore is
             documentCID:    documentCID,
             essayCID:       essayCID,
             recommendCID:   recommendCID,
+            screeningScore: 0,
             totalScore:     0,
+            voteScore:      0,
             scoreTimestamp: 0,
-            retryCount:     retryCount[programId][msg.sender],
+            retryCount:     retry,
             scoreDisputed:  false
         });
 
-        _programApplicants[programId].push(msg.sender);
-        prog.applicantCount++;
+        // Only push to list on first application
+        if (retry == 1) {
+            _programApplicants[programId].push(msg.sender);
+            prog.applicantCount++;
+        }
 
-        // BY_STUDENT: optimistically set self-declared score
-        // 7-day dispute window will allow anyone to challenge
+        // BY_STUDENT: optimistic self-report — dispute window handled off-chain
         if (prog.screeningMode == ScholarshipTypes.ScreeningMode.BY_STUDENT) {
             _setScore(
                 programId,
@@ -357,15 +488,21 @@ contract ScholarshipCore is
             );
         }
 
-        emit StudentApplied(programId, msg.sender);
+        emit StudentApplied(programId, msg.sender, retry);
     }
 
     // ── Committee Scoring ────────────────────────────────────────────────────
 
     /**
-     * @dev Committee member submits score for an applicant.
-     *      Only valid in BY_COMMITTEE mode.
-     *      Called via CommitteeGovernance contract.
+     * @notice Called by CommitteeGovernance after averaging multiple member scores.
+     *         Only valid in BY_COMMITTEE mode.
+     *
+     * @param programId        Target programme.
+     * @param applicant        Applicant wallet.
+     * @param academicScore    Averaged academic score (0–100).
+     * @param incomeScore      Averaged income score (0–100).
+     * @param recommendScore   Averaged recommendation score (0–100).
+     * @param committeeAddress CommitteeGovernance contract address for audit.
      */
     function submitCommitteeScore(
         uint256 programId,
@@ -378,11 +515,16 @@ contract ScholarshipCore is
         ScholarshipTypes.Program storage prog = programs[programId];
         require(
             prog.screeningMode == ScholarshipTypes.ScreeningMode.BY_COMMITTEE,
-            "Not committee mode"
+            "ScholarshipCore: not committee mode"
         );
         _setScore(programId, applicant, academicScore, incomeScore, recommendScore, committeeAddress);
     }
 
+    /**
+     * @dev Internal score setter shared by BY_COMMITTEE and BY_STUDENT paths.
+     *      Computes a normalised score out of 1000 using only the screening-
+     *      applicable weights (essay is excluded — scored by voters).
+     */
     function _setScore(
         uint256 programId,
         address applicant,
@@ -391,27 +533,25 @@ contract ScholarshipCore is
         uint256 recommend,
         address scoredBy
     ) internal {
-        ScholarshipTypes.Program storage prog = programs[programId];
-        ScholarshipTypes.ScoreWeights memory w = prog.scoreWeights;
+        ScholarshipTypes.ScoreWeights memory w = programs[programId].scoreWeights;
 
-        // Clamp to 100
+        // Clamp raw inputs to [0, 100]
         academic  = academic  > 100 ? 100 : academic;
         income    = income    > 100 ? 100 : income;
         recommend = recommend > 100 ? 100 : recommend;
 
-        // Weighted total (out of 1000)
-        uint256 total = (academic  * w.academicWeight)
-                      + (income    * w.incomeWeight)
-                      + (recommend * w.recommendWeight);
-        // Essay and extracurricular are scored by voters — not in screening
-        // Their weights contribute to total potential but not screening score
-        // We normalize to 1000 using only the screening-applicable weights
-        uint256 screeningWeightSum = uint256(w.academicWeight)
-                                   + w.incomeWeight
-                                   + w.recommendWeight;
+        // Screening uses only 3 components (essay = voters, extracurric optional)
+        uint256 screenWeightSum = uint256(w.academicWeight)
+            + w.incomeWeight
+            + w.recommendWeight;
 
-        uint256 normalizedScore = screeningWeightSum > 0
-            ? (total * 1000) / (screeningWeightSum * 100)
+        uint256 weightedRaw = (academic  * w.academicWeight)
+                            + (income    * w.incomeWeight)
+                            + (recommend * w.recommendWeight);
+
+        // Normalise to SCORE_MAX (1000)
+        uint256 normalised = screenWeightSum > 0
+            ? (weightedRaw * ScholarshipTypes.SCORE_MAX) / (screenWeightSum * 100)
             : 0;
 
         scoreComponents[programId][applicant] = ScholarshipTypes.ScoreComponents({
@@ -422,91 +562,111 @@ contract ScholarshipCore is
             scoredBy:        scoredBy
         });
 
-        applicants[programId][applicant].totalScore      = normalizedScore;
-        applicants[programId][applicant].scoreTimestamp  = block.timestamp;
+        ScholarshipTypes.Applicant storage app = applicants[programId][applicant];
+        app.screeningScore  = normalised;
+        app.totalScore      = normalised; // fixed at screening — voteScore tracks voting separately
+        app.scoreTimestamp  = block.timestamp;
 
-        emit ScoreSubmitted(programId, applicant, normalizedScore);
+        emit ScoreSubmitted(programId, applicant, normalised, scoredBy);
     }
 
     // ── Shortlist Resolution ─────────────────────────────────────────────────
 
     /**
-     * @dev Initiator triggers shortlist computation after all scores are submitted.
-     *      Top N applicants (by score) move to SHORTLISTED.
-     *      Others become SCREENED_OUT (can retry if retryCount < 3).
+     * @notice Compute and persist the shortlist after all scores are in.
      *
-     *      NOTE: Sorting N applicants on-chain can be expensive.
-     *      For gas efficiency, scores are compared with an off-chain generated
-     *      sorted list that the initiator provides, and the contract validates it.
+     *         The initiator provides a caller-sorted list (gas efficient —
+     *         sorts happen off-chain).  The contract validates descending order
+     *         and enforces the SCREENING_THRESHOLD floor.
+     *
+     *         Transitions programme to VOTING.
+     *
+     * @param programId         Programme to resolve.
+     * @param rankedApplicants  All scored applicants, sorted by score (desc).
      */
     function resolveShortlist(
         uint256 programId,
-        address[] calldata rankedApplicants // Off-chain sorted, contract validates
-    ) external programExists(programId) {
+        address[] calldata rankedApplicants
+    ) external programExists(programId)
+      onlyInitiator(programId)
+    {
+        _requireStatus(programId, ScholarshipTypes.ProgramStatus.SCREENING);
         ScholarshipTypes.Program storage prog = programs[programId];
-        require(msg.sender == prog.initiator, "Only initiator");
-        if (prog.status != ScholarshipTypes.ProgramStatus.SCREENING)
-            revert InvalidProgramStatus(ScholarshipTypes.ProgramStatus.SCREENING, prog.status);
 
-        uint256 shortlistSize = rankedApplicants.length < prog.maxCandidates
-            ? rankedApplicants.length
-            : prog.maxCandidates;
+        uint256 n = rankedApplicants.length;
 
-        // Validate ordering: each score must be >= the next
-        for (uint256 i = 0; i < rankedApplicants.length - 1; ) {
-            require(
-                applicants[programId][rankedApplicants[i]].totalScore >=
-                applicants[programId][rankedApplicants[i + 1]].totalScore,
-                "Invalid sort order"
-            );
+        // All applicants who submitted must appear in the ranked list — prevents
+        // initiator from silently excluding applicants without the contract knowing.
+        if (n != _programApplicants[programId].length) revert ApplicantListIncomplete();
+
+        // Cannot transition to VOTING before votingStart
+        if (block.timestamp < prog.votingStart) revert TooEarly();
+
+        // Validate descending sort order
+        for (uint256 i = 0; i < n - 1; ) {
+            if (applicants[programId][rankedApplicants[i]].screeningScore <
+                applicants[programId][rankedApplicants[i + 1]].screeningScore)
+                revert InvalidSortOrder();
             unchecked { ++i; }
         }
 
-        // Shortlist top N
+        uint256 shortlistSize = n < prog.maxCandidates ? n : prog.maxCandidates;
+
+        // Top N that clear the threshold
         for (uint256 i = 0; i < shortlistSize; ) {
             address student = rankedApplicants[i];
             ScholarshipTypes.Applicant storage app = applicants[programId][student];
 
-            if (app.totalScore >= ScholarshipTypes.SCREENING_THRESHOLD) {
+            if (app.screeningScore >= ScholarshipTypes.SCREENING_THRESHOLD) {
                 app.status = ScholarshipTypes.ApplicationStatus.SHORTLISTED;
                 _shortlist[programId].push(student);
                 prog.shortlistedCount++;
-                emit StudentShortlisted(programId, student, app.totalScore);
+                emit StudentShortlisted(programId, student, app.screeningScore);
             } else {
                 _markScreenedOut(programId, student);
             }
             unchecked { ++i; }
         }
 
-        // Mark remaining as screened out
-        for (uint256 i = shortlistSize; i < rankedApplicants.length; ) {
+        // Remainder are screened out
+        for (uint256 i = shortlistSize; i < n; ) {
             _markScreenedOut(programId, rankedApplicants[i]);
             unchecked { ++i; }
         }
 
-        // Transition to VOTING
         prog.status = ScholarshipTypes.ProgramStatus.VOTING;
         emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.VOTING);
     }
 
     function _markScreenedOut(uint256 programId, address student) internal {
         ScholarshipTypes.Applicant storage app = applicants[programId][student];
-        if (app.retryCount >= ScholarshipTypes.MAX_RETRY) {
-            app.status = ScholarshipTypes.ApplicationStatus.LOCKED;
-        } else {
-            app.status = ScholarshipTypes.ApplicationStatus.SCREENED_OUT;
-        }
-        emit StudentScreenedOut(programId, student, app.totalScore);
+        bool locked = app.retryCount >= ScholarshipTypes.MAX_RETRY;
+        app.status  = locked
+            ? ScholarshipTypes.ApplicationStatus.LOCKED
+            : ScholarshipTypes.ApplicationStatus.SCREENED_OUT;
+        emit StudentScreenedOut(programId, student, app.screeningScore, locked);
     }
 
-    // ════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════
     // PHASE 3 — VOTING
-    // ════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * @dev Token-weighted vote. Voter spends ALL remaining voting power on one candidate.
-     *      Voters see: profileCID + essayCID (score is hidden).
-     *      Reputation check: voting power locked voters cannot vote.
+     * @notice Cast a token-weighted vote for a shortlisted candidate.
+     *
+     *         Rules:
+     *         • Voter spends ALL remaining voting power on ONE candidate.
+     *         • Voting power = net donation amount.
+     *         • Voters whose REP-based voting power is locked cannot vote.
+     *         • Vote weight is ADDITIVE on top of the screening score —
+     *           this rewards candidates who both score well AND resonate
+     *           with the donor community.
+     *
+     *         What voters see: profileCID + essayCID + educationLevel.
+     *         What is HIDDEN:  screening score (avoids anchoring bias).
+     *
+     * @param programId  Target programme (must be VOTING status).
+     * @param candidate  Shortlisted applicant wallet.
      */
     function voteForCandidate(
         uint256 programId,
@@ -514,32 +674,45 @@ contract ScholarshipCore is
     ) external nonReentrant programExists(programId)
       inStatus(programId, ScholarshipTypes.ProgramStatus.VOTING)
     {
-        // Check reputation lock
-        if (reputation.isVotingPowerLocked(msg.sender))
-            revert VotingPowerLocked();
+        // Reputation lock check
+        if (reputation.isVotingPowerLocked(msg.sender)) revert VotingPowerLocked();
 
         ScholarshipTypes.VoterInfo storage voter = voterInfo[programId][msg.sender];
         if (voter.remainingVotingPower == 0) revert InsufficientVotingPower();
 
-        // Candidate must be shortlisted
+        // Only shortlisted candidates may receive votes
         if (applicants[programId][candidate].status !=
             ScholarshipTypes.ApplicationStatus.SHORTLISTED)
             revert CandidateNotShortlisted();
 
         uint256 weight = voter.remainingVotingPower;
-        voter.remainingVotingPower = 0; // spend all on one candidate
 
-        applicants[programId][candidate].totalScore += weight; // vote adds to score
-        // Note: vote weight is additive on top of screening score intentionally —
-        // it rewards candidates who both screen well AND resonate with voters
+        // CEI: zero power before mutation
+        voter.remainingVotingPower = 0;
+        voter.votedFor             = candidate;  // Track for targeted REP rewards
+
+        // Vote weight accumulates in its own field — keeps screening and voting dimensions separate
+        applicants[programId][candidate].voteScore += weight;
 
         emit VoteCast(programId, msg.sender, candidate, weight);
     }
 
     /**
-     * @dev Optional: voter places a confidence stake on a candidate they voted for.
-     *      This signals strong conviction.
-     *      Earns bonus yield if scholar succeeds. 50% slashed if scholar defrauds.
+     * @notice Optionally place a confidence stake on a candidate.
+     *
+     *         This is a PURELY OPTIONAL signal of strong conviction.
+     *         The stake is separate from voting power — a voter may stake
+     *         without having voted (though typically both happen together).
+     *
+     *         Outcomes:
+     *         • Scholar SUCCEEDS → stake returned + 20% yield bonus.
+     *         • Scholar defrauds  → 50% of stake is slashed.
+     *
+     *         One confidence stake per voter per programme.
+     *
+     * @param programId  Target programme.
+     * @param scholar    Candidate wallet to back.
+     * @param amount     USDC to lock (voter must approve treasury first).
      */
     function placeConfidenceStake(
         uint256 programId,
@@ -550,6 +723,13 @@ contract ScholarshipCore is
     {
         ScholarshipTypes.VoterInfo storage voter = voterInfo[programId][msg.sender];
         if (voter.confidenceStake > 0) revert ConfidenceStakeAlreadyExists();
+
+        // Must have voted, and must stake on the same scholar they voted for
+        if (voter.votedFor == address(0))   revert MustVoteBeforeStaking();
+        if (voter.votedFor != scholar)      revert ConfidenceStakeMismatch();
+
+        // Cap stake at own donation amount — prevents accounting overflow in Treasury
+        if (amount > voter.donatedAmount)   revert ConfidenceStakeExceedsDonation();
 
         usdc.safeTransferFrom(msg.sender, address(treasury), amount);
         treasury.depositConfidenceStake(programId, msg.sender, scholar, amount);
@@ -563,27 +743,51 @@ contract ScholarshipCore is
     // ── Select Winners ───────────────────────────────────────────────────────
 
     /**
-     * @dev After voting ends, initiator selects top N scholars.
-     *      Provides sorted list; contract validates ordering.
-     *      Winners become ACTIVE_SCHOLAR and milestones are created.
+     * @notice After voting ends, select top-N scholars and create milestones.
+     *
+     *         Initiator provides caller-sorted ranked list (off-chain sort).
+     *         Contract validates descending order against totalScore.
+     *         Quorum check: total voting power cast must exceed 50% of
+     *         totalDonated — ensures meaningful community participation.
+     *
+     *         Transitions programme to ACTIVE.
+     *
+     * @param programId         Programme to finalise.
+     * @param rankedCandidates  Shortlisted candidates sorted by totalScore (desc).
+     * @param milestoneAmounts  milestoneAmounts[i] = array of milestone USDC amounts
+     *                          for the i-th winner.
      */
     function selectWinners(
         uint256 programId,
         address[] calldata rankedCandidates,
-        uint256[][] calldata milestonAmounts  // milestonAmounts[i] = amounts for winner i
-    ) external programExists(programId) {
+        uint256[][] calldata milestoneAmounts
+    ) external programExists(programId) onlyInitiator(programId) {
+        _requireStatus(programId, ScholarshipTypes.ProgramStatus.VOTING);
         ScholarshipTypes.Program storage prog = programs[programId];
-        require(msg.sender == prog.initiator, "Only initiator");
-        if (prog.status != ScholarshipTypes.ProgramStatus.VOTING)
-            revert InvalidProgramStatus(ScholarshipTypes.ProgramStatus.VOTING, prog.status);
+
+        // Voting period must have ended before winners can be selected
+        if (block.timestamp < prog.votingEnd) revert VotingNotEnded();
+
+        // Quorum check
+        uint256 totalDonated = treasury.programTotalDonated(programId);
+        uint256 totalCast    = _computeTotalVotingCast(programId);
+        if (totalCast * 100 < totalDonated * ScholarshipTypes.QUORUM_PERCENT)
+            revert QuorumNotMet();
 
         uint256 winnerCount = rankedCandidates.length < prog.targetWinners
             ? rankedCandidates.length
             : prog.targetWinners;
 
+        // Validate descending order by voteScore (voting determines winner, not screening)
+        for (uint256 i = 0; i < winnerCount - 1; ) {
+            if (applicants[programId][rankedCandidates[i]].voteScore <
+                applicants[programId][rankedCandidates[i + 1]].voteScore)
+                revert InvalidSortOrder();
+            unchecked { ++i; }
+        }
+
         for (uint256 i = 0; i < winnerCount; ) {
-            address winner = rankedCandidates[i];
-            _activateScholar(programId, winner, milestonAmounts[i]);
+            _activateScholar(programId, rankedCandidates[i], milestoneAmounts[i]);
             unchecked { ++i; }
         }
 
@@ -591,9 +795,27 @@ contract ScholarshipCore is
         emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.ACTIVE);
     }
 
+    /**
+     * @dev Compute total voting power actually cast in a programme.
+     *      Since voting is ALL-IN (one voter → one candidate, full power spent),
+     *      a voter who has voted will have: votedFor != address(0).
+     *      Their cast amount = donatedAmount (all power was spent in one shot).
+     *      This correctly measures participation as a fraction of totalDonated.
+     */
+    function _computeTotalVotingCast(uint256 programId) internal view returns (uint256 cast) {
+        address[] memory donors = treasury.getProgramDonors(programId);
+        for (uint256 i = 0; i < donors.length; ) {
+            ScholarshipTypes.VoterInfo storage v = voterInfo[programId][donors[i]];
+            if (v.votedFor != address(0)) {
+                cast += v.donatedAmount;
+            }
+            unchecked { ++i; }
+        }
+    }
+
     function _activateScholar(
-        uint256 programId,
-        address winner,
+        uint256   programId,
+        address   winner,
         uint256[] memory amounts
     ) internal {
         scholars[winner][programId] = ScholarshipTypes.Scholar({
@@ -608,8 +830,8 @@ contract ScholarshipCore is
         });
 
         programs[programId].activeScholarCount++;
+        programs[programId].allocatedFund += _sumArray(amounts);
 
-        // Create milestone records
         for (uint256 j = 0; j < amounts.length; ) {
             uint256 mId = ++_nextMilestoneId;
             milestones[mId] = ScholarshipTypes.Milestone({
@@ -632,30 +854,40 @@ contract ScholarshipCore is
         emit ScholarSelected(programId, winner);
     }
 
-    // ════════════════════════════════════════════════════════════════
+    function _sumArray(uint256[] memory arr) private pure returns (uint256 s) {
+        for (uint256 i = 0; i < arr.length; ) {
+            s += arr[i];
+            unchecked { ++i; }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
     // PHASE 4 — MILESTONE EXECUTION
-    // ════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * @dev Scholar submits proof for a milestone.
-     *      Starts the dispute window countdown.
+     * @notice Scholar submits proof for the next pending milestone.
+     *         Starts the programme-configured dispute window countdown.
+     *
+     * @param milestoneId  The milestone to submit proof for.
+     * @param proofCID     IPFS CID of proof documents / photos.
      */
     function submitMilestoneProof(
         uint256 milestoneId,
         string calldata proofCID
     ) external nonReentrant {
         ScholarshipTypes.Milestone storage m = milestones[milestoneId];
-        if (m.scholar == address(0)) revert MilestoneNotFound();
-        if (msg.sender != m.scholar) revert NotMilestoneOwner();
+        if (m.scholar == address(0))            revert MilestoneNotFound();
+        if (msg.sender != m.scholar)            revert NotMilestoneOwner();
         if (m.status != ScholarshipTypes.MilestoneStatus.PENDING)
-            revert MilestoneNotSubmitted();
+            revert MilestoneNotInDisputeWindow();
 
         ScholarshipTypes.Scholar storage scholar = scholars[msg.sender][m.programId];
         if (scholar.status != ScholarshipTypes.StudentStatus.ACTIVE)
             revert ScholarNotActive();
 
         m.proofCID       = proofCID;
-        m.status         = ScholarshipTypes.MilestoneStatus.DISPUTE_WINDOW;
+        m.status         = ScholarshipTypes.MilestoneStatus.SUBMITTED;
         m.submittedAt    = block.timestamp;
         m.disputeDeadline = block.timestamp + programs[m.programId].milestoneDisputeWindow;
 
@@ -663,14 +895,17 @@ contract ScholarshipCore is
     }
 
     /**
-     * @dev Anyone can call this to release a milestone after dispute window passes.
-     *      Incentive: caller gets a small execution fee (from protocol fees).
-     *      This prevents milestones from hanging indefinitely.
+     * @notice Release a milestone payment after the dispute window expires.
+     *
+     *         Permissionless — anyone may call.  This prevents milestones
+     *         from hanging indefinitely and provides a liveness guarantee.
+     *
+     * @param milestoneId  The milestone to execute.
      */
     function executeMilestone(uint256 milestoneId) external nonReentrant {
         ScholarshipTypes.Milestone storage m = milestones[milestoneId];
-        if (m.status != ScholarshipTypes.MilestoneStatus.DISPUTE_WINDOW)
-            revert MilestoneNotSubmitted();
+        if (m.status != ScholarshipTypes.MilestoneStatus.SUBMITTED)
+            revert MilestoneNotInDisputeWindow();
         if (block.timestamp < m.disputeDeadline)
             revert DisputeWindowStillOpen();
 
@@ -686,15 +921,15 @@ contract ScholarshipCore is
         scholar.currentMilestone++;
         scholar.totalReceived += m.amount;
 
-        // Release payment from treasury
+        programs[m.programId].spentFund += m.amount;
+
         treasury.disburseMilestone(m.scholar, m.programId, milestoneId, m.amount);
 
-        // Give +10 REP to all voters who backed this scholar
-        _rewardVoters(m.programId, m.scholar, 10, "milestone_completed");
+        // +10 REP to voters who backed this scholar
+        _rewardVotersOf(m.programId, m.scholar, 10, "milestone_completed");
 
         emit MilestoneCompleted(milestoneId, m.scholar, m.amount);
 
-        // Check if all milestones done
         if (scholar.currentMilestone == scholar.totalMilestones) {
             _completeScholar(m.programId, m.scholar);
         }
@@ -702,28 +937,55 @@ contract ScholarshipCore is
 
     function _completeScholar(uint256 programId, address scholarAddr) internal {
         scholars[scholarAddr][programId].status = ScholarshipTypes.StudentStatus.COMPLETED;
+        globalStudentStatus[scholarAddr] = ScholarshipTypes.StudentStatus.COMPLETED;
 
         // +50 REP bonus to all backers
-        _rewardVoters(programId, scholarAddr, 50, "scholar_completed");
+        _rewardVotersOf(programId, scholarAddr, 50, "scholar_completed");
 
-        // Resolve confidence stakes positively
-        address[] memory voters = treasury.getProgramDonors(programId);
-        for (uint256 i = 0; i < voters.length; ) {
-            ScholarshipTypes.VoterInfo storage vi = voterInfo[programId][voters[i]];
-            if (vi.confidenceStakeFor == scholarAddr && vi.confidenceStake > 0) {
-                treasury.resolveConfidenceStake(programId, voters[i], true);
-            }
-            unchecked { ++i; }
-        }
+        // Resolve confidence stakes positively for this scholar's backers
+        _resolveConfidenceStakesFor(programId, scholarAddr, true);
 
-        // Mint Student NFT (only on full completion)
+        // Mint scholar credential NFT
         studentNFT.mint(scholarAddr, programId, "");
 
         emit ScholarCompleted(programId, scholarAddr);
+
+        // If all active scholars are done, complete the programme
+        ScholarshipTypes.Program storage prog = programs[programId];
+        if (_allScholarsCompleted(programId)) {
+            prog.status = ScholarshipTypes.ProgramStatus.COMPLETED;
+            treasury.distributeYield(programId);
+            emit ProgramCompleted(programId);
+        }
     }
 
-    // ── Freeze / Release (called by Bounty contract) ──────────────────────────
+    /**
+     * @dev Check whether all active scholars in a programme have completed.
+     *      Iterates shortlist — only scholars in SHORTLISTED → ACTIVE → COMPLETED path.
+     */
+    function _allScholarsCompleted(uint256 programId) internal view returns (bool) {
+        address[] memory sl = _shortlist[programId];
+        for (uint256 i = 0; i < sl.length; ) {
+            ScholarshipTypes.Scholar storage s = scholars[sl[i]][programId];
+            // Only check those who became active scholars
+            if (s.totalMilestones > 0 &&
+                s.status != ScholarshipTypes.StudentStatus.COMPLETED &&
+                s.status != ScholarshipTypes.StudentStatus.FROZEN &&
+                s.status != ScholarshipTypes.StudentStatus.BLACKLISTED)
+            {
+                return false;
+            }
+            unchecked { ++i; }
+        }
+        return true;
+    }
 
+    // ── Freeze / Release (BOUNTY_ROLE callbacks) ──────────────────────────────
+
+    /**
+     * @notice Freeze a milestone when a bounty hunter raises a dispute.
+     *         Called by ScholarshipBounty; gated by BOUNTY_ROLE.
+     */
     function freezeMilestone(uint256 milestoneId)
         external onlyRole(BOUNTY_ROLE)
     {
@@ -731,19 +993,36 @@ contract ScholarshipCore is
         emit MilestoneFrozen(milestoneId);
     }
 
+    /**
+     * @notice Unfreeze a milestone when a bounty hunter loses a dispute.
+     *         Restarts the dispute window from now.
+     *         Called by ScholarshipBounty; gated by BOUNTY_ROLE.
+     */
     function releaseMilestone(uint256 milestoneId)
         external onlyRole(BOUNTY_ROLE)
     {
-        milestones[milestoneId].status = ScholarshipTypes.MilestoneStatus.DISPUTE_WINDOW;
+        ScholarshipTypes.Milestone storage m = milestones[milestoneId];
+        m.status         = ScholarshipTypes.MilestoneStatus.SUBMITTED;
+        // Restart dispute window so BH cannot immediately re-raise
+        m.disputeDeadline = block.timestamp + programs[m.programId].milestoneDisputeWindow;
         emit MilestoneReleased(milestoneId);
     }
 
-    // ── Slash (called by Bounty contract) ─────────────────────────────────────
+    // ── Slash (BOUNTY_ROLE callback) ─────────────────────────────────────────
 
     /**
-     * @dev Called by ScholarshipBounty when a dispute is upheld.
-     *      Applies penalty based on fraud type (sliding scale).
-     *      Punishes voters who backed the fraudulent scholar.
+     * @notice Apply fraud penalty to a scholar after a bounty hunter wins.
+     *
+     *         LIGHT_FRAUD    → 6-month global freeze
+     *         MILESTONE_FRAUD → 1-year global freeze
+     *         HEAVY_FRAUD    → 2-year freeze + permanent BLACKLISTED
+     *
+     *         Additionally: punishes ONLY voters who voted for this scholar
+     *         (not all donors) via REP burn + voting power lock.
+     *
+     * @param wallet      Scholar wallet.
+     * @param programId   Programme in which the fraud occurred.
+     * @param disputeType Fraud severity classification.
      */
     function slashScholar(
         address wallet,
@@ -753,7 +1032,6 @@ contract ScholarshipCore is
         ScholarshipTypes.Scholar storage scholar = scholars[wallet][programId];
         scholar.status = ScholarshipTypes.StudentStatus.FROZEN;
 
-        // Determine freeze duration and blacklist
         uint256 freezeDuration;
         bool    blacklist = false;
 
@@ -762,49 +1040,65 @@ contract ScholarshipCore is
         } else if (disputeType == ScholarshipTypes.DisputeType.MILESTONE_FRAUD) {
             freezeDuration = ScholarshipTypes.FREEZE_MILESTONE;
         } else {
-            // HEAVY_FRAUD
             freezeDuration = ScholarshipTypes.FREEZE_HEAVY;
             blacklist      = true;
         }
 
-        globalFreezeUntil[wallet]  = block.timestamp + freezeDuration;
+        globalFreezeUntil[wallet]   = block.timestamp + freezeDuration;
         globalStudentStatus[wallet] = blacklist
             ? ScholarshipTypes.StudentStatus.BLACKLISTED
             : ScholarshipTypes.StudentStatus.FROZEN;
 
         if (blacklist) scholar.isBlacklisted = true;
 
-        // Punish voters: burn REP + lock voting power
-        uint256 repPenalty = disputeType == ScholarshipTypes.DisputeType.LIGHT_FRAUD
-            ? 50
-            : disputeType == ScholarshipTypes.DisputeType.MILESTONE_FRAUD
-                ? 100
-                : 200;
+        // REP penalty scales with fraud severity
+        uint256 repPenalty = disputeType == ScholarshipTypes.DisputeType.LIGHT_FRAUD  ? 50
+                           : disputeType == ScholarshipTypes.DisputeType.MILESTONE_FRAUD ? 100
+                           : 200;
 
-        _punishVoters(programId, wallet, repPenalty, freezeDuration);
+        // Only penalise voters who actually backed this scholar
+        _punishVotersOf(programId, wallet, repPenalty, block.timestamp + freezeDuration);
 
-        // Resolve confidence stakes negatively
-        address[] memory voters = treasury.getProgramDonors(programId);
-        for (uint256 i = 0; i < voters.length; ) {
-            ScholarshipTypes.VoterInfo storage vi = voterInfo[programId][voters[i]];
-            if (vi.confidenceStakeFor == wallet && vi.confidenceStake > 0) {
-                treasury.resolveConfidenceStake(programId, voters[i], false);
-            }
-            unchecked { ++i; }
-        }
+        // Slash confidence stakes of voters who staked on this scholar
+        _resolveConfidenceStakesFor(programId, wallet, false);
 
         emit ScholarSlashed(wallet, programId, disputeType);
     }
 
-    function getRemainingFund(address wallet, uint256 programId)
-        external view returns (uint256)
+    // ── Programme Cancellation ───────────────────────────────────────────────
+
+    /**
+     * @notice Initiator cancels a programme before it reaches ACTIVE status.
+     *         All donors are refunded pro-rata from remaining balance.
+     */
+    function cancelProgram(uint256 programId)
+        external nonReentrant programExists(programId) onlyInitiator(programId)
     {
-        return treasury.getProgramBalance(programId);
+        ScholarshipTypes.Program storage prog = programs[programId];
+
+        // Cannot cancel once scholars are active — funds already allocated/disbursed.
+        // Cannot cancel if already completed or already cancelled.
+        require(
+            prog.status != ScholarshipTypes.ProgramStatus.ACTIVE     &&
+            prog.status != ScholarshipTypes.ProgramStatus.COMPLETED  &&
+            prog.status != ScholarshipTypes.ProgramStatus.CANCELLED,
+            "ScholarshipCore: cannot cancel after ACTIVE"
+        );
+
+        prog.status = ScholarshipTypes.ProgramStatus.CANCELLED;
+        treasury.refundDonors(programId);
+        emit ProgramCancelled(programId);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // INTERNAL — VOTER REP HELPERS
+    // ═══════════════════════════════════════════════════════════════════
 
-    function _rewardVoters(
+    /**
+     * @dev Award REP only to donors whose `votedFor` matches `scholarAddr`.
+     *      This prevents rewarding donors who did not vote for this scholar.
+     */
+    function _rewardVotersOf(
         uint256 programId,
         address scholarAddr,
         uint256 repAmount,
@@ -812,100 +1106,109 @@ contract ScholarshipCore is
     ) internal {
         address[] memory donors = treasury.getProgramDonors(programId);
         for (uint256 i = 0; i < donors.length; ) {
-            // Only reward voters who actually voted for this scholar
-            // (tracked via votedFor mapping — simplified here)
-            reputation.mint(donors[i], repAmount, reason);
+            if (voterInfo[programId][donors[i]].votedFor == scholarAddr) {
+                reputation.mint(donors[i], repAmount, reason);
+            }
             unchecked { ++i; }
         }
     }
 
-    function _punishVoters(
+    /**
+     * @dev Burn REP and lock voting power for donors who voted for a fraudulent scholar.
+     */
+    function _punishVotersOf(
         uint256 programId,
         address scholarAddr,
         uint256 repPenalty,
-        uint256 lockDuration
+        uint256 lockUntil
     ) internal {
         address[] memory donors = treasury.getProgramDonors(programId);
         for (uint256 i = 0; i < donors.length; ) {
-            reputation.burn(donors[i], repPenalty, "scholar_slashed");
-            reputation.lockVotingPower(donors[i], block.timestamp + lockDuration);
+            if (voterInfo[programId][donors[i]].votedFor == scholarAddr) {
+                reputation.burn(donors[i], repPenalty, "scholar_slashed");
+                reputation.lockVotingPower(donors[i], lockUntil);
+            }
             unchecked { ++i; }
         }
     }
+
+    /**
+     * @dev Resolve confidence stakes for all voters who staked on `scholarAddr`.
+     *      `succeeded = true` → bonus; `false` → slash.
+     */
+    function _resolveConfidenceStakesFor(
+        uint256 programId,
+        address scholarAddr,
+        bool    succeeded
+    ) internal {
+        address[] memory donors = treasury.getProgramDonors(programId);
+        for (uint256 i = 0; i < donors.length; ) {
+            ScholarshipTypes.VoterInfo storage vi = voterInfo[programId][donors[i]];
+            if (vi.confidenceStakeFor == scholarAddr && vi.confidenceStake > 0) {
+                treasury.resolveConfidenceStake(programId, donors[i], succeeded);
+            }
+            unchecked { ++i; }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // INTERNAL UTILITIES
+    // ═══════════════════════════════════════════════════════════════════
 
     function _requireStudentEligible(address wallet) internal view {
         ScholarshipTypes.StudentStatus status = globalStudentStatus[wallet];
         if (status == ScholarshipTypes.StudentStatus.BLACKLISTED)
             revert StudentBlacklisted();
-        if (status == ScholarshipTypes.StudentStatus.FROZEN) {
-            if (block.timestamp < globalFreezeUntil[wallet])
-                revert StudentFrozen(globalFreezeUntil[wallet]);
-        }
+        if (status == ScholarshipTypes.StudentStatus.FROZEN &&
+            block.timestamp < globalFreezeUntil[wallet])
+            revert StudentFrozen(globalFreezeUntil[wallet]);
     }
 
-    // ── Programme cancellation ────────────────────────────────────────────────
-
-    function cancelProgram(uint256 programId)
-        external nonReentrant programExists(programId)
-    {
-        ScholarshipTypes.Program storage prog = programs[programId];
-        require(msg.sender == prog.initiator, "Only initiator");
-        require(prog.status != ScholarshipTypes.ProgramStatus.COMPLETED &&
-                prog.status != ScholarshipTypes.ProgramStatus.CANCELLED,
-                "Cannot cancel");
-
-        prog.status = ScholarshipTypes.ProgramStatus.CANCELLED;
-        treasury.refundDonors(programId);
-
-        emit ProgramCancelled(programId);
+    function _requireStatus(
+        uint256 programId,
+        ScholarshipTypes.ProgramStatus expected
+    ) internal view {
+        if (programs[programId].status != expected)
+            revert InvalidProgramStatus(expected, programs[programId].status);
     }
 
-    // ── Status transitions ────────────────────────────────────────────────────
-
-    function openApplications(uint256 programId)
-        external programExists(programId)
-    {
-        ScholarshipTypes.Program storage prog = programs[programId];
-        require(msg.sender == prog.initiator, "Only initiator");
-        require(prog.status == ScholarshipTypes.ProgramStatus.CREATED, "Wrong status");
-        prog.status = ScholarshipTypes.ProgramStatus.APPLICATION_OPEN;
-        emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN);
-    }
-
-    function openScreening(uint256 programId)
-        external programExists(programId)
-    {
-        ScholarshipTypes.Program storage prog = programs[programId];
-        require(msg.sender == prog.initiator, "Only initiator");
-        require(prog.status == ScholarshipTypes.ProgramStatus.APPLICATION_OPEN, "Wrong status");
-        prog.status = ScholarshipTypes.ProgramStatus.SCREENING;
-        emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.SCREENING);
-    }
-
-    // ── Views ─────────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════
+    // VIEWS
+    // ═══════════════════════════════════════════════════════════════════
 
     function getProgram(uint256 programId)
-        external view returns (ScholarshipTypes.Program memory) {
+        external view returns (ScholarshipTypes.Program memory)
+    {
         return programs[programId];
     }
 
     function getScholar(address wallet, uint256 programId)
-        external view returns (ScholarshipTypes.Scholar memory) {
+        external view returns (ScholarshipTypes.Scholar memory)
+    {
         return scholars[wallet][programId];
     }
 
-    function getShortlist(uint256 programId)
-        external view returns (address[] memory) {
-        return _shortlist[programId];
-    }
-
     function getMilestone(uint256 milestoneId)
-        external view returns (ScholarshipTypes.Milestone memory) {
+        external view returns (ScholarshipTypes.Milestone memory)
+    {
         return milestones[milestoneId];
     }
 
+    function getShortlist(uint256 programId)
+        external view returns (address[] memory)
+    {
+        return _shortlist[programId];
+    }
+
+    function getProgramApplicants(uint256 programId)
+        external view returns (address[] memory)
+    {
+        return _programApplicants[programId];
+    }
+
     function isStudentEligible(address wallet)
-        external view returns (bool eligible, string memory reason) {
+        external view returns (bool eligible, string memory reason)
+    {
         ScholarshipTypes.StudentStatus status = globalStudentStatus[wallet];
         if (status == ScholarshipTypes.StudentStatus.BLACKLISTED)
             return (false, "Permanently blacklisted");
@@ -915,7 +1218,17 @@ contract ScholarshipCore is
         return (true, "");
     }
 
-    // ── UUPS ──────────────────────────────────────────────────────────────────
+    /**
+     * @notice Returns USDC value of undisbursed milestones for a scholar.
+     *         Used by ScholarshipBounty to calculate stake and reward amounts.
+     */
+    function getRemainingFund(address /* wallet */, uint256 programId)
+        external view returns (uint256)
+    {
+        return treasury.getProgramBalance(programId);
+    }
+
+    // ── UUPS ─────────────────────────────────────────────────────────────────
 
     function _authorizeUpgrade(address) internal override onlyRole(UPGRADER_ROLE) {}
 }

@@ -39,9 +39,11 @@ export const v4Programs = pgTable("v4_programs", {
   screeningMode:       integer("screening_mode").default(0),
   maxCandidates:       integer("max_candidates").default(0),
   targetWinners:       integer("target_winners").default(0),
+  committeeContract:   varchar("committee_contract", { length: 42 }).default(""),
   totalFund:           numeric("total_fund").default("0"),
   allocatedFund:       numeric("allocated_fund").default("0"),
   spentFund:           numeric("spent_fund").default("0"),
+  yieldAccrued:        numeric("yield_accrued").default("0"),
   applicantCount:      integer("applicant_count").default(0),
   shortlistedCount:    integer("shortlisted_count").default(0),
   activeScholarCount:  integer("active_scholar_count").default(0),
@@ -193,6 +195,67 @@ export const v4Reputation = pgTable("v4_reputation", {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
+// V4 TABLES — Donations
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Individual donation record — created on Treasury:DonationRecorded */
+export const v4Donations = pgTable("v4_donations", {
+  id:                  uuid("id").defaultRandom().primaryKey(),
+  programId:           uuid("program_id").references(() => v4Programs.id),
+  blockchainProgramId: integer("blockchain_program_id").notNull(),
+  donor:               varchar("donor", { length: 42 }).notNull(),
+  grossAmount:         numeric("gross_amount").default("0"),
+  netAmount:           numeric("net_amount").default("0"),
+  createdAt:           timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// V4 TABLES — Committee Members
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Committee member record — created on CommitteeMemberAdded, soft-deleted on Removed */
+export const v4CommitteeMembers = pgTable("v4_committee_members", {
+  id:                  uuid("id").defaultRandom().primaryKey(),
+  programId:           uuid("program_id").references(() => v4Programs.id),
+  blockchainProgramId: integer("blockchain_program_id").notNull(),
+  memberAddress:       varchar("member_address", { length: 42 }).notNull(),
+  isActive:            boolean("is_active").default(true),
+  addedAt:             timestamp("added_at",   { withTimezone: true }).defaultNow(),
+  removedAt:           timestamp("removed_at", { withTimezone: true }),
+}, (t) => ({
+  uniqMember: unique().on(t.memberAddress, t.blockchainProgramId),
+}));
+
+/** Committee dispute vote — tracks individual member votes on disputes */
+export const v4CommitteeDisputeVotes = pgTable("v4_committee_dispute_votes", {
+  id:              uuid("id").defaultRandom().primaryKey(),
+  disputeId:       integer("dispute_id").notNull(),
+  memberAddress:   varchar("member_address", { length: 42 }).notNull(),
+  upholdDispute:   boolean("uphold_dispute").notNull(),
+  createdAt:       timestamp("created_at", { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  uniqVote: unique().on(t.disputeId, t.memberAddress),
+}));
+
+// ══════════════════════════════════════════════════════════════════════════════
+// V4 TABLES — Bounty Hunter Profiles
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** BH profile — tracks cooldown, wins/losses, flagging */
+export const v4BountyHunters = pgTable("v4_bounty_hunters", {
+  id:              uuid("id").defaultRandom().primaryKey(),
+  address:         varchar("address", { length: 42 }).notNull().unique(),
+  totalDisputes:   integer("total_disputes").default(0),
+  totalWins:       integer("total_wins").default(0),
+  totalLosses:     integer("total_losses").default(0),
+  totalRewards:    numeric("total_rewards").default("0"),
+  isFlagged:       boolean("is_flagged").default(false),
+  cooldownUntil:   timestamp("cooldown_until", { withTimezone: true }),
+  createdAt:       timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt:       timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
 // RELATIONS
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -203,6 +266,8 @@ export const v4ProgramRelations = relations(v4Programs, ({ many }) => ({
   votes: many(v4Votes),
   confidenceStakes: many(v4ConfidenceStakes),
   disputes: many(v4Disputes),
+  donations: many(v4Donations),
+  committeeMembers: many(v4CommitteeMembers),
 }));
 
 export const v4ApplicantRelations = relations(v4Applicants, ({ one }) => ({
@@ -229,4 +294,12 @@ export const v4DisputeRelations = relations(v4Disputes, ({ one }) => ({
 
 export const v4ConfidenceStakeRelations = relations(v4ConfidenceStakes, ({ one }) => ({
   program: one(v4Programs, { fields: [v4ConfidenceStakes.programId], references: [v4Programs.id] }),
+}));
+
+export const v4DonationRelations = relations(v4Donations, ({ one }) => ({
+  program: one(v4Programs, { fields: [v4Donations.programId], references: [v4Programs.id] }),
+}));
+
+export const v4CommitteeMemberRelations = relations(v4CommitteeMembers, ({ one }) => ({
+  program: one(v4Programs, { fields: [v4CommitteeMembers.programId], references: [v4Programs.id] }),
 }));

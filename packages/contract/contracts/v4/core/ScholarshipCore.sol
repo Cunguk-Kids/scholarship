@@ -797,8 +797,10 @@ contract ScholarshipCore is
 
     /**
      * @dev Compute total voting power actually cast in a programme.
-     *      Iterates all donors and checks if they voted (remainingVotingPower == 0
-     *      and votedFor != address(0)).
+     *      Since voting is ALL-IN (one voter → one candidate, full power spent),
+     *      a voter who has voted will have: votedFor != address(0).
+     *      Their cast amount = donatedAmount (all power was spent in one shot).
+     *      This correctly measures participation as a fraction of totalDonated.
      */
     function _computeTotalVotingCast(uint256 programId) internal view returns (uint256 cast) {
         address[] memory donors = treasury.getProgramDonors(programId);
@@ -950,7 +952,7 @@ contract ScholarshipCore is
 
         // If all active scholars are done, complete the programme
         ScholarshipTypes.Program storage prog = programs[programId];
-        if (scholar_allCompleted(programId)) {
+        if (_allScholarsCompleted(programId)) {
             prog.status = ScholarshipTypes.ProgramStatus.COMPLETED;
             treasury.distributeYield(programId);
             emit ProgramCompleted(programId);
@@ -961,7 +963,7 @@ contract ScholarshipCore is
      * @dev Check whether all active scholars in a programme have completed.
      *      Iterates shortlist — only scholars in SHORTLISTED → ACTIVE → COMPLETED path.
      */
-    function scholar_allCompleted(uint256 programId) internal view returns (bool) {
+    function _allScholarsCompleted(uint256 programId) internal view returns (bool) {
         address[] memory sl = _shortlist[programId];
         for (uint256 i = 0; i < sl.length; ) {
             ScholarshipTypes.Scholar storage s = scholars[sl[i]][programId];
@@ -1073,10 +1075,14 @@ contract ScholarshipCore is
         external nonReentrant programExists(programId) onlyInitiator(programId)
     {
         ScholarshipTypes.Program storage prog = programs[programId];
+
+        // Cannot cancel once scholars are active — funds already allocated/disbursed.
+        // Cannot cancel if already completed or already cancelled.
         require(
-            prog.status != ScholarshipTypes.ProgramStatus.COMPLETED &&
+            prog.status != ScholarshipTypes.ProgramStatus.ACTIVE     &&
+            prog.status != ScholarshipTypes.ProgramStatus.COMPLETED  &&
             prog.status != ScholarshipTypes.ProgramStatus.CANCELLED,
-            "ScholarshipCore: cannot cancel"
+            "ScholarshipCore: cannot cancel after ACTIVE"
         );
 
         prog.status = ScholarshipTypes.ProgramStatus.CANCELLED;
