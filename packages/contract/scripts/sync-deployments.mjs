@@ -1,20 +1,27 @@
 /**
  * sync-deployments.mjs
  *
- * Post-deploy script — run automatically after every Hardhat Ignition deploy.
+ * Post-deploy script — runs automatically after every v4 Hardhat Ignition deploy.
+ * Can also be run standalone after compile to sync ABIs only.
  *
  * What it does:
- *   1. Reads ignition/deployments/<chain>/deployed_addresses.json
+ *   1. Reads ignition/deployments/<chain>/deployed_addresses.json (if not --abi-only)
  *   2. Extracts contract addresses for ScholarshipV4 module contracts
  *   3. Reads ABI from artifacts/contracts/v4/**\/*.json
  *   4. Writes to:
- *        → packages/ponder/abis/v4/<Contract>.ts
- *        → packages/ponder/.env  (CONTRACT_* and START_BLOCK)
- *        → packages/frontend/src/constants/contractsV4.ts  (addresses + ABIs)
+ *        → packages/ponder/abis/v4/<Contract>.ts        (always)
+ *        → packages/ponder/.env  (CONTRACT_* + START_BLOCK)  (deploy mode only)
+ *        → packages/frontend/src/constants/contractsV4.ts     (always — ABIs + addresses)
  *
  * Usage (run from packages/contract/):
- *   node scripts/sync-deployments.mjs [chainId]   # default: 31337 (localhost)
- *   node scripts/sync-deployments.mjs 4202          # liskSepolia
+ *   node scripts/sync-deployments.mjs [chainId]     # full sync (addresses + ABIs)
+ *   node scripts/sync-deployments.mjs 4202           # liskSepolia full sync
+ *   node scripts/sync-deployments.mjs --abi-only     # ABIs only (no deployment needed)
+ *
+ * npm scripts (auto-chained):
+ *   npm run deploy-v4        → deploy + full sync (localhost)
+ *   npm run deploy-v4-lisk   → deploy + full sync (liskSepolia)
+ *   npm run compile:sync     → compile + ABI-only sync
  */
 
 import fs from "fs";
@@ -26,7 +33,8 @@ const ROOT = path.resolve(__dirname, "..");           // packages/contract
 const MONO_ROOT = path.resolve(ROOT, "../..");             // repo root
 
 // ── CLI args ────────────────────────────────────────────────────────────────
-const chainId = process.argv[2] ?? "31337";
+const abiOnly = process.argv.includes("--abi-only") || !process.argv[2];
+const chainId = process.argv.find(a => /^\d+$/.test(a)) ?? "31337";
 const CHAIN_DIR = path.join(ROOT, "ignition", "deployments", `chain-${chainId}`);
 
 // ── Output dirs ─────────────────────────────────────────────────────────────
@@ -56,33 +64,37 @@ const ENV_KEY_MAP = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// STEP 1 — Read deployed_addresses.json
+// STEP 1 — Read deployed_addresses.json (skipped in ABI-only mode)
 // ════════════════════════════════════════════════════════════════════════════
 
-const addressFile = path.join(CHAIN_DIR, "deployed_addresses.json");
-if (!fs.existsSync(addressFile)) {
-  console.error(`❌  No deployment found at:\n    ${addressFile}`);
-  console.error(`    Run "npm run deploy-v4" first.`);
-  process.exit(1);
-}
+let v4Addresses = {};
 
-const allAddresses = JSON.parse(fs.readFileSync(addressFile, "utf8"));
-console.log(`\n📋  Reading deployment from chain-${chainId}:`);
-
-// Filter to only v4 contracts
-const v4Addresses = {};
-for (const [key, address] of Object.entries(allAddresses)) {
-  if (CONTRACT_MAP[key]) {
-    const name = CONTRACT_MAP[key];
-    v4Addresses[name] = address;
-    console.log(`    ✅  ${name.padEnd(24)} ${address}`);
+if (!abiOnly) {
+  const addressFile = path.join(CHAIN_DIR, "deployed_addresses.json");
+  if (!fs.existsSync(addressFile)) {
+    console.error(`❌  No deployment found at:\n    ${addressFile}`);
+    console.error(`    Run "npm run deploy-v4" first, or use --abi-only to sync ABIs only.`);
+    process.exit(1);
   }
-}
 
-if (Object.keys(v4Addresses).length === 0) {
-  console.error("❌  No ScholarshipV4 contracts found in deployment.");
-  console.error("    Make sure you ran: npm run deploy-v4");
-  process.exit(1);
+  const allAddresses = JSON.parse(fs.readFileSync(addressFile, "utf8"));
+  console.log(`\n📋  Reading deployment from chain-${chainId}:`);
+
+  for (const [key, address] of Object.entries(allAddresses)) {
+    if (CONTRACT_MAP[key]) {
+      const name = CONTRACT_MAP[key];
+      v4Addresses[name] = address;
+      console.log(`    ✅  ${name.padEnd(24)} ${address}`);
+    }
+  }
+
+  if (Object.keys(v4Addresses).length === 0) {
+    console.error("❌  No ScholarshipV4 contracts found in deployment.");
+    console.error("    Make sure you ran: npm run deploy-v4");
+    process.exit(1);
+  }
+} else {
+  console.log(`\n📋  ABI-only mode — skipping address resolution`);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -137,67 +149,65 @@ for (const [name, abi] of Object.entries(abis)) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// STEP 4 — Update packages/ponder/.env
+// STEP 4 — Update packages/ponder/.env (skipped in ABI-only mode)
 // ════════════════════════════════════════════════════════════════════════════
 
-console.log(`\n🔧  Updating packages/ponder/.env`);
+if (!abiOnly) {
+  console.log(`\n🔧  Updating packages/ponder/.env`);
 
-let envContent = fs.existsSync(PONDER_ENV) ? fs.readFileSync(PONDER_ENV, "utf8") : "";
+  let envContent = fs.existsSync(PONDER_ENV) ? fs.readFileSync(PONDER_ENV, "utf8") : "";
 
-// Get start block from the journal (first block seen in this deployment)
-let startBlock = "0";
-const journalPath = path.join(CHAIN_DIR, "journal.jsonl");
-if (fs.existsSync(journalPath)) {
-  const lines = fs.readFileSync(journalPath, "utf8").split("\n").filter(Boolean);
-  for (const line of lines) {
-    try {
-      const entry = JSON.parse(line);
-      // Ignition journals include "blockNumber" on transaction receipts
-      if (entry?.type === "deployment_execution_state_initialize" || entry?.blockNumber) {
-        const bn = entry.blockNumber ?? entry?.result?.blockNumber;
-        if (bn && Number(bn) > 0) {
-          startBlock = String(Number(bn));
-          break;
+  // Get start block from the journal (first block seen in this deployment)
+  let startBlock = "0";
+  const journalPath = path.join(CHAIN_DIR, "journal.jsonl");
+  if (fs.existsSync(journalPath)) {
+    const lines = fs.readFileSync(journalPath, "utf8").split("\n").filter(Boolean);
+    for (const line of lines) {
+      try {
+        const entry = JSON.parse(line);
+        if (entry?.type === "deployment_execution_state_initialize" || entry?.blockNumber) {
+          const bn = entry.blockNumber ?? entry?.result?.blockNumber;
+          if (bn && Number(bn) > 0) {
+            startBlock = String(Number(bn));
+            break;
+          }
         }
-      }
-    } catch { /* skip malformed lines */ }
+      } catch { /* skip malformed lines */ }
+    }
   }
-}
 
-/**
- * Upsert a key=value pair in the .env content string.
- * Updates existing key or appends to the v4 section.
- */
-function upsertEnvVar(content, key, value) {
-  const regex = new RegExp(`^(${key}=).*$`, "m");
-  if (regex.test(content)) {
-    return content.replace(regex, `${key}="${value}"`);
+  /**
+   * Upsert a key=value pair in the .env content string.
+   */
+  function upsertEnvVar(content, key, value) {
+    const regex = new RegExp(`^(${key}=).*$`, "m");
+    if (regex.test(content)) {
+      return content.replace(regex, `${key}="${value}"`);
+    }
+    const sectionMarker = "# V4 CONTRACT ADDRESSES";
+    if (content.includes(sectionMarker)) {
+      return content.replace(
+        new RegExp(`(${sectionMarker}[^\n]*\n)`),
+        `$1${key}="${value}"\n`
+      );
+    }
+    return content + `\n${key}="${value}"\n`;
   }
-  // Not found — append to v4 section or end of file
-  const sectionMarker = "# V4 CONTRACT ADDRESSES";
-  if (content.includes(sectionMarker)) {
-    // Insert after the marker line
-    return content.replace(
-      new RegExp(`(${sectionMarker}[^\n]*\n)`),
-      `$1${key}="${value}"\n`
-    );
+
+  for (const [name, address] of Object.entries(v4Addresses)) {
+    const envKey = ENV_KEY_MAP[name];
+    if (!envKey) continue;
+    envContent = upsertEnvVar(envContent, envKey, address);
+    console.log(`    ✅  ${envKey}=${address}`);
   }
-  return content + `\n${key}="${value}"\n`;
+
+  envContent = upsertEnvVar(envContent, "START_BLOCK", startBlock);
+  console.log(`    ✅  START_BLOCK=${startBlock}`);
+
+  fs.writeFileSync(PONDER_ENV, envContent);
+} else {
+  console.log(`\n🔧  Skipping ponder .env update (ABI-only mode)`);
 }
-
-// Update each contract address
-for (const [name, address] of Object.entries(v4Addresses)) {
-  const envKey = ENV_KEY_MAP[name];
-  if (!envKey) continue;
-  envContent = upsertEnvVar(envContent, envKey, address);
-  console.log(`    ✅  ${envKey}=${address}`);
-}
-
-// Update START_BLOCK
-envContent = upsertEnvVar(envContent, "START_BLOCK", startBlock);
-console.log(`    ✅  START_BLOCK=${startBlock}`);
-
-fs.writeFileSync(PONDER_ENV, envContent);
 
 // ════════════════════════════════════════════════════════════════════════════
 // STEP 5 — Write to packages/frontend/src/constants/contractsV4.ts
@@ -206,10 +216,13 @@ fs.writeFileSync(PONDER_ENV, envContent);
 console.log(`\n🎨  Writing → packages/frontend/src/constants/contractsV4.ts`);
 fs.mkdirSync(FE_CONSTANTS, { recursive: true });
 
-// Build address object
-const addressLines = Object.entries(v4Addresses)
-  .map(([name, addr]) => `  ${name}: "${addr}" as \`0x\${string}\`,`)
-  .join("\n");
+// Build address object (empty if ABI-only)
+const hasAddresses = Object.keys(v4Addresses).length > 0;
+const addressLines = hasAddresses
+  ? Object.entries(v4Addresses)
+      .map(([name, addr]) => `  ${name}: "${addr}" as \`0x\${string}\`,`)
+      .join("\n")
+  : "  // Addresses will be populated after deployment (npm run deploy-v4)";
 
 // Build ABI exports
 const abiExports = Object.entries(abis)
@@ -245,14 +258,16 @@ console.log(`    ✅  contractsV4.ts`);
 // DONE
 // ════════════════════════════════════════════════════════════════════════════
 
-console.log(`
-✨  Sync complete!
+const syncedItems = ["Ponder ABIs  → packages/ponder/abis/v4/", "Frontend     → packages/frontend/src/constants/contractsV4.ts"];
+if (!abiOnly) syncedItems.unshift("Ponder .env  → packages/ponder/.env");
 
-   Ponder .env  → packages/ponder/.env
-   Ponder ABIs  → packages/ponder/abis/v4/
-   Frontend     → packages/frontend/src/constants/contractsV4.ts
+console.log(`
+✨  Sync complete!${abiOnly ? " (ABI-only)" : ""}
+
+${syncedItems.map(s => `   ${s}`).join("\n")}
 
 Next steps:
    1. cd packages/ponder && npm run dev
    2. cd packages/frontend && npm run dev
 `);
+

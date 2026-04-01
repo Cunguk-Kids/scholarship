@@ -1,6 +1,6 @@
 import { ponder } from "ponder:registry";
 import { db } from "@/db";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   v4Programs, v4Applicants, v4Scholars,
   v4Milestones, v4Votes, v4ConfidenceStakes,
@@ -150,7 +150,10 @@ export const scholarshipCoreHandlers = () => {
       const { programId, student, totalScore } = event.args;
       await db.update(v4Applicants)
         .set({ screeningScore: String(totalScore), totalScore: String(totalScore), updatedAt: new Date() })
-        .where(eq(v4Applicants.blockchainProgramId, Number(programId)));
+        .where(and(
+          eq(v4Applicants.blockchainProgramId, Number(programId)),
+          eq(v4Applicants.wallet, String(student)),
+        ));
 
       await insertBlock({ event, eventName: "ScholarshipCore:ScoreSubmitted" });
     } catch (err) {
@@ -166,7 +169,10 @@ export const scholarshipCoreHandlers = () => {
         .where(eq(v4Applicants.wallet, String(student)));
 
       await db.update(v4Programs)
-        .set({ shortlistedCount: db.$count(v4Applicants, eq(v4Applicants.blockchainProgramId, Number(programId))), updatedAt: new Date() })
+        .set({
+          shortlistedCount: sql`(SELECT COUNT(*) FROM v4_applicants WHERE blockchain_program_id = ${Number(programId)} AND status = 'SHORTLISTED')`,
+          updatedAt: new Date(),
+        })
         .where(eq(v4Programs.blockchainId, Number(programId)));
 
       await sendSseToAll("main", { step: "StudentShortlisted", data: { programId, student }, status: true, blockHash: event.block.hash });
@@ -278,13 +284,24 @@ export const scholarshipCoreHandlers = () => {
         .set({ status: "COMPLETED", completedAt: new Date(), updatedAt: new Date() })
         .where(eq(v4Milestones.blockchainId, Number(milestoneId)));
 
-      // Update scholar totalReceived
-      const scholars = await db.select().from(v4Scholars).where(eq(v4Scholars.wallet, String(scholar))).limit(1);
-      if (scholars[0]) {
-        const prev = BigInt(scholars[0].totalReceived ?? "0");
-        await db.update(v4Scholars)
-          .set({ totalReceived: String(prev + BigInt(amount)), updatedAt: new Date() })
-          .where(eq(v4Scholars.wallet, String(scholar)));
+      // Update scholar totalReceived — find the milestone's programId first to scope the update
+      const [milestone] = await db.select({ scholarId: v4Milestones.scholarId, programId: v4Milestones.programId })
+        .from(v4Milestones)
+        .where(eq(v4Milestones.blockchainId, Number(milestoneId)))
+        .limit(1);
+
+      if (milestone?.scholarId) {
+        const [existingScholar] = await db.select({ id: v4Scholars.id, totalReceived: v4Scholars.totalReceived })
+          .from(v4Scholars)
+          .where(eq(v4Scholars.id, milestone.scholarId))
+          .limit(1);
+
+        if (existingScholar) {
+          const prev = BigInt(existingScholar.totalReceived ?? "0");
+          await db.update(v4Scholars)
+            .set({ totalReceived: String(prev + BigInt(amount)), updatedAt: new Date() })
+            .where(eq(v4Scholars.id, milestone.scholarId));
+        }
       }
 
       await insertBlock({ event, eventName: "ScholarshipCore:MilestoneCompleted" });
@@ -334,7 +351,10 @@ export const scholarshipCoreHandlers = () => {
           isBlacklisted: Number(dtype) === 2,
           updatedAt: new Date(),
         })
-        .where(eq(v4Scholars.wallet, String(scholar)));
+        .where(and(
+          eq(v4Scholars.wallet, String(scholar)),
+          eq(v4Scholars.blockchainProgramId, Number(programId)),
+        ));
 
       await insertBlock({ event, eventName: "ScholarshipCore:ScholarSlashed" });
       await sendSseToAll("main", { step: "ScholarSlashed", data: { scholar, programId }, status: true, blockHash: event.block.hash });

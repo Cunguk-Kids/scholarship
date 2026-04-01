@@ -11,20 +11,18 @@
     "deploy-lisk": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network liskSepolia --verify",
     "deploy-ganache": "bun hardhat ignition deploy ignition/modules/scholarship-manager.ts --network ganache",
 
-    "deploy-v4": "bun hardhat ignition deploy ignition/modules/scholarship-v4.ts --network localhost",
-    "deploy-v4-lisk": "bun hardhat ignition deploy ignition/modules/scholarship-v4.ts --network liskSepolia --verify",
-    "deploy-v4-ganache": "bun hardhat ignition deploy ignition/modules/scholarship-v4.ts --network ganache",
-
-    "postdeploy-v4": "node scripts/sync-deployments.mjs 31337",
-    "postdeploy-v4-lisk": "node scripts/sync-deployments.mjs 4202",
-    "postdeploy-v4-ganache": "node scripts/sync-deployments.mjs 1337",
+    "deploy-v4": "bun hardhat ignition deploy ignition/modules/scholarship-v4.ts --network localhost && node scripts/sync-deployments.mjs 31337",
+    "deploy-v4-lisk": "bun hardhat ignition deploy ignition/modules/scholarship-v4.ts --network liskSepolia --verify && node scripts/sync-deployments.mjs 4202",
+    "deploy-v4-ganache": "bun hardhat ignition deploy ignition/modules/scholarship-v4.ts --network ganache && node scripts/sync-deployments.mjs 1337",
 
     "sync": "node scripts/sync-deployments.mjs 31337",
     "sync:lisk": "node scripts/sync-deployments.mjs 4202",
     "sync:ganache": "node scripts/sync-deployments.mjs 1337",
 
-    "test": "hardhat test",
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "compile:sync": "hardhat compile && node scripts/sync-deployments.mjs --abi-only",
+
+    "test": "hardhat test"
   },
   "devDependencies": {
     "@types/node": "^22.8.5",
