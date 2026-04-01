@@ -161,12 +161,35 @@ export const scholarshipCoreHandlers = () => {
     }
   });
 
+  ponder.on("ScholarshipCore:StudentScreenedOut", async ({ event }) => {
+    try {
+      const { programId, student, score, locked } = event.args;
+      await db.update(v4Applicants)
+        .set({
+          status:          locked ? "LOCKED" : "SCREENED_OUT",
+          screeningScore:  String(score),
+          updatedAt:       new Date(),
+        })
+        .where(and(
+          eq(v4Applicants.blockchainProgramId, Number(programId)),
+          eq(v4Applicants.wallet, String(student)),
+        ));
+
+      await insertBlock({ event, eventName: "ScholarshipCore:StudentScreenedOut" });
+    } catch (err) {
+      logger.error({ err }, "StudentScreenedOut handler error");
+    }
+  });
+
   ponder.on("ScholarshipCore:StudentShortlisted", async ({ event }) => {
     try {
       const { programId, student, score } = event.args;
       await db.update(v4Applicants)
         .set({ status: "SHORTLISTED", screeningScore: String(score), updatedAt: new Date() })
-        .where(eq(v4Applicants.wallet, String(student)));
+        .where(and(
+          eq(v4Applicants.blockchainProgramId, Number(programId)),
+          eq(v4Applicants.wallet, String(student)),
+        ));
 
       await db.update(v4Programs)
         .set({
@@ -368,7 +391,10 @@ export const scholarshipCoreHandlers = () => {
       const { programId, scholar } = event.args;
       await db.update(v4Scholars)
         .set({ status: "COMPLETED", updatedAt: new Date() })
-        .where(eq(v4Scholars.wallet, String(scholar)));
+        .where(and(
+          eq(v4Scholars.wallet, String(scholar)),
+          eq(v4Scholars.blockchainProgramId, Number(programId)),
+        ));
 
       await sendSseToAll("main", { step: "ScholarCompleted", data: { programId, scholar }, status: true, blockHash: event.block.hash });
     } catch (err) {
@@ -420,7 +446,10 @@ export const scholarshipTreasuryHandlers = () => {
           bonusAmount:    String(bonus),
           updatedAt:      new Date(),
         })
-        .where(eq(v4ConfidenceStakes.voterAddress, String(voter)));
+        .where(and(
+          eq(v4ConfidenceStakes.voterAddress, String(voter)),
+          eq(v4ConfidenceStakes.blockchainProgramId, Number(programId)),
+        ));
 
       await sendSseToAll("main", { step: "ConfidenceStakeResolved", data: { programId, voter, slashed }, status: true, blockHash: event.block.hash });
     } catch (err) {
@@ -566,6 +595,40 @@ export const scholarshipReputationHandlers = () => {
       }
     } catch (err) {
       logger.error({ err }, "VotingPowerLocked handler error");
+    }
+  });
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMMITTEE GOVERNANCE HANDLERS
+// ══════════════════════════════════════════════════════════════════════════════
+
+export const committeeGovernanceHandlers = () => {
+
+  /**
+   * ScoreFinalized — emitted after committee resolves tiebreaker and produces
+   * the final averaged score for a BY_COMMITTEE applicant.
+   * Updates v4Applicants with the committee-resolved scores.
+   */
+  ponder.on("CommitteeGovernance:ScoreFinalized", async ({ event }) => {
+    try {
+      const { programId, applicant, avgAcademic, avgIncome, avgRecommend } = event.args;
+      const totalScore = BigInt(avgAcademic) + BigInt(avgIncome) + BigInt(avgRecommend);
+
+      await db.update(v4Applicants)
+        .set({
+          screeningScore: String(totalScore),
+          totalScore:     String(totalScore),
+          updatedAt:      new Date(),
+        })
+        .where(and(
+          eq(v4Applicants.blockchainProgramId, Number(programId)),
+          eq(v4Applicants.wallet, String(applicant)),
+        ));
+
+      await insertBlock({ event, eventName: "CommitteeGovernance:ScoreFinalized" });
+    } catch (err) {
+      logger.error({ err }, "ScoreFinalized handler error");
     }
   });
 };

@@ -3,6 +3,7 @@ import {
   scholarshipTreasuryHandlers,
   scholarshipBountyHandlers,
   scholarshipReputationHandlers,
+  committeeGovernanceHandlers,
 } from "./handlers/scholarship-v4";
 
 export const setupHandlers = () => {
@@ -11,4 +12,5 @@ export const setupHandlers = () => {
   scholarshipTreasuryHandlers();
   scholarshipBountyHandlers();
   scholarshipReputationHandlers();
+  committeeGovernanceHandlers();
 };
