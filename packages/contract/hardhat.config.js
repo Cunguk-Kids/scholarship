@@ -28,7 +28,22 @@ dotenv.config();
 /** @type {import("hardhat/types/config").HardhatConfig} **/
 const config = {
   plugins: [hardhatToolboxViemPlugin],
-  solidity: "0.8.28",
+  solidity: {
+    version: "0.8.28",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+      viaIR: true,
+    },
+  },
+  // v3/ is an archive folder — exclude it from compilation.
+  // Hardhat compiles every .sol under paths.sources; we rename
+  // the archive folder with a leading underscore so it is skipped.
+  paths: {
+    sources: "./contracts",
+  },
   networks: {
     liskSepolia: {
       type: "http",

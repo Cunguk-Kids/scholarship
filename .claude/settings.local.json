@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const d=require\\(''D:/Porto/@team-kunyuk/scholarship/packages/contract/artifacts/contracts/v3/ScholarshipTreasuryUpgradeable.sol/ScholarshipTreasuryUpgradeable.json''\\); console.log\\(''Treasury bytecode size:'', \\(d.bytecode.length-2\\)/2, ''bytes''\\); d.abi.filter\\(x=>x.type===''function''\\).forEach\\(f=>console.log\\('' -'', f.name\\)\\)\")"
+    ]
+  }
+}

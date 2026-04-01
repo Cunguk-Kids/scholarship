@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx hardhat:*)",
+      "Bash(find /d/Porto/@team-kunyuk/scholarship -type f -name *.sol)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''''ABI entries:'''', len\\(d[''''abi'''']\\)\\); print\\(''''Bytecode size \\(bytes\\):'''', len\\(d[''''bytecode'''']\\)//2 - 1 if d[''''bytecode''''] else 0\\)\")",
+      "Bash(node -e \"const d=require\\(''/d/Porto/@team-kunyuk/scholarship/packages/contract/artifacts/contracts/v3/ScholarshipCoreUpgradeable.sol/ScholarshipCoreUpgradeable.json''\\); console.log\\(''Bytecode size:'', \\(d.bytecode.length-2\\)/2, ''bytes''\\); console.log\\(''ABI fn count:'', d.abi.filter\\(x=>x.type===''function''\\).length\\); d.abi.filter\\(x=>x.type===''function''\\).forEach\\(f=>console.log\\('' -'', f.name\\)\\)\")",
+      "Bash(node -e \"const d=require\\(''D:/Porto/@team-kunyuk/scholarship/packages/contract/artifacts/contracts/v3/ScholarshipCoreUpgradeable.sol/ScholarshipCoreUpgradeable.json''\\); console.log\\(''Bytecode size:'', \\(d.bytecode.length-2\\)/2, ''bytes''\\); console.log\\(''24KB limit:'', 24576, ''bytes''\\); d.abi.filter\\(x=>x.type===''function''\\).forEach\\(f=>console.log\\('' -'', f.name\\)\\)\")"
+    ]
+  }
+}
