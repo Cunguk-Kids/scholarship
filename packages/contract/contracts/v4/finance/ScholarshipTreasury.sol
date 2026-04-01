@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IScholarshipTreasury} from "../interfaces/IScholarship.sol";
+import {ScholarshipTypes}     from "../libraries/ScholarshipTypes.sol";
 
 /**
  * @title  ScholarshipTreasury
@@ -120,6 +121,7 @@ contract ScholarshipTreasury is
     error ConfidenceStakeAlreadyExists();
     error NothingToRefund();
     error NothingToWithdraw();
+    error TooManyDonorsForPushRefund();
 
     // ── Constructor / Initializer ────────────────────────────────────────────
 
@@ -379,14 +381,16 @@ contract ScholarshipTreasury is
     /**
      * @notice Push-refund all donors when a programme is cancelled.
      *
-     * @dev    WARNING: Loops over all donors.  For programmes with large numbers
-     *         of donors, prefer claimRefund() (pull pattern) to avoid gas limits.
-     *         Pro-rata based on remaining balance at time of cancellation.
+     * @dev    Only safe for small programmes (≤ MAX_PUSH_REFUND_DONORS donors).
+     *         For larger programmes the loop will revert — use claimRefund()
+     *         (pull pattern) instead.
      */
     function refundDonors(uint256 programId)
         external override nonReentrant onlyRole(CORE_ROLE)
     {
         address[] memory donors  = _programDonors[programId];
+        if (donors.length > ScholarshipTypes.MAX_PUSH_REFUND_DONORS)
+            revert TooManyDonorsForPushRefund();
         uint256          balance = programBalance[programId];
         uint256          total   = programTotalDonated[programId];
 

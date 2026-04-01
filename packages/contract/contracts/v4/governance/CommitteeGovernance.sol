@@ -100,6 +100,7 @@ contract CommitteeGovernance is
 
     error InitiatorCannotBeCommittee();
     error AlreadyCommitteeMember();
+    error TooManyCommitteeMembers();
     error NotCommitteeMember();
     error AlreadyScored();
     error ScoreAlreadyFinalized();
@@ -151,6 +152,8 @@ contract CommitteeGovernance is
         if (msg.sender != prog.initiator) revert OnlyInitiator();
         if (member == prog.initiator)     revert InitiatorCannotBeCommittee();
         if (isCommitteeMember[programId][member]) revert AlreadyCommitteeMember();
+        if (_committeeMembers[programId].length >= ScholarshipTypes.MAX_COMMITTEE_MEMBERS)
+            revert TooManyCommitteeMembers();
 
         isCommitteeMember[programId][member] = true;
         _committeeMembers[programId].push(member);

@@ -165,6 +165,12 @@ contract ScholarshipCore is
     error InvalidSortOrder();
     error TargetWinnersExceedsMax();
     error OnlyInitiator();
+    error TooEarly();
+    error VotingNotEnded();
+    error ApplicantListIncomplete();
+    error ConfidenceStakeExceedsDonation();
+    error MustVoteBeforeStaking();
+    error ConfidenceStakeMismatch();
 
     // ── Modifiers ────────────────────────────────────────────────────────────
 
@@ -342,6 +348,7 @@ contract ScholarshipCore is
         external programExists(programId) onlyInitiator(programId)
     {
         _requireStatus(programId, ScholarshipTypes.ProgramStatus.CREATED);
+        if (block.timestamp < programs[programId].applicationStart) revert TooEarly();
         programs[programId].status = ScholarshipTypes.ProgramStatus.APPLICATION_OPEN;
         emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN);
     }
@@ -353,6 +360,7 @@ contract ScholarshipCore is
         external programExists(programId) onlyInitiator(programId)
     {
         _requireStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN);
+        if (block.timestamp < programs[programId].applicationEnd) revert TooEarly();
         programs[programId].status = ScholarshipTypes.ProgramStatus.SCREENING;
         emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.SCREENING);
     }
@@ -456,6 +464,7 @@ contract ScholarshipCore is
             recommendCID:   recommendCID,
             screeningScore: 0,
             totalScore:     0,
+            voteScore:      0,
             scoreTimestamp: 0,
             retryCount:     retry,
             scoreDisputed:  false
@@ -555,7 +564,7 @@ contract ScholarshipCore is
 
         ScholarshipTypes.Applicant storage app = applicants[programId][applicant];
         app.screeningScore  = normalised;
-        app.totalScore      = normalised; // voting will add on top of this
+        app.totalScore      = normalised; // fixed at screening — voteScore tracks voting separately
         app.scoreTimestamp  = block.timestamp;
 
         emit ScoreSubmitted(programId, applicant, normalised, scoredBy);
@@ -585,6 +594,13 @@ contract ScholarshipCore is
         ScholarshipTypes.Program storage prog = programs[programId];
 
         uint256 n = rankedApplicants.length;
+
+        // All applicants who submitted must appear in the ranked list — prevents
+        // initiator from silently excluding applicants without the contract knowing.
+        if (n != _programApplicants[programId].length) revert ApplicantListIncomplete();
+
+        // Cannot transition to VOTING before votingStart
+        if (block.timestamp < prog.votingStart) revert TooEarly();
 
         // Validate descending sort order
         for (uint256 i = 0; i < n - 1; ) {
@@ -675,8 +691,8 @@ contract ScholarshipCore is
         voter.remainingVotingPower = 0;
         voter.votedFor             = candidate;  // Track for targeted REP rewards
 
-        // Voting weight stacks on top of screening score
-        applicants[programId][candidate].totalScore += weight;
+        // Vote weight accumulates in its own field — keeps screening and voting dimensions separate
+        applicants[programId][candidate].voteScore += weight;
 
         emit VoteCast(programId, msg.sender, candidate, weight);
     }
@@ -707,6 +723,13 @@ contract ScholarshipCore is
     {
         ScholarshipTypes.VoterInfo storage voter = voterInfo[programId][msg.sender];
         if (voter.confidenceStake > 0) revert ConfidenceStakeAlreadyExists();
+
+        // Must have voted, and must stake on the same scholar they voted for
+        if (voter.votedFor == address(0))   revert MustVoteBeforeStaking();
+        if (voter.votedFor != scholar)      revert ConfidenceStakeMismatch();
+
+        // Cap stake at own donation amount — prevents accounting overflow in Treasury
+        if (amount > voter.donatedAmount)   revert ConfidenceStakeExceedsDonation();
 
         usdc.safeTransferFrom(msg.sender, address(treasury), amount);
         treasury.depositConfidenceStake(programId, msg.sender, scholar, amount);
@@ -742,6 +765,9 @@ contract ScholarshipCore is
         _requireStatus(programId, ScholarshipTypes.ProgramStatus.VOTING);
         ScholarshipTypes.Program storage prog = programs[programId];
 
+        // Voting period must have ended before winners can be selected
+        if (block.timestamp < prog.votingEnd) revert VotingNotEnded();
+
         // Quorum check
         uint256 totalDonated = treasury.programTotalDonated(programId);
         uint256 totalCast    = _computeTotalVotingCast(programId);
@@ -752,10 +778,10 @@ contract ScholarshipCore is
             ? rankedCandidates.length
             : prog.targetWinners;
 
-        // Validate order
+        // Validate descending order by voteScore (voting determines winner, not screening)
         for (uint256 i = 0; i < winnerCount - 1; ) {
-            if (applicants[programId][rankedCandidates[i]].totalScore <
-                applicants[programId][rankedCandidates[i + 1]].totalScore)
+            if (applicants[programId][rankedCandidates[i]].voteScore <
+                applicants[programId][rankedCandidates[i + 1]].voteScore)
                 revert InvalidSortOrder();
             unchecked { ++i; }
         }

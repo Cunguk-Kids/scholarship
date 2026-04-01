@@ -178,7 +178,8 @@ library ScholarshipTypes {
         string  recommendCID;  // IPFS: recommendation letter
 
         uint256 screeningScore;   // Weighted score from screening (0–1000)
-        uint256 totalScore;       // screeningScore + voting weight accumulated
+        uint256 totalScore;       // Same as screeningScore — set once, never modified
+        uint256 voteScore;        // Accumulated USDC voting weight (separate dimension)
         uint256 scoreTimestamp;   // Block timestamp when score was confirmed
         uint8   retryCount;       // Increments on each application; max 3
         bool    scoreDisputed;    // True while a score challenge is pending
@@ -331,4 +332,6 @@ library ScholarshipTypes {
     uint256 constant QUORUM_PERCENT        = 50;          // % of totalDonated that must vote
     uint256 constant CONFIDENCE_SLASH_PCT  = 50;          // % of confidence stake slashed on fraud
     uint256 constant CONFIDENCE_BONUS_PCT  = 20;          // % yield bonus on successful scholar
+    uint256 constant MAX_COMMITTEE_MEMBERS = 15;          // Max committee size per program
+    uint256 constant MAX_PUSH_REFUND_DONORS = 50;         // Push-refund guard; above this use claimRefund
 }
