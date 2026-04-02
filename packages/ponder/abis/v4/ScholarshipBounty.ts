@@ -101,11 +101,6 @@ export const scholarshipBountyAbi = [
   },
   {
     "inputs": [],
-    "name": "InsufficientDonation",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidInitialization",
     "type": "error"
   },

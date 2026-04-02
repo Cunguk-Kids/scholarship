@@ -46,14 +46,14 @@ export default buildModule("ScholarshipV4", (m) => {
     : deployer;
 
   // ── Role constants (keccak256 of role name strings) ──────────────────
-  const UPGRADER_ROLE   = keccak256(toHex("UPGRADER_ROLE"));
-  const CORE_ROLE       = keccak256(toHex("CORE_ROLE"));
-  const BOUNTY_ROLE     = keccak256(toHex("BOUNTY_ROLE"));
-  const COMMITTEE_ROLE  = keccak256(toHex("COMMITTEE_ROLE"));
-  const RESOLVER_ROLE   = keccak256(toHex("RESOLVER_ROLE"));
-  const MINTER_ROLE     = keccak256(toHex("MINTER_ROLE"));
-  const BURNER_ROLE     = keccak256(toHex("BURNER_ROLE"));
-  const LOCKER_ROLE     = keccak256(toHex("LOCKER_ROLE"));
+  const UPGRADER_ROLE = keccak256(toHex("UPGRADER_ROLE"));
+  const CORE_ROLE = keccak256(toHex("CORE_ROLE"));
+  const BOUNTY_ROLE = keccak256(toHex("BOUNTY_ROLE"));
+  const COMMITTEE_ROLE = keccak256(toHex("COMMITTEE_ROLE"));
+  const RESOLVER_ROLE = keccak256(toHex("RESOLVER_ROLE"));
+  const MINTER_ROLE = keccak256(toHex("MINTER_ROLE"));
+  const BURNER_ROLE = keccak256(toHex("BURNER_ROLE"));
+  const LOCKER_ROLE = keccak256(toHex("LOCKER_ROLE"));
 
   // ════════════════════════════════════════════════════════════════
   // STEP 1 — USDC (MockUSDC on local; real address on testnet/mainnet)
@@ -68,7 +68,7 @@ export default buildModule("ScholarshipV4", (m) => {
   // ════════════════════════════════════════════════════════════════
 
   const reputation = m.contract("ScholarshipReputation");
-  const donorNFT   = m.contract("DonorNFT");
+  const donorNFT = m.contract("DonorNFT");
   const studentNFT = m.contract("StudentNFT");
 
   // ════════════════════════════════════════════════════════════════
@@ -135,13 +135,13 @@ export default buildModule("ScholarshipV4", (m) => {
 
   // -- Treasury roles --------------------------------------------------
   // Core may move funds; Bounty may slash and distribute
-  m.call(treasury, "grantRole", [CORE_ROLE,   core],   { id: "treasury_grantCoreRole",   ...afterAll });
+  m.call(treasury, "grantRole", [CORE_ROLE, core], { id: "treasury_grantCoreRole", ...afterAll });
   m.call(treasury, "grantRole", [BOUNTY_ROLE, bounty], { id: "treasury_grantBountyRole", ...afterAll });
 
   // -- Core roles ------------------------------------------------------
   // Bounty may freeze/release milestones and slash scholars
   // CommitteeGovernance may push averaged screening scores
-  m.call(core, "grantRole", [BOUNTY_ROLE,   bounty],    { id: "core_grantBountyRole",    ...afterAll });
+  m.call(core, "grantRole", [BOUNTY_ROLE, bounty], { id: "core_grantBountyRole", ...afterAll });
   m.call(core, "grantRole", [COMMITTEE_ROLE, committee], { id: "core_grantCommitteeRole", ...afterAll });
 
   // -- Bounty roles ----------------------------------------------------
@@ -156,7 +156,7 @@ export default buildModule("ScholarshipV4", (m) => {
 
   // -- NFT mint roles --------------------------------------------------
   // Core mints DonorNFT on donation and StudentNFT on programme completion
-  m.call(donorNFT,   "grantRole", [MINTER_ROLE, core], { id: "donorNFT_grantMinterRole",   ...afterAll });
+  m.call(donorNFT, "grantRole", [MINTER_ROLE, core], { id: "donorNFT_grantMinterRole", ...afterAll });
   m.call(studentNFT, "grantRole", [MINTER_ROLE, core], { id: "studentNFT_grantMinterRole", ...afterAll });
 
   // ════════════════════════════════════════════════════════════════
