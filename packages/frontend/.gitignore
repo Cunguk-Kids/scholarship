@@ -27,3 +27,6 @@ dist-ssr
 .netlify
 
 .tanstack
+
+*storybook.log
+storybook-static
