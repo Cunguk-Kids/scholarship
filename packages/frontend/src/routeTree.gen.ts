@@ -10,18 +10,27 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VoteRouteImport } from './routes/vote'
-import { Route as ScholarshipsRouteImport } from './routes/scholarships'
+import { Route as ProgramsRouteImport } from './routes/programs'
+import { Route as DisputesRouteImport } from './routes/disputes'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProgramsIdRouteImport } from './routes/programs.$id'
+import { Route as ApplyIdRouteImport } from './routes/apply.$id'
+import { Route as ProgramsIdApplyRouteImport } from './routes/programs.$id.apply'
 
 const VoteRoute = VoteRouteImport.update({
   id: '/vote',
   path: '/vote',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ScholarshipsRoute = ScholarshipsRouteImport.update({
-  id: '/scholarships',
-  path: '/scholarships',
+const ProgramsRoute = ProgramsRouteImport.update({
+  id: '/programs',
+  path: '/programs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisputesRoute = DisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -34,39 +43,93 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProgramsIdRoute = ProgramsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ProgramsRoute,
+} as any)
+const ApplyIdRoute = ApplyIdRouteImport.update({
+  id: '/apply/$id',
+  path: '/apply/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgramsIdApplyRoute = ProgramsIdApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => ProgramsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/scholarships': typeof ScholarshipsRoute
+  '/disputes': typeof DisputesRoute
+  '/programs': typeof ProgramsRouteWithChildren
   '/vote': typeof VoteRoute
+  '/apply/$id': typeof ApplyIdRoute
+  '/programs/$id': typeof ProgramsIdRouteWithChildren
+  '/programs/$id/apply': typeof ProgramsIdApplyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/scholarships': typeof ScholarshipsRoute
+  '/disputes': typeof DisputesRoute
+  '/programs': typeof ProgramsRouteWithChildren
   '/vote': typeof VoteRoute
+  '/apply/$id': typeof ApplyIdRoute
+  '/programs/$id': typeof ProgramsIdRouteWithChildren
+  '/programs/$id/apply': typeof ProgramsIdApplyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/scholarships': typeof ScholarshipsRoute
+  '/disputes': typeof DisputesRoute
+  '/programs': typeof ProgramsRouteWithChildren
   '/vote': typeof VoteRoute
+  '/apply/$id': typeof ApplyIdRoute
+  '/programs/$id': typeof ProgramsIdRouteWithChildren
+  '/programs/$id/apply': typeof ProgramsIdApplyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/scholarships' | '/vote'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/disputes'
+    | '/programs'
+    | '/vote'
+    | '/apply/$id'
+    | '/programs/$id'
+    | '/programs/$id/apply'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/scholarships' | '/vote'
-  id: '__root__' | '/' | '/dashboard' | '/scholarships' | '/vote'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/disputes'
+    | '/programs'
+    | '/vote'
+    | '/apply/$id'
+    | '/programs/$id'
+    | '/programs/$id/apply'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/disputes'
+    | '/programs'
+    | '/vote'
+    | '/apply/$id'
+    | '/programs/$id'
+    | '/programs/$id/apply'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
-  ScholarshipsRoute: typeof ScholarshipsRoute
+  DisputesRoute: typeof DisputesRoute
+  ProgramsRoute: typeof ProgramsRouteWithChildren
   VoteRoute: typeof VoteRoute
+  ApplyIdRoute: typeof ApplyIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -78,11 +141,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VoteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/scholarships': {
-      id: '/scholarships'
-      path: '/scholarships'
-      fullPath: '/scholarships'
-      preLoaderRoute: typeof ScholarshipsRouteImport
+    '/programs': {
+      id: '/programs'
+      path: '/programs'
+      fullPath: '/programs'
+      preLoaderRoute: typeof ProgramsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disputes': {
+      id: '/disputes'
+      path: '/disputes'
+      fullPath: '/disputes'
+      preLoaderRoute: typeof DisputesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -99,14 +169,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/programs/$id': {
+      id: '/programs/$id'
+      path: '/$id'
+      fullPath: '/programs/$id'
+      preLoaderRoute: typeof ProgramsIdRouteImport
+      parentRoute: typeof ProgramsRoute
+    }
+    '/apply/$id': {
+      id: '/apply/$id'
+      path: '/apply/$id'
+      fullPath: '/apply/$id'
+      preLoaderRoute: typeof ApplyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/programs/$id/apply': {
+      id: '/programs/$id/apply'
+      path: '/apply'
+      fullPath: '/programs/$id/apply'
+      preLoaderRoute: typeof ProgramsIdApplyRouteImport
+      parentRoute: typeof ProgramsIdRoute
+    }
   }
 }
+
+interface ProgramsIdRouteChildren {
+  ProgramsIdApplyRoute: typeof ProgramsIdApplyRoute
+}
+
+const ProgramsIdRouteChildren: ProgramsIdRouteChildren = {
+  ProgramsIdApplyRoute: ProgramsIdApplyRoute,
+}
+
+const ProgramsIdRouteWithChildren = ProgramsIdRoute._addFileChildren(
+  ProgramsIdRouteChildren,
+)
+
+interface ProgramsRouteChildren {
+  ProgramsIdRoute: typeof ProgramsIdRouteWithChildren
+}
+
+const ProgramsRouteChildren: ProgramsRouteChildren = {
+  ProgramsIdRoute: ProgramsIdRouteWithChildren,
+}
+
+const ProgramsRouteWithChildren = ProgramsRoute._addFileChildren(
+  ProgramsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
-  ScholarshipsRoute: ScholarshipsRoute,
+  DisputesRoute: DisputesRoute,
+  ProgramsRoute: ProgramsRouteWithChildren,
   VoteRoute: VoteRoute,
+  ApplyIdRoute: ApplyIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

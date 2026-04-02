@@ -1,66 +1,164 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Paytone+One&display=swap");
 @import "tailwindcss";
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — Polished Neobrutalism
+   ══════════════════════════════════════════════════════════════════════════════ */
+
 @theme {
+  /* ── Core palette ─────────────────────────────────────────────────────────── */
   --color-skpurple: #6a88f8;
   --color-skpurple-hover: #4565dd;
+  --color-skpurple-light: #e8edff;
   --color-skred: #f55f4b;
+  --color-skred-light: #ffe5e2;
   --color-skyellow: #fcd343;
+  --color-skyellow-light: #fff8dc;
   --color-skpink: #ff7989;
   --color-skbw: #fcf0e3;
   --color-skbw-hover: #f5d9b3;
   --color-skgreen: #d9fbb0;
+  --color-skgreen-dark: #4ade80;
+  --color-skcyan: #7fdbda;
+  --color-skcyan-light: #e0f7f7;
+  --color-skorange: #ff9f43;
+  --color-skdark: #1a1a2e;
+  --color-skcream: #fefae0;
+
+  /* ── Semantic colors ──────────────────────────────────────────────────────── */
   --color-error-container: #F9DEDC;
-  --color-on-error-container:#852221;
+  --color-on-error-container: #852221;
+  --color-success-container: #d9fbb0;
+  --color-on-success-container: #1a5a1a;
+
+  /* ── Typography ───────────────────────────────────────────────────────────── */
   --font-nunito: "Nunito Sans", sans-serif;
   --font-paytone: "Paytone One", sans-serif;
 
+  /* ── Shadows ──────────────────────────────────────────────────────────────── */
   --inset-shadow-sksm: inset 0 -1px 1px 0px rgba(0, 0, 0, 0.1);
   --inset-shadow-pressed: inset 8px 8px 8px 0 rgba(0, 0, 0, 0.25);
 
+  /* ── Animations ───────────────────────────────────────────────────────────── */
   @keyframes slide-up-fade-in {
-    0% {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    0% { transform: translateY(100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
   }
-
   @keyframes slide-down-fade-out {
-    0% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(100%);
-      opacity: 0;
-    }
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(100%); opacity: 0; }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(106, 136, 248, 0.4); }
+    50% { box-shadow: 0 0 12px 4px rgba(106, 136, 248, 0.2); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
   }
 
   --animate-slideUp-fadeIn: slide-up-fade-in 0.6s ease-in-out forwards;
   --animate-slideDown-fadeOut: slide-down-fade-out 0.6s ease-in-out forwards;
+  --animate-shimmer: shimmer 2s infinite linear;
+  --animate-pulse-glow: pulse-glow 2s infinite ease-in-out;
+  --animate-float: float 3s ease-in-out infinite;
 }
 
-.neo-shadow {
+/* ══════════════════════════════════════════════════════════════════════════════
+   NEOBRUTALISM UTILITIES
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Shadows ──────────────────────────────────────────────────────────────── */
+.neo-shadow-sm { box-shadow: 2px 2px 0 0 rgba(0, 0, 0); }
+.neo-shadow    { box-shadow: 4px 4px 0 0 rgba(0, 0, 0); }
+.neo-shadow-md { box-shadow: 4px 4px 0 0 rgba(0, 0, 0); }
+.neo-shadow-lg { box-shadow: 6px 6px 0 0 rgba(0, 0, 0); }
+
+/* ── Interactive shadow — lifts on hover, sinks on press ──────────────────── */
+.neo-interactive {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 4px 4px 0 0 rgba(0, 0, 0);
 }
+.neo-interactive:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 rgba(0, 0, 0);
+}
+.neo-interactive:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 rgba(0, 0, 0);
+}
+
+/* ── Neo border (thick black) ─────────────────────────────────────────────── */
+.neo-border   { border: 2px solid black; }
+.neo-border-3 { border: 3px solid black; }
+
+/* ── Card container ───────────────────────────────────────────────────────── */
+.neo-card {
+  border: 2px solid black;
+  border-radius: 1rem;
+  box-shadow: 4px 4px 0 0 rgba(0, 0, 0);
+  background: white;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.neo-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 rgba(0, 0, 0);
+}
+
+/* ── Tag / badge ──────────────────────────────────────────────────────────── */
+.neo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid black;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  box-shadow: 2px 2px 0 0 rgba(0, 0, 0);
+}
+
+/* ── Skeleton loader ──────────────────────────────────────────────────────── */
+.neo-skeleton {
+  background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: 0.5rem;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GLOBAL RESETS
+   ══════════════════════════════════════════════════════════════════════════════ */
 
 * {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-
-::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
+::-webkit-scrollbar { display: none; }
 
 input, textarea {
   background-color: white;
   box-shadow: 4px 4px 0 0 rgba(0, 0, 0);
-  border: black 2px solid;
-  padding: 8px;
+  border: 2px solid black;
+  padding: 8px 12px;
   border-radius: 1rem;
+  font-family: var(--font-nunito);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-skpurple);
+  box-shadow: 4px 4px 0 0 var(--color-skpurple);
+}
+
+/* ── Selection ────────────────────────────────────────────────────────────── */
+::selection {
+  background-color: var(--color-skyellow);
+  color: black;
 }
