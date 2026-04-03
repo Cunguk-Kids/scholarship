@@ -10,6 +10,28 @@ import {IScholarshipTreasury}   from "../interfaces/IScholarship.sol";
 import {IScholarshipReputation} from "../interfaces/IScholarship.sol";
 import {ICredentialNFT}         from "../interfaces/IScholarship.sol";
 
+/**
+ * @title  ScholarshipCoreBase v5
+ * @notice Abstract base with storage, roles, voting, and milestone callbacks.
+ *
+ * @dev    CHANGES FROM v4
+ *         ─────────────────────────────────────────────────────────────
+ *         1. Milestone storage REMOVED — lives in MilestoneManager.
+ *         2. _activateScholar() delegates mandatory milestone creation
+ *            to IMilestoneManager.createMandatoryBatch().
+ *         3. Two new external callbacks for MilestoneManager:
+ *            onOptionalApproved() — updates allocatedFund + scholar counter.
+ *            onMilestoneCompleted() — updates progress, triggers NFT/rewards.
+ *         4. Scholar struct uses mandatoryTotal/mandatoryCompleted pair
+ *            + optionalApproved/optionalCompleted pair (all uint128).
+ *         5. hasBountyRole() added for MilestoneManager auth.
+ *
+ *         SIZE BUDGET
+ *         ─────────────────────────────────────────────────────────────
+ *         Removing the entire milestone CRUD from this file saves ~6 KB
+ *         bytecode, giving ScholarshipCore comfortable headroom under
+ *         the 24 KB EIP-170 limit even after adding the new callbacks.
+ */
 abstract contract ScholarshipCoreBase is Initializable {
     using SafeERC20 for IERC20;
 
@@ -18,23 +40,26 @@ abstract contract ScholarshipCoreBase is Initializable {
     error Reentrancy();
     modifier nonReentrant() {
         if (_reentrancyStatus == 2) revert Reentrancy();
-        _reentrancyStatus = 2;
-        _;
-        _reentrancyStatus = 1;
+        _reentrancyStatus = 2; _; _reentrancyStatus = 1;
     }
     function _initReentrancy() internal { _reentrancyStatus = 1; }
 
     // ── Inline UUPS ──────────────────────────────────────────────────────────
     bytes32 private constant _IMPL_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
     event Upgraded(address indexed implementation);
-    function upgradeTo(address newImpl) external { _authorizeUpgrade(newImpl); assembly { sstore(_IMPL_SLOT, newImpl) } emit Upgraded(newImpl); }
+    function upgradeTo(address newImpl) external {
+        _authorizeUpgrade(newImpl);
+        assembly { sstore(_IMPL_SLOT, newImpl) }
+        emit Upgraded(newImpl);
+    }
     function _authorizeUpgrade(address) internal view virtual;
 
-    // ── Minimal Role System ──────────────────────────────────────────────────
-    bytes32 public constant UPGRADER_ROLE  = keccak256("UPGRADER_ROLE");
-    bytes32 public constant BOUNTY_ROLE    = keccak256("BOUNTY_ROLE");
-    bytes32 public constant COMMITTEE_ROLE = keccak256("COMMITTEE_ROLE");
-    string  public constant VERSION        = "4.0.0";
+    // ── Roles ────────────────────────────────────────────────────────────────
+    bytes32 public constant UPGRADER_ROLE   = keccak256("UPGRADER_ROLE");
+    bytes32 public constant BOUNTY_ROLE     = keccak256("BOUNTY_ROLE");
+    bytes32 public constant COMMITTEE_ROLE  = keccak256("COMMITTEE_ROLE");
+    bytes32 public constant MILESTONE_ROLE  = keccak256("MILESTONE_ROLE"); // MilestoneManager
+    string  public constant VERSION         = "5.0.0";
 
     address public admin;
     mapping(bytes32 => mapping(address => bool)) internal _roles;
@@ -48,6 +73,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     function grantRole(bytes32 role, address account) external { if (msg.sender != admin) revert NotAdmin(); _roles[role][account] = true; emit RoleGranted(role, account); }
     function revokeRole(bytes32 role, address account) external { if (msg.sender != admin) revert NotAdmin(); _roles[role][account] = false; emit RoleRevoked(role, account); }
     function hasRole(bytes32 role, address account) public view returns (bool) { return _roles[role][account]; }
+    function hasBountyRole(address account) external view returns (bool) { return _roles[BOUNTY_ROLE][account]; }
     modifier onlyRole(bytes32 role) { if (!_roles[role][msg.sender]) revert MissingRole(role, msg.sender); _; }
 
     // ── External contracts ───────────────────────────────────────────────────
@@ -56,39 +82,34 @@ abstract contract ScholarshipCoreBase is Initializable {
     IScholarshipReputation public reputation;
     ICredentialNFT         public donorNFT;
     ICredentialNFT         public studentNFT;
+    IMilestoneManager      public milestoneManager; // v5 addition
 
     // ── Storage ──────────────────────────────────────────────────────────────
     uint256 internal _nextProgramId;
-    uint256 internal _nextMilestoneId;
 
-    mapping(uint256 => ScholarshipTypes.Program)                             public programs;
-    mapping(uint256 => ScholarshipTypes.Milestone)                           public milestones;
-    mapping(uint256 => mapping(address => ScholarshipTypes.Applicant))       public applicants;
-    mapping(uint256 => address[])                                            internal _programApplicants;
-    mapping(uint256 => address[])                                            internal _shortlist;
-    mapping(address => mapping(uint256 => ScholarshipTypes.Scholar))         public scholars;
-    mapping(address => ScholarshipTypes.StudentStatus)                       public globalStudentStatus;
-    mapping(address => uint256)                                              public globalFreezeUntil;
-    mapping(uint256 => mapping(address => ScholarshipTypes.ScoreComponents)) public scoreComponents;
-    mapping(uint256 => mapping(address => ScholarshipTypes.VoterInfo))       public voterInfo;
-    mapping(uint256 => mapping(address => uint8))                            public retryCount;
-    mapping(uint256 => address)                                              public milestoneOwner;
-    mapping(uint256 => address)                                              public programCommittee;
+    mapping(uint256 => ScholarshipTypes.Program)                              public programs;
+    mapping(uint256 => mapping(address => ScholarshipTypes.Applicant))        public applicants;
+    mapping(uint256 => address[])                                             internal _programApplicants;
+    mapping(uint256 => address[])                                             internal _shortlist;
+    mapping(address => mapping(uint256 => ScholarshipTypes.Scholar))          public scholars;
+    mapping(address => ScholarshipTypes.StudentStatus)                        public globalStudentStatus;
+    mapping(address => uint256)                                               public globalFreezeUntil;
+    mapping(uint256 => mapping(address => ScholarshipTypes.ScoreComponents))  public scoreComponents;
+    mapping(uint256 => mapping(address => ScholarshipTypes.VoterInfo))        public voterInfo;
+    mapping(uint256 => mapping(address => uint8))                             public retryCount;
+    mapping(uint256 => address)                                               public programCommittee;
 
-    // ── Events (only those emitted in Base) ──────────────────────────────────
+    // ── Events ───────────────────────────────────────────────────────────────
     event VoteCast(uint256 indexed programId, address indexed voter, address indexed candidate, uint256 weight);
     event ConfidenceStaked(uint256 indexed programId, address indexed voter, address indexed scholar, uint256 amount);
     event ScholarSelected(uint256 indexed programId, address indexed scholar);
-    event MilestoneSubmitted(uint256 indexed milestoneId, address indexed scholar, string proofCID);
-    event MilestoneCompleted(uint256 indexed milestoneId, address indexed scholar, uint256 amount);
-    event MilestoneFrozen(uint256 indexed milestoneId);
-    event MilestoneReleased(uint256 indexed milestoneId);
     event ScholarSlashed(address indexed scholar, uint256 indexed programId, ScholarshipTypes.DisputeType dtype);
     event ScholarCompleted(uint256 indexed programId, address indexed scholar);
     event ProgramCompleted(uint256 indexed programId);
     event ProgramStatusChanged(uint256 indexed programId, ScholarshipTypes.ProgramStatus newStatus);
+    // Milestone events emitted from MilestoneManager now — no duplication here.
 
-    // ── Errors (only those used in Base) ─────────────────────────────────────
+    // ── Errors ───────────────────────────────────────────────────────────────
     error ProgramNotFound();
     error InvalidProgramStatus(ScholarshipTypes.ProgramStatus expected, ScholarshipTypes.ProgramStatus actual);
     error StudentFrozen(uint256 freezeUntil);
@@ -104,11 +125,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     error QuorumNotMet();
     error InvalidSortOrder();
     error OnlyInitiator();
-    error MilestoneNotFound();
-    error MilestoneNotInDisputeWindow();
-    error NotMilestoneOwner();
     error ScholarNotActive();
-    error DisputeWindowStillOpen();
 
     // ── Modifiers ────────────────────────────────────────────────────────────
     modifier programExists(uint256 programId) { if (programId == 0 || programId > _nextProgramId) revert ProgramNotFound(); _; }
@@ -119,8 +136,9 @@ abstract contract ScholarshipCoreBase is Initializable {
     modifier onlyInitiator(uint256 programId) { if (msg.sender != programs[programId].initiator) revert OnlyInitiator(); _; }
 
     // ═══════════════════════════════════════════════════════════════════
-    // PHASE 3 — VOTING
+    // PHASE 3 — VOTING (unchanged from v4)
     // ═══════════════════════════════════════════════════════════════════
+
     function voteForCandidate(uint256 programId, address candidate)
         external nonReentrant programExists(programId) inStatus(programId, ScholarshipTypes.ProgramStatus.VOTING)
     {
@@ -150,71 +168,122 @@ abstract contract ScholarshipCoreBase is Initializable {
         emit ConfidenceStaked(programId, msg.sender, scholar, amount);
     }
 
-    function selectWinners(uint256 programId, address[] calldata ranked, uint256[][] calldata amounts)
-        external programExists(programId) onlyInitiator(programId)
-    {
+    /**
+     * @notice Select winners and activate scholars.
+     *
+     * @param  ranked   Winning addresses in descending vote-score order.
+     * @param  amounts  amounts[i] = mandatory milestone amounts for ranked[i].
+     * @param  descs    descs[i]   = descriptionCIDs for ranked[i]'s milestones.
+     *                  Pass empty array to skip (descriptions can be off-chain).
+     */
+    function selectWinners(
+        uint256 programId,
+        address[] calldata ranked,
+        uint256[][] calldata amounts,
+        string[][] calldata descs        // v5: creator can supply descriptions
+    ) external programExists(programId) onlyInitiator(programId) {
         _requireStatus(programId, ScholarshipTypes.ProgramStatus.VOTING);
         ScholarshipTypes.Program storage prog = programs[programId];
         if (block.timestamp < prog.votingEnd) revert VotingNotEnded();
         if (_computeTotalVotingCast(programId) * 100 < treasury.programTotalDonated(programId) * ScholarshipTypes.QUORUM_PERCENT) revert QuorumNotMet();
         uint256 n = ranked.length < prog.targetWinners ? ranked.length : prog.targetWinners;
-        for (uint256 i = 0; i < n - 1; ) { if (applicants[programId][ranked[i]].voteScore < applicants[programId][ranked[i+1]].voteScore) revert InvalidSortOrder(); unchecked{++i;} }
-        for (uint256 i = 0; i < n; ) { _activateScholar(programId, ranked[i], amounts[i]); unchecked{++i;} }
+        for (uint256 i; i < n - 1; ) {
+            if (applicants[programId][ranked[i]].voteScore < applicants[programId][ranked[i+1]].voteScore) revert InvalidSortOrder();
+            unchecked { ++i; }
+        }
+        bool hasDescs = descs.length == n;
+        for (uint256 i; i < n; ) {
+            _activateScholar(programId, ranked[i], amounts[i], hasDescs ? descs[i] : new string[](0));
+            unchecked { ++i; }
+        }
         prog.status = ScholarshipTypes.ProgramStatus.ACTIVE;
         emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.ACTIVE);
     }
 
     function _computeTotalVotingCast(uint256 programId) internal view returns (uint256 cast) {
         address[] memory donors = treasury.getProgramDonors(programId);
-        for (uint256 i = 0; i < donors.length; ) { if (voterInfo[programId][donors[i]].votedFor != address(0)) cast += voterInfo[programId][donors[i]].donatedAmount; unchecked{++i;} }
+        for (uint256 i; i < donors.length; ) {
+            if (voterInfo[programId][donors[i]].votedFor != address(0)) cast += voterInfo[programId][donors[i]].donatedAmount;
+            unchecked { ++i; }
+        }
     }
 
-    function _activateScholar(uint256 programId, address winner, uint256[] memory amt) internal {
-        scholars[winner][programId] = ScholarshipTypes.Scholar({ programId: programId, wallet: winner, status: ScholarshipTypes.StudentStatus.ACTIVE, freezeUntil: 0, isBlacklisted: false, currentMilestone: 0, totalMilestones: amt.length, totalReceived: 0 });
+    function _activateScholar(
+        uint256 programId,
+        address winner,
+        uint256[] memory amt,
+        string[] memory descs
+    ) internal {
+        uint128 total = uint128(amt.length);
+        scholars[winner][programId] = ScholarshipTypes.Scholar({
+            programId:          programId,
+            wallet:             winner,
+            status:             ScholarshipTypes.StudentStatus.ACTIVE,
+            freezeUntil:        0,
+            isBlacklisted:      false,
+            mandatoryTotal:     total,
+            mandatoryCompleted: 0,
+            optionalApproved:   0,
+            optionalCompleted:  0,
+            totalReceived:      0
+        });
         programs[programId].activeScholarCount++;
         programs[programId].allocatedFund += _sumArray(amt);
-        for (uint256 j = 0; j < amt.length; ) {
-            uint256 mId = ++_nextMilestoneId;
-            milestones[mId] = ScholarshipTypes.Milestone({ id: mId, programId: programId, scholar: winner, amount: amt[j], descriptionCID: "", proofCID: "", status: ScholarshipTypes.MilestoneStatus.PENDING, submittedAt: 0, disputeDeadline: 0, completedAt: 0, isFirstMilestone: j == 0 });
-            milestoneOwner[mId] = winner;
-            unchecked{++j;}
-        }
+        // Delegate milestone creation to MilestoneManager
+        milestoneManager.createMandatoryBatch(programId, winner, amt, descs);
         emit ScholarSelected(programId, winner);
     }
 
-    function _sumArray(uint256[] memory arr) internal pure returns (uint256 s) { for (uint256 i = 0; i < arr.length; ) { s += arr[i]; unchecked{++i;} } }
-
     // ═══════════════════════════════════════════════════════════════════
-    // PHASE 4 — MILESTONES
+    // MILESTONE CALLBACKS (called by MilestoneManager)
     // ═══════════════════════════════════════════════════════════════════
-    function submitMilestoneProof(uint256 milestoneId, string calldata proofCID) external nonReentrant {
-        ScholarshipTypes.Milestone storage m = milestones[milestoneId];
-        if (m.scholar == address(0)) revert MilestoneNotFound();
-        if (msg.sender != m.scholar) revert NotMilestoneOwner();
-        if (m.status != ScholarshipTypes.MilestoneStatus.PENDING) revert MilestoneNotInDisputeWindow();
-        if (scholars[msg.sender][m.programId].status != ScholarshipTypes.StudentStatus.ACTIVE) revert ScholarNotActive();
-        m.proofCID = proofCID; m.status = ScholarshipTypes.MilestoneStatus.SUBMITTED;
-        m.submittedAt = block.timestamp; m.disputeDeadline = block.timestamp + programs[m.programId].milestoneDisputeWindow;
-        emit MilestoneSubmitted(milestoneId, msg.sender, proofCID);
+
+    /**
+     * @notice Called by MilestoneManager.approveMilestone() to:
+     *         - increment scholar.optionalApproved
+     *         - increase program.allocatedFund
+     */
+    function onOptionalApproved(uint256 programId, address scholar, uint256 amount)
+        external onlyRole(MILESTONE_ROLE)
+    {
+        scholars[scholar][programId].optionalApproved++;
+        programs[programId].allocatedFund += amount;
     }
 
-    function executeMilestone(uint256 milestoneId) external nonReentrant {
-        ScholarshipTypes.Milestone storage m = milestones[milestoneId];
-        if (m.status != ScholarshipTypes.MilestoneStatus.SUBMITTED) revert MilestoneNotInDisputeWindow();
-        if (block.timestamp < m.disputeDeadline) revert DisputeWindowStillOpen();
-        _completeMilestone(milestoneId);
+    /**
+     * @notice Called by MilestoneManager._completeMilestone() to:
+     *         - update scholar progress counters
+     *         - update program.spentFund
+     *         - emit reputation rewards
+     *         - mint NFT and mark program complete if all done
+     */
+    function onMilestoneCompleted(
+        uint256 programId,
+        address scholar,
+        uint256 /*milestoneId*/,
+        uint256 amount,
+        ScholarshipTypes.MilestoneKind kind
+    ) external onlyRole(MILESTONE_ROLE) {
+        ScholarshipTypes.Scholar storage s = scholars[scholar][programId];
+        s.totalReceived += amount;
+        programs[programId].spentFund += amount;
+
+        if (kind == ScholarshipTypes.MilestoneKind.MANDATORY) {
+            s.mandatoryCompleted++;
+        } else {
+            s.optionalCompleted++;
+        }
+
+        _rewardVotersOf(programId, scholar, 10, "ms_done");
+
+        // Scholar is done when all mandatory milestones are completed.
+        // Optional milestones are bonus — they don't gate scholar completion.
+        if (s.mandatoryCompleted == s.mandatoryTotal) {
+            _completeScholar(programId, scholar);
+        }
     }
 
-    function _completeMilestone(uint256 milestoneId) internal {
-        ScholarshipTypes.Milestone storage m = milestones[milestoneId];
-        m.status = ScholarshipTypes.MilestoneStatus.COMPLETED; m.completedAt = block.timestamp;
-        ScholarshipTypes.Scholar storage s = scholars[m.scholar][m.programId];
-        s.currentMilestone++; s.totalReceived += m.amount; programs[m.programId].spentFund += m.amount;
-        treasury.disburseMilestone(m.scholar, m.programId, milestoneId, m.amount);
-        _rewardVotersOf(m.programId, m.scholar, 10, "ms_done");
-        emit MilestoneCompleted(milestoneId, m.scholar, m.amount);
-        if (s.currentMilestone == s.totalMilestones) _completeScholar(m.programId, m.scholar);
-    }
+    // ── Scholar / Program completion ─────────────────────────────────────────
 
     function _completeScholar(uint256 programId, address scholarAddr) internal {
         scholars[scholarAddr][programId].status = ScholarshipTypes.StudentStatus.COMPLETED;
@@ -223,53 +292,76 @@ abstract contract ScholarshipCoreBase is Initializable {
         _resolveConfidenceStakesFor(programId, scholarAddr, true);
         studentNFT.mint(scholarAddr, programId, "");
         emit ScholarCompleted(programId, scholarAddr);
-        if (_allScholarsCompleted(programId)) { programs[programId].status = ScholarshipTypes.ProgramStatus.COMPLETED; treasury.distributeYield(programId); emit ProgramCompleted(programId); }
+        if (_allScholarsCompleted(programId)) {
+            programs[programId].status = ScholarshipTypes.ProgramStatus.COMPLETED;
+            treasury.distributeYield(programId);
+            emit ProgramCompleted(programId);
+        }
     }
 
     function _allScholarsCompleted(uint256 programId) internal view returns (bool) {
         address[] memory sl = _shortlist[programId];
-        for (uint256 i = 0; i < sl.length; ) { ScholarshipTypes.Scholar storage s = scholars[sl[i]][programId]; if (s.totalMilestones > 0 && s.status != ScholarshipTypes.StudentStatus.COMPLETED && s.status != ScholarshipTypes.StudentStatus.FROZEN && s.status != ScholarshipTypes.StudentStatus.BLACKLISTED) return false; unchecked{++i;} }
+        for (uint256 i; i < sl.length; ) {
+            ScholarshipTypes.Scholar storage s = scholars[sl[i]][programId];
+            if (s.mandatoryTotal > 0
+                && s.status != ScholarshipTypes.StudentStatus.COMPLETED
+                && s.status != ScholarshipTypes.StudentStatus.FROZEN
+                && s.status != ScholarshipTypes.StudentStatus.BLACKLISTED) return false;
+            unchecked { ++i; }
+        }
         return true;
     }
 
-    function freezeMilestone(uint256 milestoneId) external onlyRole(BOUNTY_ROLE) { milestones[milestoneId].status = ScholarshipTypes.MilestoneStatus.FROZEN; emit MilestoneFrozen(milestoneId); }
+    // ── Slash (called by BountyRole) ─────────────────────────────────────────
 
-    function releaseMilestone(uint256 milestoneId) external onlyRole(BOUNTY_ROLE) {
-        ScholarshipTypes.Milestone storage m = milestones[milestoneId];
-        m.status = ScholarshipTypes.MilestoneStatus.SUBMITTED; m.disputeDeadline = block.timestamp + programs[m.programId].milestoneDisputeWindow;
-        emit MilestoneReleased(milestoneId);
-    }
-
-    function slashScholar(address wallet, uint256 programId, ScholarshipTypes.DisputeType disputeType) external onlyRole(BOUNTY_ROLE) {
+    function slashScholar(address wallet, uint256 programId, ScholarshipTypes.DisputeType disputeType)
+        external onlyRole(BOUNTY_ROLE)
+    {
         ScholarshipTypes.Scholar storage scholar = scholars[wallet][programId];
         scholar.status = ScholarshipTypes.StudentStatus.FROZEN;
         uint256 fd; bool bl = false;
-        if (disputeType == ScholarshipTypes.DisputeType.LIGHT_FRAUD) fd = ScholarshipTypes.FREEZE_LIGHT;
+        if      (disputeType == ScholarshipTypes.DisputeType.LIGHT_FRAUD)     fd = ScholarshipTypes.FREEZE_LIGHT;
         else if (disputeType == ScholarshipTypes.DisputeType.MILESTONE_FRAUD) fd = ScholarshipTypes.FREEZE_MILESTONE;
-        else { fd = ScholarshipTypes.FREEZE_HEAVY; bl = true; }
+        else                                                                   { fd = ScholarshipTypes.FREEZE_HEAVY; bl = true; }
         globalFreezeUntil[wallet] = block.timestamp + fd;
         globalStudentStatus[wallet] = bl ? ScholarshipTypes.StudentStatus.BLACKLISTED : ScholarshipTypes.StudentStatus.FROZEN;
         if (bl) scholar.isBlacklisted = true;
-        uint256 rp = disputeType == ScholarshipTypes.DisputeType.LIGHT_FRAUD ? 50 : disputeType == ScholarshipTypes.DisputeType.MILESTONE_FRAUD ? 100 : 200;
+        uint256 rp = disputeType == ScholarshipTypes.DisputeType.LIGHT_FRAUD ? 50
+                   : disputeType == ScholarshipTypes.DisputeType.MILESTONE_FRAUD ? 100 : 200;
         _punishVotersOf(programId, wallet, rp, block.timestamp + fd);
         _resolveConfidenceStakesFor(programId, wallet, false);
         emit ScholarSlashed(wallet, programId, disputeType);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
     function _rewardVotersOf(uint256 programId, address scholarAddr, uint256 rep, string memory reason) internal {
         address[] memory donors = treasury.getProgramDonors(programId);
-        for (uint256 i = 0; i < donors.length; ) { if (voterInfo[programId][donors[i]].votedFor == scholarAddr) reputation.mint(donors[i], rep, reason); unchecked{++i;} }
+        for (uint256 i; i < donors.length; ) {
+            if (voterInfo[programId][donors[i]].votedFor == scholarAddr) reputation.mint(donors[i], rep, reason);
+            unchecked { ++i; }
+        }
     }
 
     function _punishVotersOf(uint256 programId, address scholarAddr, uint256 rep, uint256 lockUntil) internal {
         address[] memory donors = treasury.getProgramDonors(programId);
-        for (uint256 i = 0; i < donors.length; ) { if (voterInfo[programId][donors[i]].votedFor == scholarAddr) { reputation.burn(donors[i], rep, "slashed"); reputation.lockVotingPower(donors[i], lockUntil); } unchecked{++i;} }
+        for (uint256 i; i < donors.length; ) {
+            if (voterInfo[programId][donors[i]].votedFor == scholarAddr) {
+                reputation.burn(donors[i], rep, "slashed");
+                reputation.lockVotingPower(donors[i], lockUntil);
+            }
+            unchecked { ++i; }
+        }
     }
 
     function _resolveConfidenceStakesFor(uint256 programId, address scholarAddr, bool succeeded) internal {
         address[] memory donors = treasury.getProgramDonors(programId);
-        for (uint256 i = 0; i < donors.length; ) { ScholarshipTypes.VoterInfo storage vi = voterInfo[programId][donors[i]]; if (vi.confidenceStakeFor == scholarAddr && vi.confidenceStake > 0) treasury.resolveConfidenceStake(programId, donors[i], succeeded); unchecked{++i;} }
+        for (uint256 i; i < donors.length; ) {
+            ScholarshipTypes.VoterInfo storage vi = voterInfo[programId][donors[i]];
+            if (vi.confidenceStakeFor == scholarAddr && vi.confidenceStake > 0)
+                treasury.resolveConfidenceStake(programId, donors[i], succeeded);
+            unchecked { ++i; }
+        }
     }
 
     function _requireStudentEligible(address wallet) internal view {
@@ -282,17 +374,33 @@ abstract contract ScholarshipCoreBase is Initializable {
         if (programs[programId].status != expected) revert InvalidProgramStatus(expected, programs[programId].status);
     }
 
+    function _sumArray(uint256[] memory arr) internal pure returns (uint256 s) {
+        for (uint256 i; i < arr.length; ) { s += arr[i]; unchecked { ++i; } }
+    }
+
     // ── Views ────────────────────────────────────────────────────────────────
+
     function getProgram(uint256 id) external view returns (ScholarshipTypes.Program memory) { return programs[id]; }
     function getScholar(address w, uint256 id) external view returns (ScholarshipTypes.Scholar memory) { return scholars[w][id]; }
-    function getMilestone(uint256 id) external view returns (ScholarshipTypes.Milestone memory) { return milestones[id]; }
     function getShortlist(uint256 id) external view returns (address[] memory) { return _shortlist[id]; }
     function getProgramApplicants(uint256 id) external view returns (address[] memory) { return _programApplicants[id]; }
-    function getRemainingFund(address, uint256 id) external view returns (uint256) { return treasury.getProgramBalance(id); }
+    /// @notice Used by ScholarshipBounty to calculate BH stake and potential reward.
+    function getRemainingFund(address /*wallet*/, uint256 programId) external view returns (uint256) { return treasury.getProgramBalance(programId); }
+
     function isStudentEligible(address wallet) external view returns (bool, string memory) {
         ScholarshipTypes.StudentStatus s = globalStudentStatus[wallet];
         if (s == ScholarshipTypes.StudentStatus.BLACKLISTED) return (false, "blacklisted");
         if (s == ScholarshipTypes.StudentStatus.FROZEN && block.timestamp < globalFreezeUntil[wallet]) return (false, "frozen");
         return (true, "");
     }
+}
+
+// ── Minimal interface so Base can call MilestoneManager ─────────────────────
+interface IMilestoneManager {
+    function createMandatoryBatch(
+        uint256 programId,
+        address scholar,
+        uint256[] calldata amounts,
+        string[] calldata descs
+    ) external;
 }

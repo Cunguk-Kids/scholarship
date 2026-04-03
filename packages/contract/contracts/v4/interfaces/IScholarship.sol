@@ -9,10 +9,16 @@ import {ScholarshipTypes} from "../libraries/ScholarshipTypes.sol";
 
 /**
  * @notice Minimal surface exposed by ScholarshipCore to sibling contracts.
- *         Bounded to read-queries and privileged state mutations that only
- *         ScholarshipBounty or CommitteeGovernance may invoke.
+ *
+ * @dev    v5 changes:
+ *         + hasBountyRole()       — MilestoneManager auth check
+ *         + onOptionalApproved()  — callback from MilestoneManager
+ *         + onMilestoneCompleted() — callback from MilestoneManager
+ *         + resolveDisputeBH() / resolveDisputeScholar() — called by CommitteeGovernance
+ *         - getMilestone() removed — now lives on IMilestoneManager
  */
 interface IScholarshipCore {
+
     // ── Queries ────────────────────────────────────────────────────────
 
     function getProgram(uint256 programId)
@@ -21,24 +27,46 @@ interface IScholarshipCore {
     function getScholar(address wallet, uint256 programId)
         external view returns (ScholarshipTypes.Scholar memory);
 
-    function getMilestone(uint256 milestoneId)
-        external view returns (ScholarshipTypes.Milestone memory);
-
-    /// @notice Check whether a student wallet is currently eligible to apply.
     function isStudentEligible(address wallet)
         external view returns (bool eligible, string memory reason);
 
     /// @notice USDC value of undisbursed milestones for a given scholar.
+    ///         Used by ScholarshipBounty to calculate BH stake and potential reward.
     function getRemainingFund(address wallet, uint256 programId)
         external view returns (uint256);
 
+    /// @notice Returns true if `account` holds BOUNTY_ROLE.
+    ///         Used by MilestoneManager to gate freeze/release calls.
+    function hasBountyRole(address account) external view returns (bool);
+
+    // ── Callbacks (MILESTONE_ROLE only) ───────────────────────────────
+
+    /**
+     * @notice Called by MilestoneManager when a committee approves an
+     *         optional or negotiated milestone proposal.
+     *         Core increments scholar.optionalApproved and
+     *         program.allocatedFund by `amount`.
+     */
+    function onOptionalApproved(
+        uint256 programId,
+        address scholar,
+        uint256 amount
+    ) external;
+
+    /**
+     * @notice Called by MilestoneManager when any milestone completes.
+     *         Core updates progress counters, spentFund, reputation,
+     *         and fires NFT mint + program completion if all mandatory done.
+     */
+    function onMilestoneCompleted(
+        uint256 programId,
+        address scholar,
+        uint256 milestoneId,
+        uint256 amount,
+        ScholarshipTypes.MilestoneKind kind
+    ) external;
+
     // ── Privilege mutations (BOUNTY_ROLE) ──────────────────────────────
-
-    /// @notice Freeze a milestone so it cannot be auto-released.
-    function freezeMilestone(uint256 milestoneId) external;
-
-    /// @notice Unfreeze a milestone (BH lost) — restart dispute window.
-    function releaseMilestone(uint256 milestoneId) external;
 
     /**
      * @notice Apply fraud penalty to a scholar.
@@ -49,6 +77,8 @@ interface IScholarshipCore {
         uint256 programId,
         ScholarshipTypes.DisputeType disputeType
     ) external;
+
+    // ── Privilege mutations (COMMITTEE_ROLE) ──────────────────────────
 
     /**
      * @notice Called by CommitteeGovernance to push averaged scores on-chain.
@@ -61,6 +91,129 @@ interface IScholarshipCore {
         uint256 recommendScore,
         address committeeAddress
     ) external;
+
+    /**
+     * @notice Called by CommitteeGovernance when majority rules BH won.
+     *         Core (or Bounty via Core) executes the slash + BH reward.
+     */
+    function resolveDisputeBH(uint256 disputeId) external;
+
+    /**
+     * @notice Called by CommitteeGovernance when majority rules scholar won.
+     *         Core (or Bounty) releases the milestone and penalises BH.
+     */
+    function resolveDisputeScholar(uint256 disputeId) external;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// IMilestoneManager
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * @notice Full public surface of MilestoneManager.
+ *
+ * @dev    Consumers:
+ *         - ScholarshipCoreBase  → createMandatoryBatch(), setProgramCommittee()
+ *         - CommitteeGovernance  → approveMilestone(), rejectMilestone()
+ *         - ScholarshipBounty    → freezeMilestone(), releaseMilestone(),
+ *                                  forceCompleteMilestone()
+ *         - Frontend / indexer   → getMilestone(), getMandatoryIds(),
+ *                                  getOptionalIds()
+ *         - Scholar (EOA)        → proposeMilestone(), submitProof()
+ *         - Anyone               → executeMilestone()
+ */
+interface IMilestoneManager {
+
+    // ── Core-only writes ───────────────────────────────────────────────
+
+    /**
+     * @notice Create all mandatory milestones for a newly activated scholar.
+     *         Only callable by ScholarshipCore (onlyCore modifier).
+     * @param amounts  Disbursement amount per milestone.
+     * @param descs    IPFS descriptionCIDs; pass empty array to defer.
+     */
+    function createMandatoryBatch(
+        uint256 programId,
+        address scholar,
+        uint256[] calldata amounts,
+        string[] calldata descs
+    ) external;
+
+    /**
+     * @notice Register committee contract for a program.
+     *         Called by ScholarshipCore inside createProgram().
+     */
+    function setProgramCommittee(uint256 programId, address committeeContract) external;
+
+    // ── Scholar writes ─────────────────────────────────────────────────
+
+    /**
+     * @notice Scholar proposes an optional or negotiated milestone.
+     * @param kind           Must be OPTIONAL or NEGOTIATED.
+     * @param amount         Requested disbursement if approved + completed.
+     * @param descriptionCID IPFS CID describing the deliverable.
+     */
+    function proposeMilestone(
+        uint256 programId,
+        ScholarshipTypes.MilestoneKind kind,
+        uint256 amount,
+        string calldata descriptionCID
+    ) external;
+
+    /**
+     * @notice Scholar submits proof for a PENDING milestone.
+     */
+    function submitProof(uint256 milestoneId, string calldata proofCID) external;
+
+    // ── Committee writes (called via CommitteeGovernance) ──────────────
+
+    /**
+     * @notice Approve a PROPOSED optional/negotiated milestone.
+     *         Only callable by the program's CommitteeGovernance contract.
+     */
+    function approveMilestone(uint256 milestoneId) external;
+
+    /**
+     * @notice Reject a PROPOSED optional/negotiated milestone.
+     *         Frees the scholar's optional slot for re-proposal.
+     *         Only callable by the program's CommitteeGovernance contract.
+     */
+    function rejectMilestone(uint256 milestoneId) external;
+
+    // ── Public execution ───────────────────────────────────────────────
+
+    /**
+     * @notice Anyone can execute a SUBMITTED milestone once dispute window
+     *         has elapsed.  Triggers Treasury disbursement and Core callback.
+     */
+    function executeMilestone(uint256 milestoneId) external;
+
+    // ── Bounty writes ──────────────────────────────────────────────────
+
+    function freezeMilestone(uint256 milestoneId) external;
+
+    function releaseMilestone(uint256 milestoneId) external;
+
+    /// @notice Called by BountyResolver after committee votes BH won;
+    ///         forces milestone to COMPLETED and disburses (edge case).
+    function forceCompleteMilestone(uint256 milestoneId) external;
+
+    // ── Views ──────────────────────────────────────────────────────────
+
+    function getMilestone(uint256 milestoneId)
+        external view returns (ScholarshipTypes.Milestone memory);
+
+    /// @notice All mandatory milestone IDs for a scholar in a program.
+    function getMandatoryIds(uint256 programId, address scholar)
+        external view returns (uint256[] memory);
+
+    /// @notice All optional/negotiated milestone IDs for a scholar.
+    function getOptionalIds(uint256 programId, address scholar)
+        external view returns (uint256[] memory);
+
+    function milestoneOwner(uint256 milestoneId) external view returns (address);
+
+    function programCommittee(uint256 programId) external view returns (address);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -74,15 +227,9 @@ interface IScholarshipCore {
  */
 interface IScholarshipTreasury {
 
-    // ── Program fund management ────────────────────────────────────────
-
-    /// @notice Register a new program deposit (called by Core on creation).
     function depositProgramFund(uint256 programId, uint256 amount) external;
 
-    /// @notice Record a donor contribution for yield/refund accounting.
     function recordDonation(uint256 programId, address donor, uint256 netAmount) external;
-
-    // ── Milestone disbursement ─────────────────────────────────────────
 
     /// @notice Release milestone payment to scholar after dispute window clears.
     function disburseMilestone(
@@ -92,12 +239,6 @@ interface IScholarshipTreasury {
         uint256 amount
     ) external;
 
-    // ── Slash distribution ─────────────────────────────────────────────
-
-    /**
-     * @notice Distribute a slashed scholar's remaining program balance.
-     * @return bhReward Amount transferred to the bounty hunter.
-     */
     function slashAndDistribute(
         uint256 programId,
         address scholar,
@@ -106,8 +247,6 @@ interface IScholarshipTreasury {
         uint256 treasuryPercent,
         uint256 protocolPercent
     ) external returns (uint256 bhReward);
-
-    // ── Confidence stake ───────────────────────────────────────────────
 
     function depositConfidenceStake(
         uint256 programId,
@@ -122,17 +261,11 @@ interface IScholarshipTreasury {
         bool scholarSucceeded
     ) external;
 
-    // ── Yield ──────────────────────────────────────────────────────────
-
     function addYield(uint256 programId, uint256 amount) external;
 
     function distributeYield(uint256 programId) external;
 
-    // ── Refunds ────────────────────────────────────────────────────────
-
     function refundDonors(uint256 programId) external;
-
-    // ── Views ──────────────────────────────────────────────────────────
 
     function getProgramBalance(uint256 programId) external view returns (uint256);
 
@@ -147,10 +280,6 @@ interface IScholarshipTreasury {
 // ICredentialNFT
 // ═══════════════════════════════════════════════════════════════════════
 
-/**
- * @notice Minimal interface for soulbound credential NFTs (DonorNFT / StudentNFT).
- *         Only the mint function is called externally by ScholarshipCore.
- */
 interface ICredentialNFT {
     function mint(
         address recipient,
@@ -171,10 +300,6 @@ interface IScholarshipBounty {
     function getDispute(uint256 disputeId)
         external view returns (ScholarshipTypes.Dispute memory);
 
-    /**
-     * @notice Committee calls this once majority is reached.
-     * @param bountyHunterWon true = scholar guilty; false = BH rejected.
-     */
     function resolveDispute(uint256 disputeId, bool bountyHunterWon) external;
 }
 
@@ -182,15 +307,11 @@ interface IScholarshipBounty {
 // IScholarshipReputation
 // ═══════════════════════════════════════════════════════════════════════
 
-/**
- * @notice Interface for the non-transferable REP Soulbound Token.
- *         All mutations must include a human-readable reason for auditability.
- */
 interface IScholarshipReputation {
     function mint(address to,   uint256 amount, string calldata reason) external;
     function burn(address from, uint256 amount, string calldata reason) external;
     function balanceOf(address account) external view returns (uint256);
-    function lockVotingPower(address voter, uint256 lockUntil)          external;
+    function lockVotingPower(address voter, uint256 lockUntil) external;
     function isVotingPowerLocked(address voter) external view returns (bool);
 }
 

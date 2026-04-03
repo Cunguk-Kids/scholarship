@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ScholarshipTypes}    from "../libraries/ScholarshipTypes.sol";
 import {IScholarshipCore}    from "../interfaces/IScholarship.sol";
 import {IScholarshipTreasury} from "../interfaces/IScholarship.sol";
+import {IMilestoneManager} from "../interfaces/IScholarship.sol";
 
 /**
  * @title  ScholarshipBounty
@@ -74,6 +75,7 @@ contract ScholarshipBounty is
     IERC20                public usdc;
     IScholarshipCore      public core;
     IScholarshipTreasury  public treasury;
+    IMilestoneManager  public milestone;
 
     // ── Storage ──────────────────────────────────────────────────────────────
 
@@ -234,7 +236,7 @@ contract ScholarshipBounty is
         // Validate that the milestone actually belongs to this scholar — prevents
         // a BH from accidentally (or maliciously) freezing another scholar's milestone.
         if (milestoneId != 0) {
-            ScholarshipTypes.Milestone memory targetMilestone = core.getMilestone(milestoneId);
+            ScholarshipTypes.Milestone memory targetMilestone = milestone.getMilestone(milestoneId);
             require(
                 targetMilestone.scholar == scholar,
                 "ScholarshipBounty: milestone does not belong to this scholar"
@@ -243,7 +245,7 @@ contract ScholarshipBounty is
                 targetMilestone.programId == programId,
                 "ScholarshipBounty: milestone not in this program"
             );
-            core.freezeMilestone(milestoneId);
+            milestone.freezeMilestone(milestoneId);
         }
 
         emit DisputeRaised(
@@ -422,7 +424,7 @@ contract ScholarshipBounty is
 
         // Unfreeze milestone if applicable
         if (d.milestoneId != 0) {
-            core.releaseMilestone(d.milestoneId);
+            milestone.releaseMilestone(d.milestoneId);
         }
 
         // Stake stays in contract — no transfer needed
