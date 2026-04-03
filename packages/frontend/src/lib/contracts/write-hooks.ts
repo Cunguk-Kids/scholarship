@@ -1,20 +1,18 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseUnits } from "viem";
-import { useEffect } from "react";
 import { scholarshipCoreAbi, scholarshipBountyAbi, scholarshipTreasuryAbi, mockUSDCAbi, v4Addresses } from "@/constants/contractsV4";
 
-// Extract addresses (we'll assume they will be injected properly later, 
 // for now we use the v4Addresses object which will be populated dynamically or via env)
-const CORE_ADDRESS     = v4Addresses.ScholarshipCore;
-const BOUNTY_ADDRESS   = v4Addresses.ScholarshipBounty;
+const CORE_ADDRESS = v4Addresses.ScholarshipCore;
+const BOUNTY_ADDRESS = v4Addresses.ScholarshipBounty;
 const TREASURY_ADDRESS = v4Addresses.ScholarshipTreasury;
-const USDC_ADDRESS     = v4Addresses.MockUSDC;
+const USDC_ADDRESS = v4Addresses.MockUSDC;
 
 // ── USDC Approvals ────────────────────────────────────────────────────────
 
 export function useApproveUSDC() {
   const { data: hash, writeContract, isPending, error } = useWriteContract();
-  
+
   const { isLoading: isWaiting, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const approve = (spender: `0x${string}`, amountStr: string) => {
@@ -39,8 +37,8 @@ export function useCreateProgram() {
     metadataCID: string;
     educationLevel: number;
     screeningMode: number;
-    weights: { academicWeight: number; incomeWeight: number; essayWeight: number; recommendWeight: number; extracurricWeight: number };
-    slashDist: { bountyHunterPercent: number; treasuryPercent: number; protocolPercent: number };
+    weights: { academicWeight: number; incomeWeight: number; essayWeight: number; recommendWeight: number; extracurricWeight: number; };
+    slashDist: { bountyHunterPercent: number; treasuryPercent: number; protocolPercent: number; };
     maxCandidates: number;
     targetWinners: number;
     timeline: readonly [bigint, bigint, bigint, bigint];
@@ -198,12 +196,12 @@ export function useRaiseDispute() {
   const { data: hash, writeContract, isPending, error } = useWriteContract();
   const { isLoading: isWaiting, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const raiseDispute = (milestoneId: bigint, evidenceCID: string) => {
+  const raiseDispute = (programId: bigint, scholar: `0x${string}`, disputeType: number, milestoneId: bigint, evidenceCID: string) => {
     writeContract({
       address: BOUNTY_ADDRESS as `0x${string}`,
       abi: scholarshipBountyAbi,
       functionName: "raiseDispute",
-      args: [milestoneId, evidenceCID],
+      args: [programId, scholar, milestoneId, disputeType, evidenceCID],
     });
   };
 
@@ -218,8 +216,8 @@ export function useDefendDispute() {
     writeContract({
       address: BOUNTY_ADDRESS as `0x${string}`,
       abi: scholarshipBountyAbi,
-      functionName: "submitDefense",
-      args: [disputeId, evidenceCID],
+      functionName: "submitCounterEvidence",
+      args: [disputeId, evidenceCID as `0x${string}`],
     });
   };
 

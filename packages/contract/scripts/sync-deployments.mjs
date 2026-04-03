@@ -40,6 +40,7 @@ const CHAIN_DIR = path.join(ROOT, "ignition", "deployments", `chain-${chainId}`)
 // ── Output dirs ─────────────────────────────────────────────────────────────
 const PONDER_ABI_DIR = path.resolve(MONO_ROOT, "packages/ponder/abis/v4");
 const PONDER_ENV = path.resolve(MONO_ROOT, "packages/ponder/.env");
+const PONDER_ENV_LOCAL = path.resolve(MONO_ROOT, "packages/ponder/.env.local");
 const FE_CONSTANTS = path.resolve(MONO_ROOT, "packages/frontend/src/constants");
 
 // ── Contract map: Ignition key → short name ──────────────────────────────────
@@ -156,6 +157,7 @@ if (!abiOnly) {
   console.log(`\n🔧  Updating packages/ponder/.env`);
 
   let envContent = fs.existsSync(PONDER_ENV) ? fs.readFileSync(PONDER_ENV, "utf8") : "";
+  let envlocalContent = fs.existsSync(PONDER_ENV_LOCAL) ? fs.readFileSync(PONDER_ENV_LOCAL, "utf8") : "";
 
   // Get start block from the journal (first block seen in this deployment)
   let startBlock = "0";
@@ -205,6 +207,7 @@ if (!abiOnly) {
   console.log(`    ✅  START_BLOCK=${startBlock}`);
 
   fs.writeFileSync(PONDER_ENV, envContent);
+  fs.writeFileSync(PONDER_ENV_LOCAL, envContent);
 } else {
   console.log(`\n🔧  Skipping ponder .env update (ABI-only mode)`);
 }
@@ -220,8 +223,8 @@ fs.mkdirSync(FE_CONSTANTS, { recursive: true });
 const hasAddresses = Object.keys(v4Addresses).length > 0;
 const addressLines = hasAddresses
   ? Object.entries(v4Addresses)
-      .map(([name, addr]) => `  ${name}: "${addr}" as \`0x\${string}\`,`)
-      .join("\n")
+    .map(([name, addr]) => `  ${name}: "${addr}" as \`0x\${string}\`,`)
+    .join("\n")
   : "  // Addresses will be populated after deployment (npm run deploy-v4)";
 
 // Build ABI exports
