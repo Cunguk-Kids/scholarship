@@ -1,6 +1,5 @@
 import { IPFSMetadata } from "@/types/meta";
 
-
 export const fetchFromIPFS = async (
   cid: string,
 ): Promise<IPFSMetadata | null> => {
@@ -8,7 +7,11 @@ export const fetchFromIPFS = async (
   const timeout = setTimeout(() => controller.abort(), 7000);
 
   try {
-    const res = await fetch(`${process.env.IPFS_HOST_REQUEST}/ipfs/${cid}`, {
+    const gateway = process.env.PINATA_GATEWAY
+      ? `https://${process.env.PINATA_GATEWAY}/ipfs`
+      : process.env.IPFS_HOST_REQUEST + '/ipfs';
+
+    const res = await fetch(`${gateway}/${cid}`, {
       signal: controller.signal,
     });
 
@@ -19,7 +22,7 @@ export const fetchFromIPFS = async (
     const raw = await res.json();
     return raw as IPFSMetadata;
   } catch (err) {
-    clearTimeout(timeout); // pastikan selalu dibersihkan
+    clearTimeout(timeout);
 
     if (err instanceof Error && err.name === "AbortError") {
       console.error("Fetch timeout: IPFS CID mungkin tidak tersedia.");
