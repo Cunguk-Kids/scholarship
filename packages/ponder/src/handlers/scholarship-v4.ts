@@ -11,6 +11,7 @@ import {
 import { logger } from "@/utils/logger";
 import { insertBlock } from "@/services/block.log.service";
 import { sendSseToAll } from "@/api/controller/sse.controller";
+import { scholarshipCoreAbi } from "abis/v4/ScholarshipCore";
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -74,21 +75,48 @@ export const scholarshipCoreHandlers = () => {
 
   // ── Phase 0: Program Created ─────────────────────────────────────────────
 
-  ponder.on("ScholarshipCore:ProgramCreated", async ({ event }) => {
+  ponder.on("ScholarshipCore:ProgramCreated", async ({ event, context }) => {
     try {
-      console.log(event.args, "=======event.args======");
-
       const { programId, initiator, metadataCID } = event.args;
-      logger.info({ programId, initiator, metadataCID }, "ProgramCreated");
+
+      const prog: any = await context.client.readContract({
+        abi: scholarshipCoreAbi,
+        address: event.log.address as `0x${string}`,
+        functionName: "getProgram",
+        args: [programId],
+      });
+
+      const toDate = (ts: bigint) => ts > 0n ? new Date(Number(ts) * 1000) : null;
 
       await db.insert(v4Programs).values({
         blockchainId: Number(programId),
         initiator: String(initiator),
         metadataCID: String(metadataCID),
         status: "CREATED",
+        totalFund: String(prog.totalFund),
+        targetWinners: Number(prog.targetWinners),
+        maxCandidates: Number(prog.maxCandidates),
+        educationLevel: Number(prog.educationLevel),
+        screeningMode: Number(prog.screeningMode),
+        applicationStart: toDate(prog.applicationStart),
+        applicationEnd: toDate(prog.applicationEnd),
+        votingStart: toDate(prog.votingStart),
+        votingEnd: toDate(prog.votingEnd),
       }).onConflictDoUpdate({
         target: [v4Programs.blockchainId],
-        set: { metadataCID: String(metadataCID), updatedAt: new Date() },
+        set: {
+          metadataCID: String(metadataCID),
+          totalFund: String(prog.totalFund),
+          targetWinners: Number(prog.targetWinners),
+          maxCandidates: Number(prog.maxCandidates),
+          educationLevel: Number(prog.educationLevel),
+          screeningMode: Number(prog.screeningMode),
+          applicationStart: toDate(prog.applicationStart),
+          applicationEnd: toDate(prog.applicationEnd),
+          votingStart: toDate(prog.votingStart),
+          votingEnd: toDate(prog.votingEnd),
+          updatedAt: new Date(),
+        },
       });
 
       await insertBlock({ event, eventName: "ScholarshipCore:ProgramCreated" });
@@ -122,16 +150,20 @@ export const scholarshipCoreHandlers = () => {
 
   // ── Committee Assigned ─────────────────────────────────────────────────
 
+  // scholarship-v4.ts — CommitteeAssigned handler
   ponder.on("ScholarshipCore:CommitteeAssigned", async ({ event }) => {
     try {
       const { programId, committeeContract } = event.args;
-
-      await db.update(v4Programs)
-        .set({ committeeContract: String(committeeContract), updatedAt: new Date() })
-        .where(eq(v4Programs.blockchainId, Number(programId)));
-
-      await insertBlock({ event, eventName: "ScholarshipCore:CommitteeAssigned" });
-      await sendSseToAll("main", { step: "CommitteeAssigned", data: { programId, committeeContract }, status: true, blockHash: event.block.hash });
+      await db.insert(v4Programs)
+        .values({
+          blockchainId: Number(programId),
+          initiator: "",
+          committeeContract: String(committeeContract),
+        })
+        .onConflictDoUpdate({
+          target: [v4Programs.blockchainId],
+          set: { committeeContract: String(committeeContract), updatedAt: new Date() },
+        });
     } catch (err) {
       logger.error({ err }, "CommitteeAssigned handler error");
     }
