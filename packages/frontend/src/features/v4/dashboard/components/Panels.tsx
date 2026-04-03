@@ -2,14 +2,12 @@ import { Link } from '@tanstack/react-router';
 import { formatUnits } from 'viem';
 import { NeoCard, NeoCardBody } from '@/components/ui/NeoCard';
 import { NeoButton } from '@/components/ui/NeoButton';
-import { useSubmitMilestone, useClaimYield } from '@/lib/contracts/write-hooks';
+import { useSubmitMilestone } from '@/lib/contracts/write-hooks';
 import type { DashboardData, Program, Scholar } from '@/lib/api/types';
 
 // ── Initiator ─────────────────────────────────────────────────────────────────
 
 export function InitiatorPanel({ programs }: { programs: Program[] }) {
-  const { claimYield, isPending } = useClaimYield();
-
   return (
     <section>
       <h2 className="font-paytone text-3xl mb-4 border-l-8 border-skpink pl-4 leading-none">
@@ -36,13 +34,13 @@ export function InitiatorPanel({ programs }: { programs: Program[] }) {
                 <Link to={`/programs/${p.id}`} className="flex-1">
                   <NeoButton label="View Program" variant="secondary" fullWidth />
                 </Link>
-                <NeoButton
+                {/* <NeoButton
                   label="Claim Yield"
                   variant="success"
                   loading={isPending}
                   disabled={BigInt(p.yieldAccrued) <= 0n && !isPending}
-                  onClick={() => claimYield(BigInt(p.blockchainId))}
-                />
+                  onClick={() => claimYield(BigInt(p.blockchainId), "")}
+                /> */}
               </div>
             </NeoCardBody>
           </NeoCard>
