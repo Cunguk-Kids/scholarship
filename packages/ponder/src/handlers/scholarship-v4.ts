@@ -27,7 +27,7 @@ async function upsertReputation(
   if (existing.length === 0) {
     await db.insert(v4Reputation).values({
       address,
-      repBalance:  String(isMint ? delta : 0n),
+      repBalance: String(isMint ? delta : 0n),
       totalMinted: String(isMint ? delta : 0n),
       totalBurned: String(isMint ? 0n : delta),
     });
@@ -36,10 +36,10 @@ async function upsertReputation(
     const prev = BigInt(row.repBalance ?? "0");
     await db.update(v4Reputation)
       .set({
-        repBalance:  String(isMint ? prev + delta : (prev > delta ? prev - delta : 0n)),
+        repBalance: String(isMint ? prev + delta : (prev > delta ? prev - delta : 0n)),
         totalMinted: String(BigInt(row.totalMinted ?? "0") + (isMint ? delta : 0n)),
         totalBurned: String(BigInt(row.totalBurned ?? "0") + (isMint ? 0n : delta)),
-        updatedAt:   new Date(),
+        updatedAt: new Date(),
       })
       .where(eq(v4Reputation.address, address));
   }
@@ -76,14 +76,16 @@ export const scholarshipCoreHandlers = () => {
 
   ponder.on("ScholarshipCore:ProgramCreated", async ({ event }) => {
     try {
+      console.log(event.args, "=======event.args======");
+
       const { programId, initiator, metadataCID } = event.args;
       logger.info({ programId, initiator, metadataCID }, "ProgramCreated");
 
       await db.insert(v4Programs).values({
         blockchainId: Number(programId),
-        initiator:    String(initiator),
-        metadataCID:  String(metadataCID),
-        status:       "CREATED",
+        initiator: String(initiator),
+        metadataCID: String(metadataCID),
+        status: "CREATED",
       }).onConflictDoUpdate({
         target: [v4Programs.blockchainId],
         set: { metadataCID: String(metadataCID), updatedAt: new Date() },
@@ -103,7 +105,7 @@ export const scholarshipCoreHandlers = () => {
       const { programId, newStatus } = event.args;
       const statusMap: Record<number, NonNullable<typeof v4Programs.$inferInsert["status"]>> = {
         0: "CREATED", 1: "APPLICATION_OPEN", 2: "SCREENING",
-        3: "VOTING",  4: "ACTIVE",           5: "COMPLETED", 6: "CANCELLED",
+        3: "VOTING", 4: "ACTIVE", 5: "COMPLETED", 6: "CANCELLED",
       };
       const status = statusMap[Number(newStatus)] ?? "CREATED";
 
@@ -170,10 +172,10 @@ export const scholarshipCoreHandlers = () => {
       const progUuid = await findProgramUuid(Number(programId));
 
       await db.insert(v4Applicants).values({
-        programId:           progUuid ?? undefined,
+        programId: progUuid ?? undefined,
         blockchainProgramId: Number(programId),
-        wallet:              String(student),
-        retryCount:          Number(retryCount),
+        wallet: String(student),
+        retryCount: Number(retryCount),
       }).onConflictDoUpdate({
         target: [v4Applicants.wallet, v4Applicants.blockchainProgramId],
         set: { retryCount: Number(retryCount), updatedAt: new Date() },
@@ -215,9 +217,9 @@ export const scholarshipCoreHandlers = () => {
       const { programId, student, score, locked } = event.args;
       await db.update(v4Applicants)
         .set({
-          status:          locked ? "LOCKED" : "SCREENED_OUT",
-          screeningScore:  String(score),
-          updatedAt:       new Date(),
+          status: locked ? "LOCKED" : "SCREENED_OUT",
+          screeningScore: String(score),
+          updatedAt: new Date(),
         })
         .where(and(
           eq(v4Applicants.blockchainProgramId, Number(programId)),
@@ -262,11 +264,11 @@ export const scholarshipCoreHandlers = () => {
       const progUuid = await findProgramUuid(Number(programId));
 
       await db.insert(v4Votes).values({
-        programId:           progUuid ?? undefined,
+        programId: progUuid ?? undefined,
         blockchainProgramId: Number(programId),
-        voterAddress:        String(voter),
-        candidateAddress:    String(candidate),
-        votingWeight:        String(weight),
+        voterAddress: String(voter),
+        candidateAddress: String(candidate),
+        votingWeight: String(weight),
       }).onConflictDoUpdate({
         target: [v4Votes.voterAddress, v4Votes.blockchainProgramId],
         set: { candidateAddress: String(candidate), votingWeight: String(weight) },
@@ -285,11 +287,11 @@ export const scholarshipCoreHandlers = () => {
       const progUuid = await findProgramUuid(Number(programId));
 
       await db.insert(v4ConfidenceStakes).values({
-        programId:           progUuid ?? undefined,
+        programId: progUuid ?? undefined,
         blockchainProgramId: Number(programId),
-        voterAddress:        String(voter),
-        scholarAddress:      String(scholar),
-        amount:              String(amount),
+        voterAddress: String(voter),
+        scholarAddress: String(scholar),
+        amount: String(amount),
       }).onConflictDoUpdate({
         target: [v4ConfidenceStakes.voterAddress, v4ConfidenceStakes.blockchainProgramId],
         set: { amount: String(amount), updatedAt: new Date() },
@@ -309,10 +311,10 @@ export const scholarshipCoreHandlers = () => {
       const progUuid = await findProgramUuid(Number(programId));
 
       await db.insert(v4Scholars).values({
-        programId:           progUuid ?? undefined,
+        programId: progUuid ?? undefined,
         blockchainProgramId: Number(programId),
-        wallet:              String(scholar),
-        status:              "ACTIVE",
+        wallet: String(scholar),
+        status: "ACTIVE",
       }).onConflictDoUpdate({
         target: [v4Scholars.wallet, v4Scholars.blockchainProgramId],
         set: { status: "ACTIVE", updatedAt: new Date() },
@@ -345,13 +347,13 @@ export const scholarshipCoreHandlers = () => {
         .from(v4Scholars).where(eq(v4Scholars.wallet, String(scholar))).limit(1);
 
       await db.insert(v4Milestones).values({
-        blockchainId:  mId,
-        programId:     scholarRow?.programId ?? undefined,
-        scholarId:     scholarRow?.id ?? undefined,
+        blockchainId: mId,
+        programId: scholarRow?.programId ?? undefined,
+        scholarId: scholarRow?.id ?? undefined,
         scholarWallet: String(scholar),
-        proofCID:      String(proofCID),
-        status:        "SUBMITTED",
-        submittedAt:   new Date(Number(event.block.timestamp) * 1000),
+        proofCID: String(proofCID),
+        status: "SUBMITTED",
+        submittedAt: new Date(Number(event.block.timestamp) * 1000),
       }).onConflictDoUpdate({
         target: [v4Milestones.blockchainId],
         set: { proofCID: String(proofCID), status: "SUBMITTED", submittedAt: new Date(), updatedAt: new Date() },
@@ -530,10 +532,10 @@ export const scholarshipTreasuryHandlers = () => {
       const progUuid = await findProgramUuid(Number(programId));
 
       await db.insert(v4Donations).values({
-        programId:           progUuid ?? undefined,
+        programId: progUuid ?? undefined,
         blockchainProgramId: Number(programId),
-        donor:               String(donor),
-        netAmount:           String(netAmount),
+        donor: String(donor),
+        netAmount: String(netAmount),
       });
 
       await insertBlock({ event, eventName: "ScholarshipTreasury:DonationRecorded" });
@@ -614,11 +616,11 @@ export const scholarshipTreasuryHandlers = () => {
       const { programId, voter, returned, bonus, slashed } = event.args;
       await db.update(v4ConfidenceStakes)
         .set({
-          isResolved:     true,
-          wasSlashed:     slashed,
+          isResolved: true,
+          wasSlashed: slashed,
           returnedAmount: String(returned),
-          bonusAmount:    String(bonus),
-          updatedAt:      new Date(),
+          bonusAmount: String(bonus),
+          updatedAt: new Date(),
         })
         .where(and(
           eq(v4ConfidenceStakes.voterAddress, String(voter)),
@@ -707,16 +709,16 @@ export const scholarshipBountyHandlers = () => {
       };
 
       await db.insert(v4Disputes).values({
-        blockchainId:    Number(disputeId),
-        programId:       progUuid ?? undefined,
-        scholarAddress:  String(scholar),
-        bountyHunter:    String(bountyHunter),
-        disputeType:     typeMap[Number(disputeType)] ?? "LIGHT_FRAUD",
-        status:          "ACTIVE",
-        evidenceCID:     String(evidenceCID),
-        stake:           String(stake),
+        blockchainId: Number(disputeId),
+        programId: progUuid ?? undefined,
+        scholarAddress: String(scholar),
+        bountyHunter: String(bountyHunter),
+        disputeType: typeMap[Number(disputeType)] ?? "LIGHT_FRAUD",
+        status: "ACTIVE",
+        evidenceCID: String(evidenceCID),
+        stake: String(stake),
         potentialReward: String(potentialReward),
-        raisedAt:        new Date(Number(event.block.timestamp) * 1000),
+        raisedAt: new Date(Number(event.block.timestamp) * 1000),
       }).onConflictDoUpdate({
         target: [v4Disputes.blockchainId],
         set: { updatedAt: new Date() },
@@ -776,10 +778,10 @@ export const scholarshipBountyHandlers = () => {
       const { disputeId, bountyHunterWon, bhReward } = event.args;
       await db.update(v4Disputes)
         .set({
-          status:       bountyHunterWon ? "BH_WON" : "BH_LOST",
+          status: bountyHunterWon ? "BH_WON" : "BH_LOST",
           bhRewardPaid: String(bhReward),
-          resolvedAt:   new Date(),
-          updatedAt:    new Date(),
+          resolvedAt: new Date(),
+          updatedAt: new Date(),
         })
         .where(eq(v4Disputes.blockchainId, Number(disputeId)));
 
@@ -794,9 +796,9 @@ export const scholarshipBountyHandlers = () => {
         if (bh) {
           await db.update(v4BountyHunters)
             .set({
-              totalWins:  bountyHunterWon ? (bh.totalWins ?? 0) + 1 : bh.totalWins,
+              totalWins: bountyHunterWon ? (bh.totalWins ?? 0) + 1 : bh.totalWins,
               totalLosses: !bountyHunterWon ? (bh.totalLosses ?? 0) + 1 : bh.totalLosses,
-              updatedAt:  new Date(),
+              updatedAt: new Date(),
             })
             .where(eq(v4BountyHunters.address, dispute.bountyHunter));
         }
@@ -909,10 +911,10 @@ export const committeeGovernanceHandlers = () => {
       const progUuid = await findProgramUuid(Number(programId));
 
       await db.insert(v4CommitteeMembers).values({
-        programId:           progUuid ?? undefined,
+        programId: progUuid ?? undefined,
         blockchainProgramId: Number(programId),
-        memberAddress:       String(member),
-        isActive:            true,
+        memberAddress: String(member),
+        isActive: true,
       }).onConflictDoUpdate({
         target: [v4CommitteeMembers.memberAddress, v4CommitteeMembers.blockchainProgramId],
         set: { isActive: true, removedAt: null, addedAt: new Date() },
@@ -981,8 +983,8 @@ export const committeeGovernanceHandlers = () => {
       await db.update(v4Applicants)
         .set({
           screeningScore: String(totalScore),
-          totalScore:     String(totalScore),
-          updatedAt:      new Date(),
+          totalScore: String(totalScore),
+          updatedAt: new Date(),
         })
         .where(and(
           eq(v4Applicants.blockchainProgramId, Number(programId)),
@@ -1003,7 +1005,7 @@ export const committeeGovernanceHandlers = () => {
       const { disputeId, member, upholdDispute } = event.args;
 
       await db.insert(v4CommitteeDisputeVotes).values({
-        disputeId:     Number(disputeId),
+        disputeId: Number(disputeId),
         memberAddress: String(member),
         upholdDispute: upholdDispute,
       }).onConflictDoUpdate({
@@ -1027,9 +1029,9 @@ export const committeeGovernanceHandlers = () => {
       // Update dispute status based on committee resolution
       await db.update(v4Disputes)
         .set({
-          status:     bountyHunterWon ? "BH_WON" : "BH_LOST",
+          status: bountyHunterWon ? "BH_WON" : "BH_LOST",
           resolvedAt: new Date(),
-          updatedAt:  new Date(),
+          updatedAt: new Date(),
         })
         .where(eq(v4Disputes.blockchainId, Number(disputeId)));
 
