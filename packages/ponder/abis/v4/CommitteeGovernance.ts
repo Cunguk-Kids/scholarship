@@ -44,12 +44,12 @@ export const committeeGovernanceAbi = [
   },
   {
     "inputs": [],
-    "name": "AlreadyScored",
+    "name": "AlreadyVotedOnDispute",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "AlreadyVotedOnDispute",
+    "name": "AlreadyVotedOnMilestone",
     "type": "error"
   },
   {
@@ -85,6 +85,11 @@ export const committeeGovernanceAbi = [
   },
   {
     "inputs": [],
+    "name": "MilestoneAlreadyResolved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotCommitteeMember",
     "type": "error"
   },
@@ -96,11 +101,6 @@ export const committeeGovernanceAbi = [
   {
     "inputs": [],
     "name": "OnlyInitiator",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ScoreAlreadyFinalized",
     "type": "error"
   },
   {
@@ -173,25 +173,6 @@ export const committeeGovernanceAbi = [
       },
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "bountyHunterWon",
-        "type": "bool"
-      }
-    ],
-    "name": "DisputeResolutionReached",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "disputeId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "address",
         "name": "member",
         "type": "address"
@@ -225,23 +206,42 @@ export const committeeGovernanceAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "milestoneId",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "applicant",
-        "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
         "name": "member",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approve",
+        "type": "bool"
       }
     ],
-    "name": "MemberScoreSubmitted",
+    "name": "MilestoneVoteCast",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "milestoneId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      }
+    ],
+    "name": "MilestoneVoteResolved",
     "type": "event"
   },
   {
@@ -329,50 +329,19 @@ export const committeeGovernanceAbi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "applicant",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "avgAcademic",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "avgIncome",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "avgRecommend",
-        "type": "uint256"
-      }
-    ],
-    "name": "ScoreFinalized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "programId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "address",
         "name": "applicant",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "score",
+        "type": "uint256"
       }
     ],
-    "name": "TiebreakerRequired",
+    "name": "ScoreSubmitted",
     "type": "event"
   },
   {
@@ -428,19 +397,6 @@ export const committeeGovernanceAbi = [
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "VERSION",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -456,32 +412,6 @@ export const committeeGovernanceAbi = [
     "name": "addCommitteeMember",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "bounty",
-    "outputs": [
-      {
-        "internalType": "contract IScholarshipBounty",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "core",
-    "outputs": [
-      {
-        "internalType": "contract IScholarshipCore",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -613,6 +543,35 @@ export const committeeGovernanceAbi = [
         "internalType": "address",
         "name": "",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "hasScored",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "name": "hasVotedOnDispute",
@@ -635,12 +594,12 @@ export const committeeGovernanceAbi = [
       },
       {
         "internalType": "address",
-        "name": "_core",
+        "name": "core",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_bounty",
+        "name": "milestoneManager",
         "type": "address"
       }
     ],
@@ -679,38 +638,13 @@ export const committeeGovernanceAbi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
-    "name": "memberScores",
+    "name": "milestoneResolved",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "academic",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "income",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "recommend",
-        "type": "uint256"
-      },
-      {
         "internalType": "bool",
-        "name": "submitted",
+        "name": "",
         "type": "bool"
       }
     ],
@@ -782,54 +716,6 @@ export const committeeGovernanceAbi = [
     "name": "revokeRole",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "scoreCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "scoreFinalized",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -910,12 +796,40 @@ export const committeeGovernanceAbi = [
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
         "internalType": "bool",
         "name": "upholdDispute",
         "type": "bool"
       }
     ],
     "name": "voteOnDispute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "milestoneId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "approve",
+        "type": "bool"
+      }
+    ],
+    "name": "voteOnMilestone",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

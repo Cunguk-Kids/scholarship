@@ -8,6 +8,7 @@ import {ScholarshipTypes}       from "../libraries/ScholarshipTypes.sol";
 import {IScholarshipTreasury}   from "../interfaces/IScholarship.sol";
 import {IScholarshipReputation} from "../interfaces/IScholarship.sol";
 import {ICredentialNFT}         from "../interfaces/IScholarship.sol";
+import {IMilestoneManager}      from "../interfaces/IScholarship.sol";
 import {ScholarshipCoreBase}    from "./ScholarshipCoreBase.sol";
 
 /**

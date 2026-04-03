@@ -115,6 +115,18 @@ contract MilestoneManager is Initializable {
     }
 
     // ── Admin ────────────────────────────────────────────────────────────────
+
+    /**
+     * @notice Set ScholarshipCore address post-deploy to resolve circular dependency.
+     *         Call this once after Core is deployed — core starts as address(0).
+     */
+    function setCore(address coreAddr) external {
+        if (msg.sender != admin) revert NotCore();
+        require(core == address(0), "core already set");
+        core          = coreAddr;
+        _coreContract = IScholarshipCoreMin(coreAddr);
+    }
+
     function setProgramCommittee(uint256 programId, address committeeContract) external {
         if (msg.sender != admin && msg.sender != core) revert NotCore();
         programCommittee[programId] = committeeContract;

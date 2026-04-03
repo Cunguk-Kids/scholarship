@@ -145,6 +145,12 @@ interface IMilestoneManager {
      */
     function setProgramCommittee(uint256 programId, address committeeContract) external;
 
+    /**
+     * @notice Set ScholarshipCore address post-deploy (resolves circular dependency).
+     *         Can only be called once by admin; core starts as address(0).
+     */
+    function setCore(address coreAddr) external;
+
     // ── Scholar writes ─────────────────────────────────────────────────
 
     /**
@@ -326,3 +332,4 @@ interface ICommitteeGovernance {
     function isCommitteeMember(uint256 programId, address member)
         external view returns (bool);
 }
+

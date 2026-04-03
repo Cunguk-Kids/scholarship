@@ -6,7 +6,7 @@ import {
   v4Milestones, v4Votes, v4ConfidenceStakes,
   v4Disputes, v4Reputation, v4Donations,
   v4CommitteeMembers, v4CommitteeDisputeVotes,
-  v4BountyHunters,
+  v4BountyHunters, v4CommitteeMilestoneVotes
 } from "@/db/schema";
 import { logger } from "@/utils/logger";
 import { insertBlock } from "@/services/block.log.service";
@@ -364,95 +364,6 @@ export const scholarshipCoreHandlers = () => {
       await sendSseToAll("main", { step: "ScholarSelected", data: { programId, scholar }, status: true, blockHash: event.block.hash });
     } catch (err) {
       logger.error({ err }, "ScholarSelected handler error");
-    }
-  });
-
-  // ── Milestones ────────────────────────────────────────────────────────
-
-  ponder.on("ScholarshipCore:MilestoneSubmitted", async ({ event }) => {
-    try {
-      const { milestoneId, scholar, proofCID } = event.args;
-      const mId = Number(milestoneId);
-
-      // Try to find the scholar record to link
-      const [scholarRow] = await db.select({ id: v4Scholars.id, programId: v4Scholars.programId })
-        .from(v4Scholars).where(eq(v4Scholars.wallet, String(scholar))).limit(1);
-
-      await db.insert(v4Milestones).values({
-        blockchainId: mId,
-        programId: scholarRow?.programId ?? undefined,
-        scholarId: scholarRow?.id ?? undefined,
-        scholarWallet: String(scholar),
-        proofCID: String(proofCID),
-        status: "SUBMITTED",
-        submittedAt: new Date(Number(event.block.timestamp) * 1000),
-      }).onConflictDoUpdate({
-        target: [v4Milestones.blockchainId],
-        set: { proofCID: String(proofCID), status: "SUBMITTED", submittedAt: new Date(), updatedAt: new Date() },
-      });
-
-      await insertBlock({ event, eventName: "ScholarshipCore:MilestoneSubmitted" });
-      await sendSseToAll("main", { step: "MilestoneSubmitted", data: { milestoneId, scholar }, status: true, blockHash: event.block.hash });
-    } catch (err) {
-      logger.error({ err }, "MilestoneSubmitted handler error");
-    }
-  });
-
-  ponder.on("ScholarshipCore:MilestoneCompleted", async ({ event }) => {
-    try {
-      const { milestoneId, scholar, amount } = event.args;
-      await db.update(v4Milestones)
-        .set({ status: "COMPLETED", amount: String(amount), completedAt: new Date(), updatedAt: new Date() })
-        .where(eq(v4Milestones.blockchainId, Number(milestoneId)));
-
-      // Update scholar totalReceived
-      const [milestone] = await db.select({ scholarId: v4Milestones.scholarId, programId: v4Milestones.programId })
-        .from(v4Milestones)
-        .where(eq(v4Milestones.blockchainId, Number(milestoneId)))
-        .limit(1);
-
-      if (milestone?.scholarId) {
-        const [existingScholar] = await db.select({ id: v4Scholars.id, totalReceived: v4Scholars.totalReceived })
-          .from(v4Scholars)
-          .where(eq(v4Scholars.id, milestone.scholarId))
-          .limit(1);
-
-        if (existingScholar) {
-          const prev = BigInt(existingScholar.totalReceived ?? "0");
-          await db.update(v4Scholars)
-            .set({ totalReceived: String(prev + BigInt(amount)), updatedAt: new Date() })
-            .where(eq(v4Scholars.id, milestone.scholarId));
-        }
-      }
-
-      await insertBlock({ event, eventName: "ScholarshipCore:MilestoneCompleted" });
-      await sendSseToAll("main", { step: "MilestoneCompleted", data: { milestoneId, scholar, amount: String(amount) }, status: true, blockHash: event.block.hash });
-    } catch (err) {
-      logger.error({ err }, "MilestoneCompleted handler error");
-    }
-  });
-
-  ponder.on("ScholarshipCore:MilestoneFrozen", async ({ event }) => {
-    try {
-      const { milestoneId } = event.args;
-      await db.update(v4Milestones)
-        .set({ status: "FROZEN", updatedAt: new Date() })
-        .where(eq(v4Milestones.blockchainId, Number(milestoneId)));
-      await insertBlock({ event, eventName: "ScholarshipCore:MilestoneFrozen" });
-    } catch (err) {
-      logger.error({ err }, "MilestoneFrozen handler error");
-    }
-  });
-
-  ponder.on("ScholarshipCore:MilestoneReleased", async ({ event }) => {
-    try {
-      const { milestoneId } = event.args;
-      await db.update(v4Milestones)
-        .set({ status: "SUBMITTED", updatedAt: new Date() })
-        .where(eq(v4Milestones.blockchainId, Number(milestoneId)));
-      await insertBlock({ event, eventName: "ScholarshipCore:MilestoneReleased" });
-    } catch (err) {
-      logger.error({ err }, "MilestoneReleased handler error");
     }
   });
 
@@ -979,43 +890,20 @@ export const committeeGovernanceHandlers = () => {
     }
   });
 
-  // ── MemberScoreSubmitted — committee member submitted a score ──────────
+  // ── ScoreSubmitted — committee member submitted a score for an applicant ─
+  // v5: replaces MemberScoreSubmitted + ScoreFinalized + TiebreakerRequired.
+  // Core accumulates scores and calls submitCommitteeScore() once all members
+  // voted — so this single event covers both partial and final submission.
 
-  ponder.on("CommitteeGovernance:MemberScoreSubmitted", async ({ event }) => {
+  ponder.on("CommitteeGovernance:ScoreSubmitted", async ({ event }) => {
     try {
-      const { programId, applicant, member } = event.args;
+      const { programId, applicant, score } = event.args;
 
-      await insertBlock({ event, eventName: "CommitteeGovernance:MemberScoreSubmitted" });
-      await sendSseToAll("main", { step: "MemberScoreSubmitted", data: { programId, applicant, member }, status: true, blockHash: event.block.hash });
-    } catch (err) {
-      logger.error({ err }, "MemberScoreSubmitted handler error");
-    }
-  });
-
-  // ── TiebreakerRequired — committee needs tiebreaker for applicant ─────
-
-  ponder.on("CommitteeGovernance:TiebreakerRequired", async ({ event }) => {
-    try {
-      const { programId, applicant } = event.args;
-
-      await insertBlock({ event, eventName: "CommitteeGovernance:TiebreakerRequired" });
-      await sendSseToAll("main", { step: "TiebreakerRequired", data: { programId, applicant }, status: true, blockHash: event.block.hash });
-    } catch (err) {
-      logger.error({ err }, "TiebreakerRequired handler error");
-    }
-  });
-
-  // ── ScoreFinalized — final averaged score produced by committee ────────
-
-  ponder.on("CommitteeGovernance:ScoreFinalized", async ({ event }) => {
-    try {
-      const { programId, applicant, avgAcademic, avgIncome, avgRecommend } = event.args;
-      const totalScore = BigInt(avgAcademic) + BigInt(avgIncome) + BigInt(avgRecommend);
-
+      // Update applicant screening score — Core will overwrite with finalized
+      // average when all members have voted, so last-write is always correct.
       await db.update(v4Applicants)
         .set({
-          screeningScore: String(totalScore),
-          totalScore: String(totalScore),
+          screeningScore: String(score),
           updatedAt: new Date(),
         })
         .where(and(
@@ -1023,10 +911,10 @@ export const committeeGovernanceHandlers = () => {
           eq(v4Applicants.wallet, String(applicant)),
         ));
 
-      await insertBlock({ event, eventName: "CommitteeGovernance:ScoreFinalized" });
-      await sendSseToAll("main", { step: "ScoreFinalized", data: { programId, applicant, totalScore: String(totalScore) }, status: true, blockHash: event.block.hash });
+      await insertBlock({ event, eventName: "CommitteeGovernance:ScoreSubmitted" });
+      await sendSseToAll("main", { step: "ScoreSubmitted", data: { programId, applicant, score: String(score) }, status: true, blockHash: event.block.hash });
     } catch (err) {
-      logger.error({ err }, "ScoreFinalized handler error");
+      logger.error({ err }, "ScoreSubmitted handler error");
     }
   });
 
@@ -1052,25 +940,332 @@ export const committeeGovernanceHandlers = () => {
     }
   });
 
-  // ── DisputeResolutionReached — committee majority reached ─────────────
+  // ── MilestoneVoteCast — committee member votes on optional milestone ───
+  // v5 new event: emitted by voteOnMilestone() before majority is reached.
 
-  ponder.on("CommitteeGovernance:DisputeResolutionReached", async ({ event }) => {
+  ponder.on("CommitteeGovernance:MilestoneVoteCast", async ({ event }) => {
     try {
-      const { disputeId, bountyHunterWon } = event.args;
+      const { milestoneId, member, approve } = event.args;
 
-      // Update dispute status based on committee resolution
-      await db.update(v4Disputes)
+      await db.insert(v4CommitteeMilestoneVotes).values({
+        milestoneId: Number(milestoneId),
+        memberAddress: String(member),
+        approve: approve,
+      }).onConflictDoUpdate({
+        target: [v4CommitteeMilestoneVotes.milestoneId, v4CommitteeMilestoneVotes.memberAddress],
+        set: { approve: approve },
+      });
+
+      await insertBlock({ event, eventName: "CommitteeGovernance:MilestoneVoteCast" });
+      await sendSseToAll("main", { step: "MilestoneVoteCast", data: { milestoneId, member, approve }, status: true, blockHash: event.block.hash });
+    } catch (err) {
+      logger.error({ err }, "MilestoneVoteCast handler error");
+    }
+  });
+
+  // ── MilestoneVoteResolved — committee majority reached on milestone ────
+  // v5 new event: emitted when approve or reject reaches majority.
+  // MilestoneManager.approveMilestone() / rejectMilestone() is called inside
+  // the contract, which will emit MilestoneApproved / MilestoneRejected on
+  // MilestoneManager — those handlers will update v4_milestones.status.
+  // Here we just update the vote record for auditability.
+
+  ponder.on("CommitteeGovernance:MilestoneVoteResolved", async ({ event }) => {
+    try {
+      const { milestoneId, approved } = event.args;
+
+      // Milestone status is updated by MilestoneManager:MilestoneApproved/Rejected handler.
+      // Only send SSE so frontend knows vote is settled.
+      await insertBlock({ event, eventName: "CommitteeGovernance:MilestoneVoteResolved" });
+      await sendSseToAll("main", { step: "MilestoneVoteResolved", data: { milestoneId, approved }, status: true, blockHash: event.block.hash });
+    } catch (err) {
+      logger.error({ err }, "MilestoneVoteResolved handler error");
+    }
+  });
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MILESTONE MANAGER HANDLERS
+// Semua event milestone sekarang emit dari MilestoneManager (v5).
+// ScholarshipCore tidak lagi emit MilestoneSubmitted / Completed / Frozen / Released.
+//
+// Flow per tier:
+//  MANDATORY : MilestoneCreated → MilestoneSubmitted → MilestoneCompleted
+//                                                     → MilestoneFrozen (bounty dispute)
+//                                                     → MilestoneReleased (dispute resolved)
+//  OPTIONAL  : MilestoneProposed → MilestoneApproved / MilestoneRejected
+//                               → MilestoneSubmitted → MilestoneCompleted
+//  NEGOTIATED: (flow sama dengan OPTIONAL, kind=NEGOTIATED)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export const milestoneManagerHandlers = () => {
+
+  // ── MilestoneCreated — Core calls createMandatoryBatch() at selectWinners ─
+  // Tier 1 (MANDATORY): dibuat otomatis oleh program creator saat pilih winner.
+
+  ponder.on("MilestoneManager:MilestoneCreated", async ({ event }) => {
+    try {
+      const { id, programId, scholar, kind } = event.args;
+      const mId = Number(id);
+
+      // Resolve DB foreign keys
+      const [scholarRow] = await db
+        .select({ id: v4Scholars.id, programId: v4Scholars.programId })
+        .from(v4Scholars)
+        .where(and(
+          eq(v4Scholars.wallet, String(scholar)),
+          eq(v4Scholars.blockchainProgramId, Number(programId)),
+        ))
+        .limit(1);
+
+      const progUuid = scholarRow?.programId ?? await findProgramUuid(Number(programId));
+
+      // kind comes in as uint8 from enum MilestoneKind: 0=MANDATORY,1=OPTIONAL,2=NEGOTIATED
+      const kindMap: Record<number, "MANDATORY" | "OPTIONAL" | "NEGOTIATED"> = {
+        0: "MANDATORY", 1: "OPTIONAL", 2: "NEGOTIATED",
+      };
+      const kindStr = kindMap[Number(kind)] ?? "MANDATORY";
+
+      await db.insert(v4Milestones).values({
+        blockchainId: mId,
+        programId: progUuid ?? undefined,
+        scholarId: scholarRow?.id ?? undefined,
+        scholarWallet: String(scholar),
+        kind: kindStr,
+        status: "PENDING",
+      }).onConflictDoUpdate({
+        target: [v4Milestones.blockchainId],
+        set: { kind: kindStr, status: "PENDING", updatedAt: new Date() },
+      });
+
+      await insertBlock({ event, eventName: "MilestoneManager:MilestoneCreated" });
+      await sendSseToAll("main", {
+        step: "MilestoneCreated",
+        data: { milestoneId: mId, programId: Number(programId), scholar, kind: kindStr },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "MilestoneManager:MilestoneCreated handler error");
+    }
+  });
+
+  // ── MilestoneProposed — scholar proposes OPTIONAL or NEGOTIATED milestone ─
+  // Tier 2 & 3: status = PROPOSED, menunggu committee approval.
+
+  ponder.on("MilestoneManager:MilestoneProposed", async ({ event }) => {
+    try {
+      const { id, programId, scholar, kind } = event.args;
+      const mId = Number(id);
+
+      const [scholarRow] = await db
+        .select({ id: v4Scholars.id, programId: v4Scholars.programId })
+        .from(v4Scholars)
+        .where(and(
+          eq(v4Scholars.wallet, String(scholar)),
+          eq(v4Scholars.blockchainProgramId, Number(programId)),
+        ))
+        .limit(1);
+
+      const kindMap: Record<number, "MANDATORY" | "OPTIONAL" | "NEGOTIATED"> = {
+        0: "MANDATORY", 1: "OPTIONAL", 2: "NEGOTIATED",
+      };
+      const kindStr = kindMap[Number(kind)] ?? "OPTIONAL";
+
+      await db.insert(v4Milestones).values({
+        blockchainId: mId,
+        programId: scholarRow?.programId ?? undefined,
+        scholarId: scholarRow?.id ?? undefined,
+        scholarWallet: String(scholar),
+        kind: kindStr,
+        proposedBy: String(scholar),
+        status: "PROPOSED",
+      }).onConflictDoUpdate({
+        target: [v4Milestones.blockchainId],
+        set: { status: "PROPOSED", proposedBy: String(scholar), updatedAt: new Date() },
+      });
+
+      await insertBlock({ event, eventName: "MilestoneManager:MilestoneProposed" });
+      await sendSseToAll("main", {
+        step: "MilestoneProposed",
+        data: { milestoneId: mId, programId: Number(programId), scholar, kind: kindStr },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "MilestoneManager:MilestoneProposed handler error");
+    }
+  });
+
+  // ── MilestoneApproved — committee approves OPTIONAL/NEGOTIATED proposal ──
+  // Status PROPOSED → PENDING. Scholar kini bisa submit proof.
+
+  ponder.on("MilestoneManager:MilestoneApproved", async ({ event }) => {
+    try {
+      const { id, approvedBy } = event.args;
+
+      await db.update(v4Milestones)
+        .set({ status: "PENDING", approvedBy: String(approvedBy), updatedAt: new Date() })
+        .where(eq(v4Milestones.blockchainId, Number(id)));
+
+      await insertBlock({ event, eventName: "MilestoneManager:MilestoneApproved" });
+      await sendSseToAll("main", {
+        step: "MilestoneApproved",
+        data: { milestoneId: Number(id), approvedBy },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "MilestoneManager:MilestoneApproved handler error");
+    }
+  });
+
+  // ── MilestoneRejected — committee menolak proposal ────────────────────
+  // Slot optional dibebaskan (contract swap-and-pop), scholar bisa propose ulang.
+
+  ponder.on("MilestoneManager:MilestoneRejected", async ({ event }) => {
+    try {
+      const { id, rejectedBy } = event.args;
+
+      await db.update(v4Milestones)
+        .set({ status: "REJECTED", approvedBy: String(rejectedBy), updatedAt: new Date() })
+        .where(eq(v4Milestones.blockchainId, Number(id)));
+
+      await insertBlock({ event, eventName: "MilestoneManager:MilestoneRejected" });
+      await sendSseToAll("main", {
+        step: "MilestoneRejected",
+        data: { milestoneId: Number(id), rejectedBy },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "MilestoneManager:MilestoneRejected handler error");
+    }
+  });
+
+  // ── MilestoneSubmitted — scholar submit proof untuk milestone PENDING ─
+  // Berlaku untuk semua tier (MANDATORY / OPTIONAL / NEGOTIATED).
+  // Contract: submitProof() → set status=SUBMITTED + disputeDeadline.
+
+  ponder.on("MilestoneManager:MilestoneSubmitted", async ({ event }) => {
+    try {
+      const { id, scholar, proofCID } = event.args;
+      const mId = Number(id);
+      const submittedAt = new Date(Number(event.block.timestamp) * 1000);
+
+      await db.insert(v4Milestones).values({
+        blockchainId: mId,
+        scholarWallet: String(scholar),
+        proofCID: String(proofCID),
+        status: "SUBMITTED",
+        submittedAt,
+      }).onConflictDoUpdate({
+        target: [v4Milestones.blockchainId],
+        set: {
+          proofCID: String(proofCID),
+          status: "SUBMITTED",
+          submittedAt,
+          updatedAt: new Date(),
+        },
+      });
+
+      await insertBlock({ event, eventName: "MilestoneManager:MilestoneSubmitted" });
+      await sendSseToAll("main", {
+        step: "MilestoneSubmitted",
+        data: { milestoneId: mId, scholar },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "MilestoneManager:MilestoneSubmitted handler error");
+    }
+  });
+
+  // ── MilestoneCompleted — dispute window lewat, executeMilestone() dipanggil ─
+  // Atau forceCompleteMilestone() setelah dispute BH menang.
+  // Treasury sudah disbursed. Core sudah update progress & mungkin NFT.
+
+  ponder.on("MilestoneManager:MilestoneCompleted", async ({ event }) => {
+    try {
+      const { id, scholar, amount } = event.args;
+      const mId = Number(id);
+
+      await db.update(v4Milestones)
         .set({
-          status: bountyHunterWon ? "BH_WON" : "BH_LOST",
-          resolvedAt: new Date(),
+          status: "COMPLETED",
+          amount: String(amount),
+          completedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(v4Disputes.blockchainId, Number(disputeId)));
+        .where(eq(v4Milestones.blockchainId, mId));
 
-      await insertBlock({ event, eventName: "CommitteeGovernance:DisputeResolutionReached" });
-      await sendSseToAll("main", { step: "DisputeResolutionReached", data: { disputeId, bountyHunterWon }, status: true, blockHash: event.block.hash });
+      // Sync totalReceived ke v4_scholars
+      const [milestone] = await db
+        .select({ scholarId: v4Milestones.scholarId })
+        .from(v4Milestones)
+        .where(eq(v4Milestones.blockchainId, mId))
+        .limit(1);
+
+      if (milestone?.scholarId) {
+        const [existingScholar] = await db
+          .select({ totalReceived: v4Scholars.totalReceived })
+          .from(v4Scholars)
+          .where(eq(v4Scholars.id, milestone.scholarId))
+          .limit(1);
+
+        if (existingScholar) {
+          const prev = BigInt(existingScholar.totalReceived ?? "0");
+          await db.update(v4Scholars)
+            .set({ totalReceived: String(prev + BigInt(amount)), updatedAt: new Date() })
+            .where(eq(v4Scholars.id, milestone.scholarId));
+        }
+      }
+
+      await insertBlock({ event, eventName: "MilestoneManager:MilestoneCompleted" });
+      await sendSseToAll("main", {
+        step: "MilestoneCompleted",
+        data: { milestoneId: mId, scholar, amount: String(amount) },
+        status: true, blockHash: event.block.hash,
+      });
     } catch (err) {
-      logger.error({ err }, "DisputeResolutionReached handler error");
+      logger.error({ err }, "MilestoneManager:MilestoneCompleted handler error");
+    }
+  });
+
+  // ── MilestoneFrozen — ScholarshipBounty panggil freezeMilestone() ─────
+  // Milestone di-freeze selama dispute bounty berlangsung.
+
+  ponder.on("MilestoneManager:MilestoneFrozen", async ({ event }) => {
+    try {
+      const { id } = event.args;
+      await db.update(v4Milestones)
+        .set({ status: "FROZEN", updatedAt: new Date() })
+        .where(eq(v4Milestones.blockchainId, Number(id)));
+
+      await insertBlock({ event, eventName: "MilestoneManager:MilestoneFrozen" });
+      await sendSseToAll("main", {
+        step: "MilestoneFrozen",
+        data: { milestoneId: Number(id) },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "MilestoneManager:MilestoneFrozen handler error");
+    }
+  });
+
+  // ── MilestoneReleased — dispute selesai, milestone kembali ke SUBMITTED ─
+  // disputeDeadline di-reset ke block.timestamp + milestoneDisputeWindow.
+
+  ponder.on("MilestoneManager:MilestoneReleased", async ({ event }) => {
+    try {
+      const { id } = event.args;
+      await db.update(v4Milestones)
+        .set({ status: "SUBMITTED", updatedAt: new Date() })
+        .where(eq(v4Milestones.blockchainId, Number(id)));
+
+      await insertBlock({ event, eventName: "MilestoneManager:MilestoneReleased" });
+      await sendSseToAll("main", {
+        step: "MilestoneReleased",
+        data: { milestoneId: Number(id) },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "MilestoneManager:MilestoneReleased handler error");
     }
   });
 };

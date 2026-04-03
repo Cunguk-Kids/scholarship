@@ -1,0 +1,1 @@
+ALTER TABLE "v4_programs" ADD COLUMN "max_optional_milestones" integer DEFAULT 0;

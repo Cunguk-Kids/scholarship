@@ -947,6 +947,19 @@ export const scholarshipBountyAbi = [
   },
   {
     "inputs": [],
+    "name": "milestone",
+    "outputs": [
+      {
+        "internalType": "contract IMilestoneManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "proxiableUUID",
     "outputs": [
       {

@@ -47,11 +47,6 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
-    "name": "DisputeWindowStillOpen",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InsufficientDonation",
     "type": "error"
   },
@@ -73,6 +68,11 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [],
     "name": "InvalidInitialization",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidMaxOptional",
     "type": "error"
   },
   {
@@ -117,16 +117,6 @@ export const scholarshipCoreAbi = [
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "MilestoneNotFound",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MilestoneNotInDisputeWindow",
-    "type": "error"
-  },
-  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -155,11 +145,6 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [],
     "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotMilestoneOwner",
     "type": "error"
   },
   {
@@ -326,82 +311,6 @@ export const scholarshipCoreAbi = [
       }
     ],
     "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "milestoneId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "scholar",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "MilestoneCompleted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "milestoneId",
-        "type": "uint256"
-      }
-    ],
-    "name": "MilestoneFrozen",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "milestoneId",
-        "type": "uint256"
-      }
-    ],
-    "name": "MilestoneReleased",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "milestoneId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "scholar",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "proofCID",
-        "type": "string"
-      }
-    ],
-    "name": "MilestoneSubmitted",
     "type": "event"
   },
   {
@@ -759,6 +668,19 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
+    "name": "MILESTONE_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "UPGRADER_ROLE",
     "outputs": [
       {
@@ -1038,6 +960,11 @@ export const scholarshipCoreAbi = [
         "type": "uint256"
       },
       {
+        "internalType": "uint8",
+        "name": "maxOptionalMilestones",
+        "type": "uint8"
+      },
+      {
         "internalType": "address",
         "name": "committeeContract",
         "type": "address"
@@ -1079,108 +1006,6 @@ export const scholarshipCoreAbi = [
         "internalType": "contract ICredentialNFT",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "milestoneId",
-        "type": "uint256"
-      }
-    ],
-    "name": "executeMilestone",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "milestoneId",
-        "type": "uint256"
-      }
-    ],
-    "name": "freezeMilestone",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getMilestone",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "programId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "scholar",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "descriptionCID",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "proofCID",
-            "type": "string"
-          },
-          {
-            "internalType": "enum ScholarshipTypes.MilestoneStatus",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "submittedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "disputeDeadline",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "completedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isFirstMilestone",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct ScholarshipTypes.Milestone",
-        "name": "",
-        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -1351,6 +1176,11 @@ export const scholarshipCoreAbi = [
             "internalType": "uint256",
             "name": "activeScholarCount",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "maxOptionalMilestones",
+            "type": "uint8"
           }
         ],
         "internalType": "struct ScholarshipTypes.Program",
@@ -1389,7 +1219,7 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "programId",
         "type": "uint256"
       }
     ],
@@ -1447,14 +1277,24 @@ export const scholarshipCoreAbi = [
             "type": "bool"
           },
           {
-            "internalType": "uint256",
-            "name": "currentMilestone",
-            "type": "uint256"
+            "internalType": "uint128",
+            "name": "mandatoryTotal",
+            "type": "uint128"
           },
           {
-            "internalType": "uint256",
-            "name": "totalMilestones",
-            "type": "uint256"
+            "internalType": "uint128",
+            "name": "mandatoryCompleted",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "optionalApproved",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "optionalCompleted",
+            "type": "uint128"
           },
           {
             "internalType": "uint256",
@@ -1548,6 +1388,25 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "hasBountyRole",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -1600,6 +1459,11 @@ export const scholarshipCoreAbi = [
         "internalType": "address",
         "name": "_studentNFT",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_milestoneManager",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -1632,17 +1496,11 @@ export const scholarshipCoreAbi = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "milestoneOwner",
+    "inputs": [],
+    "name": "milestoneManager",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IMilestoneManager",
         "name": "",
         "type": "address"
       }
@@ -1654,17 +1512,37 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "milestones",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
+        "name": "programId",
         "type": "uint256"
       },
+      {
+        "internalType": "address",
+        "name": "scholar",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ScholarshipTypes.MilestoneKind",
+        "name": "kind",
+        "type": "uint8"
+      }
+    ],
+    "name": "onMilestoneCompleted",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "uint256",
         "name": "programId",
@@ -1679,44 +1557,11 @@ export const scholarshipCoreAbi = [
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "descriptionCID",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "proofCID",
-        "type": "string"
-      },
-      {
-        "internalType": "enum ScholarshipTypes.MilestoneStatus",
-        "name": "status",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "submittedAt",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "disputeDeadline",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "completedAt",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "isFirstMilestone",
-        "type": "bool"
       }
     ],
-    "stateMutability": "view",
+    "name": "onOptionalApproved",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1950,22 +1795,14 @@ export const scholarshipCoreAbi = [
         "internalType": "uint256",
         "name": "activeScholarCount",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "maxOptionalMilestones",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "milestoneId",
-        "type": "uint256"
-      }
-    ],
-    "name": "releaseMilestone",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -2082,14 +1919,24 @@ export const scholarshipCoreAbi = [
         "type": "bool"
       },
       {
-        "internalType": "uint256",
-        "name": "currentMilestone",
-        "type": "uint256"
+        "internalType": "uint128",
+        "name": "mandatoryTotal",
+        "type": "uint128"
       },
       {
-        "internalType": "uint256",
-        "name": "totalMilestones",
-        "type": "uint256"
+        "internalType": "uint128",
+        "name": "mandatoryCompleted",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "optionalApproved",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "optionalCompleted",
+        "type": "uint128"
       },
       {
         "internalType": "uint256",
@@ -2160,6 +2007,11 @@ export const scholarshipCoreAbi = [
         "internalType": "uint256[][]",
         "name": "amounts",
         "type": "uint256[][]"
+      },
+      {
+        "internalType": "string[][]",
+        "name": "descs",
+        "type": "string[][]"
       }
     ],
     "name": "selectWinners",
@@ -2237,24 +2089,6 @@ export const scholarshipCoreAbi = [
       }
     ],
     "name": "submitCommitteeScore",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "milestoneId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "proofCID",
-        "type": "string"
-      }
-    ],
-    "name": "submitMilestoneProof",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

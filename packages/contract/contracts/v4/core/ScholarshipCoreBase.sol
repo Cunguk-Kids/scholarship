@@ -9,6 +9,7 @@ import {ScholarshipTypes}       from "../libraries/ScholarshipTypes.sol";
 import {IScholarshipTreasury}   from "../interfaces/IScholarship.sol";
 import {IScholarshipReputation} from "../interfaces/IScholarship.sol";
 import {ICredentialNFT}         from "../interfaces/IScholarship.sol";
+import {IMilestoneManager}      from "../interfaces/IScholarship.sol";
 
 /**
  * @title  ScholarshipCoreBase v5
@@ -393,14 +394,4 @@ abstract contract ScholarshipCoreBase is Initializable {
         if (s == ScholarshipTypes.StudentStatus.FROZEN && block.timestamp < globalFreezeUntil[wallet]) return (false, "frozen");
         return (true, "");
     }
-}
-
-// ── Minimal interface so Base can call MilestoneManager ─────────────────────
-interface IMilestoneManager {
-    function createMandatoryBatch(
-        uint256 programId,
-        address scholar,
-        uint256[] calldata amounts,
-        string[] calldata descs
-    ) external;
 }
