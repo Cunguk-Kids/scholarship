@@ -4,6 +4,7 @@ import { NeoCard, NeoCardBody } from '@/components/ui/NeoCard';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { useSubmitMilestone } from '@/lib/contracts/write-hooks';
 import type { DashboardData, Program, Scholar } from '@/lib/api/types';
+import { formatCurrency, formatUSDC } from '@/util/currency';
 
 // ── Initiator ─────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ export function InitiatorPanel({ programs }: { programs: Program[] }) {
                 <div>
                   <h3 className="font-bold text-lg">Program #{p.id}</h3>
                   <p className="text-xs text-gray-500 uppercase">{p.status}</p>
+                  <p>{formatCurrency(formatUSDC(Number(p.totalFund)), 'USD')}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500">Yield Accrued</p>
