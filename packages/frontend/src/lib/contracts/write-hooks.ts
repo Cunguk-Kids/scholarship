@@ -5,10 +5,10 @@ import { scholarshipCoreAbi, scholarshipBountyAbi, scholarshipTreasuryAbi, mockU
 
 // Extract addresses (we'll assume they will be injected properly later, 
 // for now we use the v4Addresses object which will be populated dynamically or via env)
-const CORE_ADDRESS = (v4Addresses as any).ScholarshipCoreProxy || "";
-const BOUNTY_ADDRESS = (v4Addresses as any).ScholarshipBountyProxy || "";
-const TREASURY_ADDRESS = (v4Addresses as any).ScholarshipTreasuryProxy || "";
-const USDC_ADDRESS = (v4Addresses as any).MockUSDC || "";
+const CORE_ADDRESS     = v4Addresses.ScholarshipCore;
+const BOUNTY_ADDRESS   = v4Addresses.ScholarshipBounty;
+const TREASURY_ADDRESS = v4Addresses.ScholarshipTreasury;
+const USDC_ADDRESS     = v4Addresses.MockUSDC;
 
 // ── USDC Approvals ────────────────────────────────────────────────────────
 

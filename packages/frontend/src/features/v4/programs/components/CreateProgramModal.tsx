@@ -43,14 +43,14 @@ export function CreateProgramModal({ isOpen, onClose }: Props) {
       setStep("approve");
     } else if (step === "approve") {
       // 2. Approve USDC
-      approve((v4Addresses as any).ScholarshipTreasuryProxy as `0x${string}`, formData.totalFund);
+      approve(v4Addresses.ScholarshipCore, formData.totalFund);
     } else if (step === "create") {
       // 3. Create Contract
       const now = BigInt(Math.floor(Date.now() / 1000));
-      const appStart = now;
-      const appEnd = now + 7n * 86400n;
-      const voteStart = appEnd;
-      const voteEnd = voteStart + 7n * 86400n;
+      const appStart  = now;
+      const appEnd    = now + 7n * 86400n;
+      const voteStart = appEnd + 3600n;          // 1h gap — contract requires appEnd < voteStart
+      const voteEnd   = voteStart + 7n * 86400n;
 
       create({
         metadataCID: metaCID,

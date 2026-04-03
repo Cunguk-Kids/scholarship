@@ -3,27 +3,42 @@ import { uploadERCToIPFS, uploadToIPFS } from "../service/ipfs.service";
 import { isArray, isObject } from "lodash";
 
 export const uploadController = async (c: Context) => {
-  const body = await c.req.parseBody();
-  const file = body.file as File;
-
-  const rawAttributes = body;
-  let parsedAttributes: Record<string, any>[] = [];
-
-  if (isArray(rawAttributes) && rawAttributes.every((item) => typeof item === 'object' && item !== null)) {
-    parsedAttributes = [...rawAttributes];
-  } else if (isObject(rawAttributes) && rawAttributes !== null) {
-    parsedAttributes = [rawAttributes];
+  // Support both JSON body (no-file metadata uploads) and multipart (with file)
+  const ct = c.req.header("content-type") ?? "";
+  let body: Record<string, any>;
+  if (ct.includes("application/json")) {
+    const raw = await c.req.json();
+    // Flatten: { meta: { name, description, ... } } → { name, description, ... }
+    body = typeof raw?.meta === "object" && raw.meta !== null
+      ? { ...raw.meta }
+      : raw ?? {};
   } else {
-    return c.json({ error: 'Attributes must be object or array of objects' }, 400);
+    body = await c.req.parseBody();
+  }
+
+  const file = body.file instanceof File ? body.file : undefined;
+
+  // Parse attributes only from body.attributes, not the entire body
+  let parsedAttributes: Record<string, any>[] = [];
+  const rawAttributes = body.attributes;
+  if (typeof rawAttributes === "string") {
+    try {
+      const parsed = JSON.parse(rawAttributes);
+      parsedAttributes = isArray(parsed) ? parsed : isObject(parsed) ? [parsed] : [];
+    } catch { /* ignore malformed JSON */ }
+  } else if (isArray(rawAttributes)) {
+    parsedAttributes = rawAttributes;
+  } else if (isObject(rawAttributes) && rawAttributes !== null) {
+    parsedAttributes = [rawAttributes as Record<string, any>];
   }
 
   const metadata = {
-    name: typeof body.name === 'string' ? body.name : 'Untitled',
-    description: typeof body.description === 'string' ? body.description : '',
-    attributes: parsedAttributes,
+    name:        typeof body.name        === "string" ? body.name        : "Untitled",
+    description: typeof body.description === "string" ? body.description : "",
+    attributes:  parsedAttributes,
   };
 
-  const result = await uploadToIPFS(file, metadata);
+  const result = await uploadToIPFS(file as File, metadata);
   return c.json(result);
 };
 
