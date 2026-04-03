@@ -246,12 +246,12 @@ export function useClaimYield() {
   const { data: hash, writeContract, isPending, error } = useWriteContract();
   const { isLoading: isWaiting, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const claimYield = (programId: bigint) => {
+  const claimYield = (programId: bigint, voteAddress: `0x${string}`) => {
     writeContract({
       address: TREASURY_ADDRESS as `0x${string}`,
       abi: scholarshipTreasuryAbi,
-      functionName: "claimDonorYield",
-      args: [programId],
+      functionName: "claimYield",
+      args: [programId, voteAddress],
     });
   };
 
