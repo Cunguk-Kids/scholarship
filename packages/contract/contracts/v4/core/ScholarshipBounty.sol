@@ -9,8 +9,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {ScholarshipTypes}    from "../libraries/ScholarshipTypes.sol";
-import {ScholarshipCore}     from "./ScholarshipCore.sol";
-import {ScholarshipTreasury} from "../finance/ScholarshipTreasury.sol";
+import {IScholarshipCore}    from "../interfaces/IScholarship.sol";
+import {IScholarshipTreasury} from "../interfaces/IScholarship.sol";
 
 /**
  * @title  ScholarshipBounty
@@ -71,9 +71,9 @@ contract ScholarshipBounty is
 
     // ── External contracts ───────────────────────────────────────────────────
 
-    IERC20               public usdc;
-    ScholarshipCore      public core;
-    ScholarshipTreasury  public treasury;
+    IERC20                public usdc;
+    IScholarshipCore      public core;
+    IScholarshipTreasury  public treasury;
 
     // ── Storage ──────────────────────────────────────────────────────────────
 
@@ -150,8 +150,8 @@ contract ScholarshipBounty is
         _grantRole(RESOLVER_ROLE,      admin); // CommitteeGovernance will be granted this
 
         usdc     = IERC20(_usdc);
-        core     = ScholarshipCore(_core);
-        treasury = ScholarshipTreasury(_treasury);
+        core     = IScholarshipCore(_core);
+        treasury = IScholarshipTreasury(_treasury);
     }
 
     // ═══════════════════════════════════════════════════════════════════

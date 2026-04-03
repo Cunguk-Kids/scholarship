@@ -49,6 +49,18 @@ interface IScholarshipCore {
         uint256 programId,
         ScholarshipTypes.DisputeType disputeType
     ) external;
+
+    /**
+     * @notice Called by CommitteeGovernance to push averaged scores on-chain.
+     */
+    function submitCommitteeScore(
+        uint256 programId,
+        address applicant,
+        uint256 academicScore,
+        uint256 incomeScore,
+        uint256 recommendScore,
+        address committeeAddress
+    ) external;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -127,6 +139,24 @@ interface IScholarshipTreasury {
     function getAccruedYield(uint256 programId) external view returns (uint256);
 
     function getProgramDonors(uint256 programId) external view returns (address[] memory);
+
+    function programTotalDonated(uint256 programId) external view returns (uint256);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ICredentialNFT
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * @notice Minimal interface for soulbound credential NFTs (DonorNFT / StudentNFT).
+ *         Only the mint function is called externally by ScholarshipCore.
+ */
+interface ICredentialNFT {
+    function mint(
+        address recipient,
+        uint256 programId,
+        string calldata metadataURI
+    ) external returns (uint256 tokenId);
 }
 
 // ═══════════════════════════════════════════════════════════════════════

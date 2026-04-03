@@ -7,38 +7,6 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
-    "name": "AccessControlBadConfirmation",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "neededRole",
-        "type": "bytes32"
-      }
-    ],
-    "name": "AccessControlUnauthorizedAccount",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "target",
-        "type": "address"
-      }
-    ],
-    "name": "AddressEmptyCode",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "AlreadyApplied",
     "type": "error"
   },
@@ -83,27 +51,6 @@ export const scholarshipCoreAbi = [
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
-    ],
-    "name": "ERC1967InvalidImplementation",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ERC1967NonPayable",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "FailedCall",
-    "type": "error"
-  },
-  {
     "inputs": [],
     "name": "InsufficientDonation",
     "type": "error"
@@ -121,11 +68,6 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [],
     "name": "InvalidCandidateRange",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidDisputeWindow",
     "type": "error"
   },
   {
@@ -185,8 +127,29 @@ export const scholarshipCoreAbi = [
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "MissingRole",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "MustVoteBeforeStaking",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotAdmin",
     "type": "error"
   },
   {
@@ -216,7 +179,7 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
-    "name": "ReentrancyGuardReentrantCall",
+    "name": "Reentrancy",
     "type": "error"
   },
   {
@@ -259,22 +222,6 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [],
     "name": "TooEarly",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "UUPSUnauthorizedCallContext",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "slot",
-        "type": "bytes32"
-      }
-    ],
-    "name": "UUPSUnsupportedProxiableUUID",
     "type": "error"
   },
   {
@@ -538,39 +485,8 @@ export const scholarshipCoreAbi = [
       },
       {
         "indexed": true,
-        "internalType": "bytes32",
-        "name": "previousAdminRole",
-        "type": "bytes32"
-      },
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "newAdminRole",
-        "type": "bytes32"
-      }
-    ],
-    "name": "RoleAdminChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "role",
-        "type": "bytes32"
-      },
-      {
-        "indexed": true,
         "internalType": "address",
         "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "sender",
         "type": "address"
       }
     ],
@@ -590,12 +506,6 @@ export const scholarshipCoreAbi = [
         "indexed": true,
         "internalType": "address",
         "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "sender",
         "type": "address"
       }
     ],
@@ -849,19 +759,6 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
-    "name": "DEFAULT_ADMIN_ROLE",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "UPGRADER_ROLE",
     "outputs": [
       {
@@ -875,7 +772,7 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
-    "name": "UPGRADE_INTERFACE_VERSION",
+    "name": "VERSION",
     "outputs": [
       {
         "internalType": "string",
@@ -888,12 +785,12 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
-    "name": "VERSION",
+    "name": "admin",
     "outputs": [
       {
-        "internalType": "string",
+        "internalType": "address",
         "name": "",
-        "type": "string"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1012,17 +909,17 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "selfDeclaredAcademicScore",
+        "name": "academicScore",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "selfDeclaredIncomeScore",
+        "name": "incomeScore",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "selfDeclaredRecommendScore",
+        "name": "recommendScore",
         "type": "uint256"
       }
     ],
@@ -1179,7 +1076,7 @@ export const scholarshipCoreAbi = [
     "name": "donorNFT",
     "outputs": [
       {
-        "internalType": "contract DonorNFT",
+        "internalType": "contract ICredentialNFT",
         "name": "",
         "type": "address"
       }
@@ -1217,7 +1114,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "milestoneId",
+        "name": "id",
         "type": "uint256"
       }
     ],
@@ -1293,7 +1190,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "id",
         "type": "uint256"
       }
     ],
@@ -1468,7 +1365,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "id",
         "type": "uint256"
       }
     ],
@@ -1492,7 +1389,7 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "id",
         "type": "uint256"
       }
     ],
@@ -1510,32 +1407,13 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "role",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getRoleAdmin",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
-        "name": "wallet",
+        "name": "w",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "id",
         "type": "uint256"
       }
     ],
@@ -1596,7 +1474,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "id",
         "type": "uint256"
       }
     ],
@@ -1695,7 +1573,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "admin",
+        "name": "_admin",
         "type": "address"
       },
       {
@@ -1741,12 +1619,12 @@ export const scholarshipCoreAbi = [
     "outputs": [
       {
         "internalType": "bool",
-        "name": "eligible",
+        "name": "",
         "type": "bool"
       },
       {
         "internalType": "string",
-        "name": "reason",
+        "name": "",
         "type": "string"
       }
     ],
@@ -2078,19 +1956,6 @@ export const scholarshipCoreAbi = [
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "proxiableUUID",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -2104,29 +1969,11 @@ export const scholarshipCoreAbi = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "role",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "callerConfirmation",
-        "type": "address"
-      }
-    ],
-    "name": "renounceRole",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "reputation",
     "outputs": [
       {
-        "internalType": "contract ScholarshipReputation",
+        "internalType": "contract IScholarshipReputation",
         "name": "",
         "type": "address"
       }
@@ -2143,7 +1990,7 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "address[]",
-        "name": "rankedApplicants",
+        "name": "ranked",
         "type": "address[]"
       }
     ],
@@ -2306,12 +2153,12 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "address[]",
-        "name": "rankedCandidates",
+        "name": "ranked",
         "type": "address[]"
       },
       {
         "internalType": "uint256[][]",
-        "name": "milestoneAmounts",
+        "name": "amounts",
         "type": "uint256[][]"
       }
     ],
@@ -2348,7 +2195,7 @@ export const scholarshipCoreAbi = [
     "name": "studentNFT",
     "outputs": [
       {
-        "internalType": "contract StudentNFT",
+        "internalType": "contract ICredentialNFT",
         "name": "",
         "type": "address"
       }
@@ -2413,30 +2260,11 @@ export const scholarshipCoreAbi = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes4",
-        "name": "interfaceId",
-        "type": "bytes4"
-      }
-    ],
-    "name": "supportsInterface",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "treasury",
     "outputs": [
       {
-        "internalType": "contract ScholarshipTreasury",
+        "internalType": "contract IScholarshipTreasury",
         "name": "",
         "type": "address"
       }
@@ -2448,18 +2276,13 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "newImplementation",
+        "name": "newImpl",
         "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
       }
     ],
-    "name": "upgradeToAndCall",
+    "name": "upgradeTo",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

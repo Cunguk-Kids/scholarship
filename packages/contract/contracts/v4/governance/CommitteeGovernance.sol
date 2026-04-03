@@ -5,9 +5,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-import {ScholarshipTypes} from "../libraries/ScholarshipTypes.sol";
-import {ScholarshipCore}  from "../core/ScholarshipCore.sol";
-import {ScholarshipBounty} from "../core/ScholarshipBounty.sol";
+import {ScholarshipTypes}   from "../libraries/ScholarshipTypes.sol";
+import {IScholarshipCore}   from "../interfaces/IScholarship.sol";
+import {IScholarshipBounty} from "../interfaces/IScholarship.sol";
 
 /**
  * @title  CommitteeGovernance
@@ -58,8 +58,8 @@ contract CommitteeGovernance is
 
     // ── External contracts ───────────────────────────────────────────────────
 
-    ScholarshipCore   public core;
-    ScholarshipBounty public bounty;
+    IScholarshipCore   public core;
+    IScholarshipBounty public bounty;
 
     // ── Storage ──────────────────────────────────────────────────────────────
 
@@ -129,8 +129,8 @@ contract CommitteeGovernance is
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(UPGRADER_ROLE,      admin);
 
-        core   = ScholarshipCore(_core);
-        bounty = ScholarshipBounty(_bounty);
+        core   = IScholarshipCore(_core);
+        bounty = IScholarshipBounty(_bounty);
     }
 
     // ═══════════════════════════════════════════════════════════════════

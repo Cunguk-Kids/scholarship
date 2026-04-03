@@ -463,7 +463,7 @@ export const committeeGovernanceAbi = [
     "name": "bounty",
     "outputs": [
       {
-        "internalType": "contract ScholarshipBounty",
+        "internalType": "contract IScholarshipBounty",
         "name": "",
         "type": "address"
       }
@@ -476,7 +476,7 @@ export const committeeGovernanceAbi = [
     "name": "core",
     "outputs": [
       {
-        "internalType": "contract ScholarshipCore",
+        "internalType": "contract IScholarshipCore",
         "name": "",
         "type": "address"
       }

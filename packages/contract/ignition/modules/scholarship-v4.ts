@@ -1,36 +1,46 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 /**
- * Scholarship Protocol v4 — Ignition Deployment Module
+ * Scholarship Protocol v4 — Ignition Deployment Module (FIXED)
  *
- * Deploy order:
- *   1. MockUSDC / existing USDC
- *   2. ScholarshipReputation, DonorNFT, StudentNFT  (no deps)
- *   3. ScholarshipTreasury
- *   4. ScholarshipCore
- *   5. ScholarshipBounty
- *   6. CommitteeGovernance
- *   7. Wire all roles
+ * ROOT CAUSE OF PREVIOUS FAILURES:
  *
- * FIXES vs previous version:
- *   1. Removed `import { keccak256, toHex } from "viem"` — viem is ESM-only
- *      and Hardhat's module loader is CommonJS. Using it caused the
- *      "SyntaxError: missing ) after argument list" error.
- *      Role hashes are now hardcoded (deterministic keccak256 constants).
+ *   All upgradeable contracts (ScholarshipReputation, ScholarshipTreasury,
+ *   ScholarshipCore, ScholarshipBounty, CommitteeGovernance) call
+ *   `_disableInitializers()` in their constructors — the standard UUPS safety
+ *   guard that prevents the implementation contract from being initialised
+ *   directly.
  *
- *   2. feeRecipient ternary fixed — when PROTOCOL_FEE_RECIPIENT env is empty,
- *      we pass `deployer` (an Ignition AccountFuture) directly as the arg.
- *      Both string and AccountFuture are valid m.call argument types.
+ *   The old module deployed them with plain `m.contract(...)` and then called
+ *   `m.call(..., "initialize", ...)` on the bare implementation.
+ *   That always reverts with `InvalidInitialization()` because initializers
+ *   are permanently disabled on the implementation itself.
  *
- * Required .env (packages/contract/.env):
- *   DEPLOYER_PRIVATE_KEY     — wallet that signs deployment txs
- *   USDC_ADDRESS             — leave empty to deploy MockUSDC locally
- *   PROTOCOL_FEE_RECIPIENT   — leave empty to use deployer wallet
+ * THE FIX — wrap every upgradeable contract in an ERC1967Proxy:
+ *
+ *   1. Deploy the implementation:
+ *        const impl = m.contract("ScholarshipReputation");
+ *   2. ABI-encode the `initialize(...)` call:
+ *        const initData = encodeFunctionData({ abi, functionName: "initialize", args });
+ *      (But Ignition can't import ethers/viem directly, so we use a helper
+ *       pattern — see ENCODING NOTE below.)
+ *   3. Deploy the proxy:
+ *        const proxy = m.contract("ERC1967Proxy", [impl, initData]);
+ *   4. Interact with `proxy` address cast as the implementation type.
+ *
+ * ENCODING NOTE:
+ *   Hardhat Ignition supports `m.encodeFunctionCall(contract, "fnName", args)`
+ *   as a first-class helper (since @nomicfoundation/hardhat-ignition v0.15+).
+ *   This is the idiomatic way to pass init calldata to a proxy constructor
+ *   without importing viem or ethers.
+ *
+ * NON-UPGRADEABLE CONTRACTS (deploy unchanged):
+ *   MockUSDC, DonorNFT, StudentNFT — no proxy needed.
+ *
+ * ROLE WIRING — identical to previous module.
  */
 
 // ── Pre-computed role hashes ──────────────────────────────────────────────
-// keccak256(toUtf8Bytes("ROLE_NAME")) — verified against OpenZeppelin output.
-// Recompute: ethers.keccak256(ethers.toUtf8Bytes("ROLE_NAME"))
 const ROLES = {
   UPGRADER_ROLE: "0x189ab7a9244df0848122154315af71fe140f3db0fe014031783b0946b8c9d2e3",
   CORE_ROLE: "0x502d3d275257923b2bea6ea25d9631f12369fb532871f13eb85eb09dc0fb4842",
@@ -42,7 +52,6 @@ const ROLES = {
   LOCKER_ROLE: "0xaf9a8bb3cbd6b84fbccefa71ff73e26e798553c6914585a84886212a46a90279",
 };
 
-// ── Env config ────────────────────────────────────────────────────────────
 const USDC_ADDRESS = process.env.USDC_ADDRESS ?? "";
 const PROTOCOL_FEE_RECIPIENT = process.env.PROTOCOL_FEE_RECIPIENT ?? "";
 
@@ -50,110 +59,176 @@ export default buildModule("ScholarshipV4", (m) => {
 
   const deployer = m.getAccount(0);
 
-  // ════════════════════════════════════════════════════════════
-  // STEP 1 — USDC
-  // ════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════
+  // STEP 1 — USDC  (non-upgradeable, deploy as-is)
+  // ════════════════════════════════════════════════════════════════════
 
   const usdc = USDC_ADDRESS !== ""
     ? m.contractAt("MockUSDC", USDC_ADDRESS)
     : m.contract("MockUSDC");
 
-  // ════════════════════════════════════════════════════════════
-  // STEP 2 — TOKEN CONTRACTS (no proxy, no init)
-  // ════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════
+  // STEP 2 — NFTs  (non-upgradeable, no proxy, no init call)
+  // ════════════════════════════════════════════════════════════════════
 
-  const reputation = m.contract("ScholarshipReputation");
   const donorNFT = m.contract("DonorNFT");
   const studentNFT = m.contract("StudentNFT");
 
-  // ════════════════════════════════════════════════════════════
-  // STEP 3 — INITIALIZE REPUTATION (UUPS)
-  // ════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════
+  // STEP 3 — ScholarshipReputation  (UUPS → needs proxy)
+  //
+  //   impl constructor: _disableInitializers()  → blocks direct init
+  //   fix: deploy impl + ERC1967Proxy(impl, initCalldata)
+  // ════════════════════════════════════════════════════════════════════
 
-  const reputationInit = m.call(reputation, "initialize", [deployer], {
-    id: "reputationInit",
+  const reputationImpl = m.contract("ScholarshipReputation", [], {
+    id: "ScholarshipReputation_Impl",
   });
 
-  // ════════════════════════════════════════════════════════════
-  // STEP 4 — TREASURY
-  // feeRecipient: plain string from .env OR deployer AccountFuture.
-  // Both types are accepted by Hardhat Ignition as call arguments.
-  // ════════════════════════════════════════════════════════════
+  const reputationInitData = m.encodeFunctionCall(
+    reputationImpl,
+    "initialize",
+    [deployer],
+  );
 
-  const treasury = m.contract("ScholarshipTreasury");
+  const reputationProxy = m.contract("ERC1967Proxy", [reputationImpl, reputationInitData], {
+    id: "ScholarshipReputation_Proxy",
+  });
+
+  // Re-attach the ABI so downstream calls use the typed interface
+  const reputation = m.contractAt("ScholarshipReputation", reputationProxy, {
+    id: "ScholarshipReputation",
+  });
+
+  // ════════════════════════════════════════════════════════════════════
+  // STEP 4 — ScholarshipTreasury  (UUPS → needs proxy)
+  // ════════════════════════════════════════════════════════════════════
+
   const feeRecipient = PROTOCOL_FEE_RECIPIENT !== "" ? PROTOCOL_FEE_RECIPIENT : deployer;
 
-  const treasuryInit = m.call(treasury, "initialize", [
-    deployer, usdc, feeRecipient,
-  ], {
-    id: "treasuryInit",
-    after: [reputationInit],
+  const treasuryImpl = m.contract("ScholarshipTreasury", [], {
+    id: "ScholarshipTreasury_Impl",
   });
 
-  // ════════════════════════════════════════════════════════════
-  // STEP 5 — CORE
-  // ════════════════════════════════════════════════════════════
+  const treasuryInitData = m.encodeFunctionCall(
+    treasuryImpl,
+    "initialize",
+    [deployer, usdc, feeRecipient],
+  );
 
-  const core = m.contract("ScholarshipCore");
-
-  const coreInit = m.call(core, "initialize", [
-    deployer, usdc, treasury, reputation, donorNFT, studentNFT,
-  ], {
-    id: "coreInit",
-    after: [treasuryInit],
+  const treasuryProxy = m.contract("ERC1967Proxy", [treasuryImpl, treasuryInitData], {
+    id: "ScholarshipTreasury_Proxy",
+    after: [reputationProxy], // enforce ordering
   });
 
-  // ════════════════════════════════════════════════════════════
-  // STEP 6 — BOUNTY
-  // ════════════════════════════════════════════════════════════
-
-  const bounty = m.contract("ScholarshipBounty");
-
-  const bountyInit = m.call(bounty, "initialize", [
-    deployer, usdc, core, treasury,
-  ], {
-    id: "bountyInit",
-    after: [coreInit],
+  const treasury = m.contractAt("ScholarshipTreasury", treasuryProxy, {
+    id: "ScholarshipTreasury",
   });
 
-  // ════════════════════════════════════════════════════════════
-  // STEP 7 — COMMITTEE GOVERNANCE
-  // ════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════
+  // STEP 5 — ScholarshipCore  (UUPS → needs proxy)
+  // ════════════════════════════════════════════════════════════════════
 
-  const committee = m.contract("CommitteeGovernance");
-
-  const committeeInit = m.call(committee, "initialize", [
-    deployer, core, bounty,
-  ], {
-    id: "committeeInit",
-    after: [bountyInit],
+  const coreImpl = m.contract("ScholarshipCore", [], {
+    id: "ScholarshipCore_Impl",
   });
 
-  // ════════════════════════════════════════════════════════════
+  const coreInitData = m.encodeFunctionCall(
+    coreImpl,
+    "initialize",
+    [deployer, usdc, treasuryProxy, reputationProxy, donorNFT, studentNFT],
+  );
+
+  const coreProxy = m.contract("ERC1967Proxy", [coreImpl, coreInitData], {
+    id: "ScholarshipCore_Proxy",
+    after: [treasuryProxy],
+  });
+
+  const core = m.contractAt("ScholarshipCore", coreProxy, {
+    id: "ScholarshipCore",
+  });
+
+  // ════════════════════════════════════════════════════════════════════
+  // STEP 6 — ScholarshipBounty  (UUPS → needs proxy)
+  // ════════════════════════════════════════════════════════════════════
+
+  const bountyImpl = m.contract("ScholarshipBounty", [], {
+    id: "ScholarshipBounty_Impl",
+  });
+
+  const bountyInitData = m.encodeFunctionCall(
+    bountyImpl,
+    "initialize",
+    [deployer, usdc, coreProxy, treasuryProxy],
+  );
+
+  const bountyProxy = m.contract("ERC1967Proxy", [bountyImpl, bountyInitData], {
+    id: "ScholarshipBounty_Proxy",
+    after: [coreProxy],
+  });
+
+  const bounty = m.contractAt("ScholarshipBounty", bountyProxy, {
+    id: "ScholarshipBounty",
+  });
+
+  // ════════════════════════════════════════════════════════════════════
+  // STEP 7 — CommitteeGovernance  (UUPS → needs proxy)
+  // ════════════════════════════════════════════════════════════════════
+
+  const committeeImpl = m.contract("CommitteeGovernance", [], {
+    id: "CommitteeGovernance_Impl",
+  });
+
+  const committeeInitData = m.encodeFunctionCall(
+    committeeImpl,
+    "initialize",
+    [deployer, coreProxy, bountyProxy],
+  );
+
+  const committeeProxy = m.contract("ERC1967Proxy", [committeeImpl, committeeInitData], {
+    id: "CommitteeGovernance_Proxy",
+    after: [bountyProxy],
+  });
+
+  const committee = m.contractAt("CommitteeGovernance", committeeProxy, {
+    id: "CommitteeGovernance",
+  });
+
+  // ════════════════════════════════════════════════════════════════════
   // STEP 8 — WIRE ROLES
-  // ════════════════════════════════════════════════════════════
+  // (identical to before — just using proxy-backed contract refs)
+  // ════════════════════════════════════════════════════════════════════
 
-  const afterAll = { after: [committeeInit] };
+  const afterAll = { after: [committeeProxy] };
 
   // Treasury: Core moves funds; Bounty slashes & distributes
-  m.call(treasury, "grantRole", [ROLES.CORE_ROLE, core], { id: "treasury_grantCoreRole", ...afterAll });
-  m.call(treasury, "grantRole", [ROLES.BOUNTY_ROLE, bounty], { id: "treasury_grantBountyRole", ...afterAll });
+  m.call(treasury, "grantRole", [ROLES.CORE_ROLE, coreProxy], { id: "treasury_grantCoreRole", ...afterAll });
+  m.call(treasury, "grantRole", [ROLES.BOUNTY_ROLE, bountyProxy], { id: "treasury_grantBountyRole", ...afterAll });
 
   // Core: Bounty freezes/releases/slashes; Committee pushes scores
-  m.call(core, "grantRole", [ROLES.BOUNTY_ROLE, bounty], { id: "core_grantBountyRole", ...afterAll });
-  m.call(core, "grantRole", [ROLES.COMMITTEE_ROLE, committee], { id: "core_grantCommitteeRole", ...afterAll });
+  m.call(core, "grantRole", [ROLES.BOUNTY_ROLE, bountyProxy], { id: "core_grantBountyRole", ...afterAll });
+  m.call(core, "grantRole", [ROLES.COMMITTEE_ROLE, committeeProxy], { id: "core_grantCommitteeRole", ...afterAll });
 
   // Bounty: Committee resolves disputes
-  m.call(bounty, "grantRole", [ROLES.RESOLVER_ROLE, committee], { id: "bounty_grantResolverRole", ...afterAll });
+  m.call(bounty, "grantRole", [ROLES.RESOLVER_ROLE, committeeProxy], { id: "bounty_grantResolverRole", ...afterAll });
 
   // Reputation: Core mints, burns, locks
-  m.call(reputation, "grantRole", [ROLES.MINTER_ROLE, core], { id: "rep_grantMinterRole", ...afterAll });
-  m.call(reputation, "grantRole", [ROLES.BURNER_ROLE, core], { id: "rep_grantBurnerRole", ...afterAll });
-  m.call(reputation, "grantRole", [ROLES.LOCKER_ROLE, core], { id: "rep_grantLockerRole", ...afterAll });
+  m.call(reputation, "grantRole", [ROLES.MINTER_ROLE, coreProxy], { id: "rep_grantMinterRole", ...afterAll });
+  m.call(reputation, "grantRole", [ROLES.BURNER_ROLE, coreProxy], { id: "rep_grantBurnerRole", ...afterAll });
+  m.call(reputation, "grantRole", [ROLES.LOCKER_ROLE, coreProxy], { id: "rep_grantLockerRole", ...afterAll });
 
   // NFTs: Core mints on donation and full completion
-  m.call(donorNFT, "grantRole", [ROLES.MINTER_ROLE, core], { id: "donorNFT_grantMinterRole", ...afterAll });
-  m.call(studentNFT, "grantRole", [ROLES.MINTER_ROLE, core], { id: "studentNFT_grantMinterRole", ...afterAll });
+  m.call(donorNFT, "grantRole", [ROLES.MINTER_ROLE, coreProxy], { id: "donorNFT_grantMinterRole", ...afterAll });
+  m.call(studentNFT, "grantRole", [ROLES.MINTER_ROLE, coreProxy], { id: "studentNFT_grantMinterRole", ...afterAll });
 
-  return { usdc, reputation, donorNFT, studentNFT, treasury, core, bounty, committee };
+  return {
+    usdc,
+    donorNFT,
+    studentNFT,
+    reputation,
+    treasury,
+    core,
+    bounty,
+    committee,
+  };
 });

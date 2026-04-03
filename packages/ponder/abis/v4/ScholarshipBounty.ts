@@ -612,7 +612,7 @@ export const scholarshipBountyAbi = [
     "name": "core",
     "outputs": [
       {
-        "internalType": "contract ScholarshipCore",
+        "internalType": "contract IScholarshipCore",
         "name": "",
         "type": "address"
       }
@@ -1087,7 +1087,7 @@ export const scholarshipBountyAbi = [
     "name": "treasury",
     "outputs": [
       {
-        "internalType": "contract ScholarshipTreasury",
+        "internalType": "contract IScholarshipTreasury",
         "name": "",
         "type": "address"
       }
