@@ -17,7 +17,6 @@ reputationRoute.get("/:address", async (c) => {
       .limit(1);
 
     if (!rep) {
-      // Return zero balance for addresses with no REP record
       return c.json({
         data: {
           address,

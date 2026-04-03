@@ -86,7 +86,6 @@ scholarsRoute.get("/:wallet", async (c) => {
       return c.json({ error: "Scholar not found" }, 404);
     }
 
-    // Fetch milestones for each scholar record
     const results = await Promise.all(
       scholars.map(async (s) => {
         const milestones = await db.select().from(v4Milestones)

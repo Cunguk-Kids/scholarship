@@ -25,12 +25,10 @@ dashboardRoute.get("/:wallet", async (c) => {
   try {
     const wallet = c.req.param("wallet");
 
-    // ── Programs created by this wallet ────────────────────────────────
     const programsCreated = await db.select().from(v4Programs)
       .where(eq(v4Programs.initiator, wallet))
       .orderBy(desc(v4Programs.createdAt));
 
-    // ── Applications by this wallet ───────────────────────────────────
     const applications = await db.select({
       applicant: v4Applicants,
       program: {
@@ -46,7 +44,6 @@ dashboardRoute.get("/:wallet", async (c) => {
       .where(eq(v4Applicants.wallet, wallet))
       .orderBy(desc(v4Applicants.createdAt));
 
-    // ── Scholar records ───────────────────────────────────────────────
     const scholarships = await db.select({
       scholar: v4Scholars,
       program: {
@@ -62,22 +59,18 @@ dashboardRoute.get("/:wallet", async (c) => {
       .where(eq(v4Scholars.wallet, wallet))
       .orderBy(desc(v4Scholars.createdAt));
 
-    // ── Milestones for this scholar ───────────────────────────────────
     const milestones = await db.select().from(v4Milestones)
       .where(eq(v4Milestones.scholarWallet, wallet))
       .orderBy(v4Milestones.blockchainId);
 
-    // ── Votes cast by this wallet ─────────────────────────────────────
     const votes = await db.select().from(v4Votes)
       .where(eq(v4Votes.voterAddress, wallet))
       .orderBy(desc(v4Votes.createdAt));
 
-    // ── Confidence stakes ─────────────────────────────────────────────
     const stakes = await db.select().from(v4ConfidenceStakes)
       .where(eq(v4ConfidenceStakes.voterAddress, wallet))
       .orderBy(desc(v4ConfidenceStakes.createdAt));
 
-    // ── Disputes (as BH or as scholar) ────────────────────────────────
     const disputes = await db.select().from(v4Disputes)
       .where(or(
         eq(v4Disputes.bountyHunter, wallet),
@@ -85,12 +78,10 @@ dashboardRoute.get("/:wallet", async (c) => {
       ))
       .orderBy(desc(v4Disputes.createdAt));
 
-    // ── Reputation ────────────────────────────────────────────────────
     const [reputation] = await db.select().from(v4Reputation)
       .where(eq(v4Reputation.address, wallet))
       .limit(1);
 
-    // ── Compute summary stats ─────────────────────────────────────────
     const totalReceived = scholarships.reduce(
       (sum, s) => sum + BigInt(s.scholar.totalReceived ?? "0"), 0n
     );
