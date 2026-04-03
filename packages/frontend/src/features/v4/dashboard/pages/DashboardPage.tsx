@@ -1,15 +1,19 @@
-import { useAccount } from "wagmi";
-import { useDashboard } from "@/lib/api/hooks";
-import { NeoCard, NeoCardBody } from "@/components/ui/NeoCard";
-import { NeoSkeleton } from "@/components/ui/NeoSkeleton";
-import { StatCard } from "@/components/ui/StatCard";
-import { formatUnits } from "viem";
+import { useAccount } from 'wagmi';
+import { useDashboard } from '@/lib/api/hooks';
+import { NeoCard, NeoCardBody } from '@/components/ui/NeoCard';
+import { NeoSkeleton } from '@/components/ui/NeoSkeleton';
+import { StatCard } from '@/components/ui/StatCard';
+import { formatUnits } from 'viem';
 
-import { InitiatorPanel, StudentPanel, VoterPanel, BountyHunterPanel } from "../components/Panels";
+import { InitiatorPanel, StudentPanel, VoterPanel, BountyHunterPanel } from '../components/Panels';
+import { CreateProgramModal } from '../../programs/components/CreateProgramModal';
+import { useState } from 'react';
+import { NeoButton } from '@/components/ui/NeoButton';
 
 export function DashboardPage() {
   const { address } = useAccount();
-  const { data: dashboard, isLoading } = useDashboard(address || "");
+  const { data: dashboard, isLoading } = useDashboard(address || '');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   if (!address) {
     return (
@@ -22,7 +26,11 @@ export function DashboardPage() {
   }
 
   if (isLoading) {
-    return <div className="p-12 max-w-5xl mx-auto"><NeoSkeleton lines={8} /></div>;
+    return (
+      <div className="p-12 max-w-5xl mx-auto">
+        <NeoSkeleton lines={8} />
+      </div>
+    );
   }
 
   if (!dashboard) {
@@ -38,20 +46,35 @@ export function DashboardPage() {
   const { summary, programsCreated, scholarships, votes, stakes, disputes, reputation } = dashboard;
 
   const roles = [];
-  if (programsCreated.length > 0) roles.push("INITIATOR");
-  if (scholarships.length > 0) roles.push("SCHOLAR");
-  if (votes.length > 0 || stakes.length > 0) roles.push("VOTER");
-  if (disputes.length > 0) roles.push("BOUNTY_HUNTER");
+  if (programsCreated.length > 0) roles.push('INITIATOR');
+  if (scholarships.length > 0) roles.push('SCHOLAR');
+  if (votes.length > 0 || stakes.length > 0) roles.push('VOTER');
+  if (disputes.length > 0) roles.push('BOUNTY_HUNTER');
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="mb-8">
-        <h1 className="font-paytone text-5xl mb-2">My Dashboard</h1>
-        <p className="text-gray-600 text-lg font-mono">{address}</p>
+        <div className="flex flex-row justify-between items-center">
+          <div>
+            <h1 className="font-paytone text-5xl mb-2">My Dashboard</h1>
+            <p className="text-gray-600 text-lg font-mono">{address}</p>
+          </div>
+          {roles.includes('INITIATOR') && (
+            <NeoButton
+              label="Create Program"
+              variant="primary"
+              size="lg"
+              onClick={() => setIsCreateModalOpen(true)}
+            />
+          )}
+        </div>
+
         <div className="flex gap-2 mt-4">
-          {roles.map(r => (
-            <span key={r} className="px-3 py-1 bg-skpurple-light border-2 border-black rounded-lg text-xs font-bold uppercase">
-              {r.replace("_", " ")}
+          {roles.map((r) => (
+            <span
+              key={r}
+              className="px-3 py-1 bg-skpurple-light border-2 border-black rounded-lg text-xs font-bold uppercase">
+              {r.replace('_', ' ')}
             </span>
           ))}
           {roles.length === 0 && (
@@ -64,25 +87,41 @@ export function DashboardPage() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-        <StatCard icon="🏆" label="Reputation" value={reputation ? Number(formatUnits(BigInt(reputation.repBalance), 18)).toFixed(2) : "0"} />
+        <StatCard
+          icon="🏆"
+          label="Reputation"
+          value={
+            reputation ? Number(formatUnits(BigInt(reputation.repBalance), 18)).toFixed(2) : '0'
+          }
+        />
         <StatCard icon="🎓" label="Scholarships" value={summary.scholarshipsCount.toString()} />
         <StatCard icon="🗳️" label="Votes Cast" value={summary.votesCount.toString()} />
         <StatCard icon="⚖️" label="Disputes" value={summary.disputesCount.toString()} />
       </div>
 
       <div className="space-y-12">
-        {roles.includes("INITIATOR") && <InitiatorPanel programs={programsCreated} />}
-        {roles.includes("SCHOLAR") && <StudentPanel scholarships={scholarships} dashboardData={dashboard} />}
-        {roles.includes("VOTER") && <VoterPanel votes={votes} stakes={stakes} dashboardData={dashboard} />}
-        {roles.includes("BOUNTY_HUNTER") && <BountyHunterPanel disputes={disputes} dashboardData={dashboard} />}
-        
+        {roles.includes('INITIATOR') && <InitiatorPanel programs={programsCreated} />}
+        {roles.includes('SCHOLAR') && (
+          <StudentPanel scholarships={scholarships} dashboardData={dashboard} />
+        )}
+        {roles.includes('VOTER') && (
+          <VoterPanel votes={votes} stakes={stakes} dashboardData={dashboard} />
+        )}
+        {roles.includes('BOUNTY_HUNTER') && (
+          <BountyHunterPanel disputes={disputes} dashboardData={dashboard} />
+        )}
+
         {roles.length === 0 && (
           <NeoCard className="p-8 text-center bg-skyellow-light">
             <h2 className="font-paytone text-2xl mb-2">Welcome to Scholarship V4</h2>
-            <p className="text-gray-700">Explore programs to apply or vote, or create your own program to fund students.</p>
+            <p className="text-gray-700">
+              Explore programs to apply or vote, or create your own program to fund students.
+            </p>
           </NeoCard>
         )}
       </div>
+
+      <CreateProgramModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   );
 }

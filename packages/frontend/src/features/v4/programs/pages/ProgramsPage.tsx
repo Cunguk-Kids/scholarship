@@ -1,42 +1,44 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { usePrograms } from "@/lib/api/hooks";
-import { fetchProgramMeta } from "@/lib/ipfs";
-import { useSSE } from "@/lib/sse/useSSE";
-import type { Program, ProgramMetadata, ProgramStatus } from "@/lib/api/types";
-import { ProgramCard } from "../components/ProgramCard";
-import { NeoCardSkeleton } from "@/components/ui/NeoSkeleton";
-import { NeoButton } from "@/components/ui/NeoButton";
-import SplitText from "@/components/ui/split-text";
-import { CreateProgramModal } from "../components/CreateProgramModal";
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { usePrograms } from '@/lib/api/hooks';
+import { fetchProgramMeta } from '@/lib/ipfs';
+import { useSSE } from '@/lib/sse/useSSE';
+import type { Program, ProgramStatus } from '@/lib/api/types';
+import { ProgramCard } from '../components/ProgramCard';
+import { NeoCardSkeleton } from '@/components/ui/NeoSkeleton';
+import { NeoButton } from '@/components/ui/NeoButton';
+import SplitText from '@/components/ui/split-text';
+import { CreateProgramModal } from '../components/CreateProgramModal';
 
-const STATUS_TABS: Array<{ label: string; value: ProgramStatus | "ALL" }> = [
-  { label: "All",         value: "ALL" },
-  { label: "Open",        value: "APPLICATION_OPEN" },
-  { label: "Screening",   value: "SCREENING" },
-  { label: "Voting",      value: "VOTING" },
-  { label: "Active",      value: "ACTIVE" },
-  { label: "Completed",   value: "COMPLETED" },
+const STATUS_TABS: Array<{ label: string; value: ProgramStatus | 'ALL' }> = [
+  { label: 'All', value: 'ALL' },
+  { label: 'Open', value: 'APPLICATION_OPEN' },
+  { label: 'Screening', value: 'SCREENING' },
+  { label: 'Voting', value: 'VOTING' },
+  { label: 'Active', value: 'ACTIVE' },
+  { label: 'Completed', value: 'COMPLETED' },
 ];
 
 export function ProgramsPage() {
-  const [activeTab, setActiveTab] = useState<ProgramStatus | "ALL">("ALL");
+  const [activeTab, setActiveTab] = useState<ProgramStatus | 'ALL'>('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // SSE for real-time updates
   const { data: sseEvent } = useSSE<{ step: string }>({
     url: `${import.meta.env.VITE_BACKEND_HOST}/sse`,
-    event: "main",
+    event: 'main',
   });
 
   // Fetch programs
-  const { data: result, isLoading, refetch } = usePrograms(
-    activeTab === "ALL" ? undefined : { status: activeTab }
-  );
+  const {
+    data: result,
+    isLoading,
+    refetch,
+  } = usePrograms(activeTab === 'ALL' ? undefined : { status: activeTab });
 
   // Refetch on SSE events
   useEffect(() => {
-    if (sseEvent?.step === "ProgramCreated" || sseEvent?.step === "ProgramStatusChanged") {
+    if (sseEvent?.step === 'ProgramCreated' || sseEvent?.step === 'ProgramStatusChanged') {
       refetch();
     }
   }, [sseEvent, refetch]);
@@ -51,34 +53,48 @@ export function ProgramsPage() {
           <h1 className="font-paytone text-5xl md:text-6xl">
             <SplitText
               text="Empower the Future."
-              delay={150} duration={0.6} ease="power3.out"
+              delay={150}
+              duration={0.6}
+              ease="power3.out"
               splitType="words"
-              from={{ opacity: 0, y: 40 }} to={{ opacity: 1, y: 0 }}
-              threshold={0.1} rootMargin="-50px" textAlign="center"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              rootMargin="-50px"
+              textAlign="center"
             />
           </h1>
           <p className="font-nunito text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto">
             <SplitText
               text="Transparent scholarships powered by smart contracts. Funds go directly to students."
-              delay={50} duration={0.6} ease="power3.out"
+              delay={50}
+              duration={0.6}
+              ease="power3.out"
               splitType="words"
-              from={{ opacity: 0, y: 30 }} to={{ opacity: 1, y: 0 }}
-              threshold={0.1} rootMargin="-50px" textAlign="center"
+              from={{ opacity: 0, y: 30 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              rootMargin="-50px"
+              textAlign="center"
             />
           </p>
           <div className="flex items-center justify-center gap-4 pt-4">
-            <NeoButton label="Create Program" variant="primary" size="lg" onClick={() => setIsCreateModalOpen(true)} />
             <NeoButton
-              label="Connect Wallet"
-              variant="connect"
+              label="Create Program"
+              variant="primary"
               size="lg"
+              onClick={() => setIsCreateModalOpen(true)}
             />
+            <NeoButton label="Connect Wallet" variant="connect" size="lg" />
           </div>
         </div>
 
         {/* Decorative elements */}
         <div className="absolute -top-8 -left-8 w-32 h-32 bg-skyellow rounded-full border-2 border-black opacity-30 animate-float" />
-        <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-skpink rounded-full border-2 border-black opacity-30 animate-float" style={{ animationDelay: "1s" }} />
+        <div
+          className="absolute -bottom-4 -right-4 w-24 h-24 bg-skpink rounded-full border-2 border-black opacity-30 animate-float"
+          style={{ animationDelay: '1s' }}
+        />
       </section>
 
       {/* ── Programs Section ────────────────────────────────────────────────── */}
@@ -91,19 +107,19 @@ export function ProgramsPage() {
 
           {/* Status filter tabs */}
           <div className="flex flex-wrap gap-2 mb-8">
-            {STATUS_TABS.map(tab => (
+            {STATUS_TABS.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
                 className={`
                   px-4 py-2 rounded-xl border-2 border-black font-bold text-sm
                   transition-all duration-150
-                  ${activeTab === tab.value
-                    ? "bg-black text-white shadow-none translate-x-0.5 translate-y-0.5"
-                    : "bg-white text-black neo-shadow-sm hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_rgba(0,0,0)]"
+                  ${
+                    activeTab === tab.value
+                      ? 'bg-black text-white shadow-none translate-x-0.5 translate-y-0.5'
+                      : 'bg-white text-black neo-shadow-sm hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_rgba(0,0,0)]'
                   }
-                `}
-              >
+                `}>
                 {tab.label}
               </button>
             ))}
@@ -124,7 +140,7 @@ export function ProgramsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {programs.map(program => (
+              {programs.map((program) => (
                 <ProgramCardWithMeta key={program.id} program={program} />
               ))}
             </div>
@@ -132,13 +148,13 @@ export function ProgramsPage() {
         </div>
 
         {/* Bottom wave */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 bg-skbw" style={{ clipPath: "ellipse(70% 100% at 50% 100%)" }} />
+        <div
+          className="absolute bottom-0 left-0 right-0 h-8 bg-skbw"
+          style={{ clipPath: 'ellipse(70% 100% at 50% 100%)' }}
+        />
       </section>
 
-      <CreateProgramModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+      <CreateProgramModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   );
 }
@@ -146,7 +162,7 @@ export function ProgramsPage() {
 /** Program card that fetches IPFS metadata */
 function ProgramCardWithMeta({ program }: { program: Program }) {
   const { data: meta } = useQuery({
-    queryKey: ["ipfs-meta", program.metadataCID],
+    queryKey: ['ipfs-meta', program.metadataCID],
     queryFn: () => fetchProgramMeta(program.metadataCID),
     enabled: !!program.metadataCID,
     staleTime: Infinity,
