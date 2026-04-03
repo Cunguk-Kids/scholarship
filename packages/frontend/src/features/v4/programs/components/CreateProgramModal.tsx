@@ -108,9 +108,7 @@ export function CreateProgramModal({ isOpen, onClose }: Props) {
               />
             </div>
             <div className="">
-              <label className="block text-sm font-bold mb-1">
-                Program For {formData.educationLevel == 0 ? 'true' : 'false'}
-              </label>
+              <label className="block text-sm font-bold mb-1">Program For</label>
               <div className="grid grid-cols-4 w-full">
                 <NeoButton
                   className={formData.educationLevel == 0 ? 'bg-skpurple-hover' : ''}
