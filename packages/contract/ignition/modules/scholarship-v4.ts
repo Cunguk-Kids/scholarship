@@ -63,7 +63,7 @@ export default buildModule("ScholarshipV4", (m) => {
   const coreProxy = m.contract("ERC1967Proxy", [
     coreImpl,
     m.encodeFunctionCall(coreImpl, "initialize", [
-      deployer, usdc, treasuryProxy, reputationProxy, donorNFT, studentNFT, milestoneManagerProxy,
+      deployer, usdc, treasuryProxy, reputationProxy, donorNFT, studentNFT, milestoneManagerProxy, ZERO,
     ]),
   ], { id: "ScholarshipCore_Proxy", after: [milestoneManagerProxy] });
   const core = m.contractAt("ScholarshipCore", coreProxy, { id: "ScholarshipCore" });
@@ -101,7 +101,7 @@ export default buildModule("ScholarshipV4", (m) => {
 
   // Core Access
   m.call(core, "grantRole", [ROLES.GOVERNANCE_ROLE, adminProxy], { id: "core_grantGovernanceRole", ...afterAll });
-  m.call(core, "grantRole", [ROLES.BOUNTY_ROLE, bountyProxy], { id: "core_grantBountyRole", ...afterAll });
+  m.call(core, "setBounty", [bountyProxy], { id: "core_setBounty", ...afterAll });
   m.call(core, "grantRole", [ROLES.COMMITTEE_ROLE, committeeProxy], { id: "core_grantCommitteeRole", ...afterAll });
 
   // Treasury Access

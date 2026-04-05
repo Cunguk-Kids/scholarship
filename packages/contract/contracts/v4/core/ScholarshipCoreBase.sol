@@ -102,6 +102,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     ICredentialNFT         public donorNFT;
     ICredentialNFT         public studentNFT;
     IMilestoneManager      public milestoneManager;
+    address                public bountyHunter; // Using address to match existing wiring or use IScholarshipBounty
 
     // ── Storage ──────────────────────────────────────────────────────────────
     uint256 internal _nextProgramId;
@@ -161,6 +162,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     error NewVotingEndMustBeAfterVotingStart();
     error MaxExtensionsReached();
     error ExtensionTooLong();
+    error TooEarly();
 
     // ── Shared Helpers ───────────────────────────────────────────────────────
     function _requireProgramExists(uint256 programId) internal view { if (programId == 0 || programId > _nextProgramId) revert ProgramNotFound(); }
@@ -243,4 +245,133 @@ abstract contract ScholarshipCoreBase is Initializable {
         uint8 count = ++votingExtensionCount[pid];
         emit VotingDeadlineExtended(pid, oE, nE, count);
     }
+
+    // ── Internal Core Logic Restoration ──────────────────────────────────────
+
+    function _voteForCandidate(uint256 pid, address candidate) internal {
+        _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
+        ScholarshipTypes.Program storage p = programs[pid];
+        if (block.timestamp < p.votingStart || block.timestamp > p.votingEnd) revert TooEarly();
+        if (applicants[pid][candidate].status != ScholarshipTypes.ApplicationStatus.SHORTLISTED) revert CandidateNotShortlisted();
+        if (reputation.isVotingPowerLocked(msg.sender)) revert VotingPowerLocked();
+        
+        uint256 power = reputation.balanceOf(msg.sender);
+        if (power == 0) revert InsufficientVotingPower();
+
+        voterInfo[pid][msg.sender] = ScholarshipTypes.VoterInfo({
+            donatedAmount: 0,
+            remainingVotingPower: 0,
+            votedFor: candidate,
+            confidenceStake: 0,
+            confidenceStakeFor: address(0),
+            hasClaimedYield: false
+        });
+
+        applicants[pid][candidate].voteScore += power;
+        programs[pid].totalVotes += power;
+
+        emit VoteCast(pid, msg.sender, candidate, power);
+    }
+
+    function _placeConfidenceStake(uint256 pid, address scholar, uint256 amount) internal {
+        _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
+        ScholarshipTypes.VoterInfo storage v = voterInfo[pid][msg.sender];
+        if (v.votedFor != scholar) revert MustVoteBeforeStaking();
+        if (v.confidenceStake > 0) revert ConfidenceStakeAlreadyExists();
+        
+        uint256 netDonation = programs[pid].totalFund; 
+        if (amount > netDonation) revert ConfidenceStakeExceedsDonation();
+        
+        v.confidenceStake = amount;
+        v.confidenceStakeFor = scholar;
+        treasury.depositConfidenceStake(pid, msg.sender, scholar, amount);
+        emit ConfidenceStaked(pid, msg.sender, scholar, amount);
+    }
+
+    function _onMilestoneCompleted(uint256 pid, address scholarAddr, uint256 mid, uint256 amount, ScholarshipTypes.MilestoneKind kind) internal {
+        ScholarshipTypes.Scholar storage s = scholars[scholarAddr][pid];
+        if (s.status != ScholarshipTypes.StudentStatus.ACTIVE) revert ScholarNotActive();
+
+        if (kind == ScholarshipTypes.MilestoneKind.MANDATORY) {
+            s.mandatoryCompleted++;
+        } else {
+            s.optionalCompleted++;
+        }
+
+        s.totalReceived += amount;
+        programs[pid].spentFund += amount;
+
+        if (s.mandatoryCompleted == s.mandatoryTotal) {
+            s.status = ScholarshipTypes.StudentStatus.COMPLETED;
+            reputation.mint(scholarAddr, 100, "Scholarship Completion");
+            emit ScholarCompleted(pid, scholarAddr);
+            _checkProgramCompletion(pid);
+        }
+    }
+
+    function _onOptionalApproved(uint256 pid, address s, uint256 amt) internal {
+        scholars[s][pid].optionalApproved++;
+        programs[pid].allocatedFund += amt;
+    }
+
+    function _checkProgramCompletion(uint256 pid) internal {
+        ScholarshipTypes.Program storage p = programs[pid];
+        uint256 count;
+        address[] memory winners = _shortlist[pid]; 
+        for (uint256 i; i < winners.length; i++) {
+            if (scholars[winners[i]][pid].status == ScholarshipTypes.StudentStatus.COMPLETED) {
+                count++;
+            }
+        }
+        if (count == p.targetWinners) {
+            p.status = ScholarshipTypes.ProgramStatus.COMPLETED;
+            emit ProgramStatusChanged(pid, ScholarshipTypes.ProgramStatus.COMPLETED);
+            emit ProgramCompleted(pid);
+        }
+    }
+
+    function _slashScholar(address wallet, uint256 pid, ScholarshipTypes.DisputeType dtype) internal {
+        scholars[wallet][pid].status = ScholarshipTypes.StudentStatus.FROZEN;
+        if (dtype == ScholarshipTypes.DisputeType.HEAVY_FRAUD) {
+            globalStudentStatus[wallet] = ScholarshipTypes.StudentStatus.BLACKLISTED;
+        } else {
+            globalStudentStatus[wallet] = ScholarshipTypes.StudentStatus.FROZEN;
+            globalFreezeUntil[wallet] = block.timestamp + _config.freezeHeavy;
+        }
+        emit ScholarSlashed(wallet, pid, dtype);
+    }
+
+    function _selectWinners(uint256 pid, address[] calldata ranked, uint256[][] calldata amounts, string[][] calldata descs) internal {
+        _requireInitiator(pid);
+        _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
+        if (block.timestamp < programs[pid].votingEnd) revert VotingNotEnded();
+        if (programs[pid].totalVotes == 0) revert QuorumNotMet();
+
+        programs[pid].status = ScholarshipTypes.ProgramStatus.ACTIVE;
+        emit ProgramStatusChanged(pid, ScholarshipTypes.ProgramStatus.ACTIVE);
+
+        for (uint256 i; i < ranked.length; i++) {
+            address s = ranked[i];
+            if (applicants[pid][s].status != ScholarshipTypes.ApplicationStatus.SHORTLISTED) revert CandidateNotShortlisted();
+            
+            scholars[s][pid] = ScholarshipTypes.Scholar({
+                programId: pid,
+                wallet: s,
+                status: ScholarshipTypes.StudentStatus.ACTIVE,
+                freezeUntil: 0,
+                isBlacklisted: false,
+                mandatoryTotal: uint128(amounts[i].length),
+                mandatoryCompleted: 0,
+                optionalApproved: 0,
+                optionalCompleted: 0,
+                totalReceived: 0
+            });
+
+            milestoneManager.createMandatoryBatch(pid, s, amounts[i], descs[i]);
+            emit ScholarSelected(pid, s);
+        }
+    }
+
+    function _resolveDisputeBH(uint256) internal {}
+    function _resolveDisputeScholar(uint256) internal {}
 }

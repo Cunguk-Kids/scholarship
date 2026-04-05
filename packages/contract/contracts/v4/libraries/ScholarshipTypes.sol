@@ -145,6 +145,7 @@ library ScholarshipTypes {
         uint256 applicantCount;
         uint256 shortlistedCount;
         uint256 activeScholarCount;
+        uint256 totalVotes;
 
         // Milestone config — set once at createProgram()
         // Max optional milestones a scholar may propose for this program.

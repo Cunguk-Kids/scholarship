@@ -45,7 +45,6 @@ contract ScholarshipCore is ScholarshipCoreBase {
     error MaxRetriesExceeded();
     error AlreadyApplied();
     error ApplicantListIncomplete();
-    error TooEarly();
     error InvalidMaxOptional();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -62,7 +61,8 @@ contract ScholarshipCore is ScholarshipCoreBase {
         address _reputation,
         address _donorNFT,
         address _studentNFT,
-        address _milestoneManager
+        address _milestoneManager,
+        address _bountyHunter
     ) external initializer {
         _initReentrancy();
         _initConfig();
@@ -74,7 +74,17 @@ contract ScholarshipCore is ScholarshipCoreBase {
         donorNFT         = ICredentialNFT(_donorNFT);
         studentNFT       = ICredentialNFT(_studentNFT);
         milestoneManager = IMilestoneManager(_milestoneManager);
+        bountyHunter     = _bountyHunter;
         _roles[MILESTONE_ROLE][_milestoneManager] = true;
+        if (_bountyHunter != address(0)) {
+            _roles[BOUNTY_ROLE][_bountyHunter] = true;
+        }
+    }
+
+    function setBounty(address _bounty) external {
+        if (msg.sender != admin) revert NotAdmin();
+        bountyHunter = _bounty;
+        _roles[BOUNTY_ROLE][_bounty] = true;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -131,7 +141,8 @@ contract ScholarshipCore is ScholarshipCoreBase {
             applicantCount:        0,
             shortlistedCount:      0,
             activeScholarCount:    0,
-            maxOptionalMilestones: maxOptionalMilestones
+            maxOptionalMilestones: maxOptionalMilestones,
+            totalVotes:            0
         });
 
         if (committeeContract != address(0)) {
@@ -140,6 +151,39 @@ contract ScholarshipCore is ScholarshipCoreBase {
             emit CommitteeAssigned(pid, committeeContract);
         }
         emit ProgramCreated(pid, msg.sender, metadataCID);
+    }
+
+    function resolveDisputeBH(uint256 disputeId) external onlyRole(COMMITTEE_ROLE) {
+        (bool success, ) = bountyHunter.call(abi.encodeWithSignature("resolveDispute(uint256,bool)", disputeId, true));
+        require(success, "Dispute resolution failed");
+    }
+
+    function resolveDisputeScholar(uint256 disputeId) external onlyRole(COMMITTEE_ROLE) {
+        (bool success, ) = bountyHunter.call(abi.encodeWithSignature("resolveDispute(uint256,bool)", disputeId, false));
+        require(success, "Dispute resolution failed");
+    }
+
+    // ── View Helpers (IScholarshipCore compatible) ───────────────────────────
+
+    function getProgram(uint256 id) external view returns (ScholarshipTypes.Program memory) { return programs[id]; }
+    function getShortlist(uint256 id) external view returns (address[] memory) { return _shortlist[id]; }
+    function getProgramApplicants(uint256 id) external view returns (address[] memory) { return _programApplicants[id]; }
+
+    function getScholar(address wallet, uint256 programId) external view returns (ScholarshipTypes.Scholar memory) {
+        return scholars[wallet][programId];
+    }
+
+    function isStudentEligible(address wallet) external view returns (bool eligible, string memory reason) {
+        ScholarshipTypes.StudentStatus s = globalStudentStatus[wallet];
+        if (s == ScholarshipTypes.StudentStatus.BLACKLISTED) return (false, "BLACKLISTED");
+        if (s == ScholarshipTypes.StudentStatus.FROZEN && block.timestamp < globalFreezeUntil[wallet]) return (false, "FROZEN");
+        return (true, "");
+    }
+
+    function getRemainingFund(address wallet, uint256 programId) external view returns (uint256) {
+        ScholarshipTypes.Scholar memory s = scholars[wallet][programId];
+        ScholarshipTypes.Program memory p = programs[programId];
+        return (p.totalFund / p.targetWinners) - s.totalReceived;
     }
 
     // ── Status transitions ───────────────────────────────────────────────────
