@@ -1,6 +1,6 @@
 import { ponder } from "ponder:registry";
 import { db } from "@/db";
-import { v4Programs, v4Applicants, v4Scholars, v4Votes, v4ConfidenceStakes } from "@/db/schema";
+import { v4Programs, v4Applicants, v4Scholars, v4Votes, v4ConfidenceStakes, v4Reputation } from "@/db/schema";
 import { scholarshipCoreAbi } from "abis/v4/ScholarshipCore";
 import { logger } from "@/utils/logger";
 import { insertBlock } from "@/services/block.log.service";
@@ -137,6 +137,17 @@ export const scholarshipCoreHandlers = () => {
           .where(eq(v4Programs.blockchainId, Number(programId)));
       }
 
+      await db.insert(v4Reputation).values({
+        address: String(donor).toLowerCase(),
+        remainingVotingPower: String(netAmount),
+      }).onConflictDoUpdate({
+        target: [v4Reputation.address],
+        set: {
+          remainingVotingPower: sql`remaining_voting_power + ${String(netAmount)}`,
+          updatedAt: new Date(),
+        },
+      });
+
       await insertBlock({ event, eventName: "ScholarshipCore:DonationReceived" });
       await sendSseToAll("main", { step: "DonationReceived", data: { programId, donor, grossAmount: String(grossAmount), netAmount: String(netAmount) }, status: true, blockHash: event.block.hash });
     } catch (err) {
@@ -263,19 +274,28 @@ export const scholarshipCoreHandlers = () => {
 
   ponder.on("ScholarshipCore:VoteCast", async ({ event }) => {
     try {
-      const { programId, voter, candidate, weight } = event.args;
+      const { programId, voter, candidate, weight, useReputation } = event.args;
       const progUuid = await findProgramUuid(Number(programId));
 
       await db.insert(v4Votes).values({
         programId: progUuid ?? undefined,
         blockchainProgramId: Number(programId),
-        voterAddress: String(voter),
-        candidateAddress: String(candidate),
+        voterAddress: String(voter).toLowerCase(),
+        candidateAddress: String(candidate).toLowerCase(),
         votingWeight: String(weight),
       }).onConflictDoUpdate({
         target: [v4Votes.voterAddress, v4Votes.blockchainProgramId],
-        set: { candidateAddress: String(candidate), votingWeight: String(weight) },
+        set: { candidateAddress: String(candidate).toLowerCase(), votingWeight: String(weight) },
       });
+
+      if (!useReputation) {
+        await db.update(v4Reputation)
+          .set({
+            remainingVotingPower: sql`remaining_voting_power - ${String(weight)}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(v4Reputation.address, String(voter).toLowerCase()));
+      }
 
       await insertBlock({ event, eventName: "ScholarshipCore:VoteCast" });
       await sendSseToAll("main", { step: "VoteCast", data: { programId, voter, candidate }, status: true, blockHash: event.block.hash });

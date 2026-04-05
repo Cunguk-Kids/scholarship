@@ -23,6 +23,7 @@ reputationRoute.get("/:address", async (c) => {
           repBalance: "0",
           totalMinted: "0",
           totalBurned: "0",
+          remainingVotingPower: "0",
           votingLockedUntil: null,
           isVotingLocked: false,
         },

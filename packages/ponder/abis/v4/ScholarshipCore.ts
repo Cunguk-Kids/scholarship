@@ -831,6 +831,12 @@ export const scholarshipCoreAbi = [
         "internalType": "uint256",
         "name": "weight",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "useReputation",
+        "type": "bool"
       }
     ],
     "name": "VoteCast",
@@ -2063,6 +2069,29 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "pid",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "scholar",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "placeConfidenceStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
@@ -2798,6 +2827,29 @@ export const scholarshipCoreAbi = [
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "pid",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "candidate",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "useReputation",
+        "type": "bool"
+      }
+    ],
+    "name": "voteForCandidate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

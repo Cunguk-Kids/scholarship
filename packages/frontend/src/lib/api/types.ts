@@ -167,6 +167,7 @@ export interface Reputation {
   repBalance: string;
   totalMinted: string;
   totalBurned: string;
+  remainingVotingPower: string;
   votingLockedUntil: string | null;
   isVotingLocked?: boolean;
   createdAt: string;

@@ -127,7 +127,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     uint256 public constant MAX_EXTENSION_DURATION = 30 days;
 
     // ── Events ───────────────────────────────────────────────────────────────
-    event VoteCast(uint256 indexed programId, address indexed voter, address indexed candidate, uint256 weight);
+    event VoteCast(uint256 indexed programId, address indexed voter, address indexed candidate, uint256 weight, bool useReputation);
     event ConfidenceStaked(uint256 indexed programId, address indexed voter, address indexed scholar, uint256 amount);
     event ScholarSelected(uint256 indexed programId, address indexed scholar);
     event ScholarSlashed(address indexed scholar, uint256 indexed programId, ScholarshipTypes.DisputeType dtype);
@@ -251,30 +251,29 @@ abstract contract ScholarshipCoreBase is Initializable {
 
     // ── Internal Core Logic Restoration ──────────────────────────────────────
 
-    function _voteForCandidate(uint256 pid, address candidate) internal {
+    function _voteForCandidate(uint256 pid, address candidate, bool useReputation) internal {
         _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
         ScholarshipTypes.Program storage p = programs[pid];
         if (!p.openDonation) revert PublicParticipationDisabled();
         if (block.timestamp < uint256(p.votingStart) || block.timestamp > uint256(p.votingEnd)) revert TooEarly();
         if (applicants[pid][candidate].status != ScholarshipTypes.ApplicationStatus.SHORTLISTED) revert CandidateNotShortlisted();
-        if (reputation.isVotingPowerLocked(msg.sender)) revert VotingPowerLocked();
         
-        uint256 power = reputation.balanceOf(msg.sender);
+        uint256 power;
+        if (useReputation) {
+            if (reputation.isVotingPowerLocked(msg.sender)) revert VotingPowerLocked();
+            power = reputation.balanceOf(msg.sender);
+        } else {
+            power = voterInfo[pid][msg.sender].remainingVotingPower;
+            voterInfo[pid][msg.sender].remainingVotingPower = 0; // Spend donation power
+        }
+
         if (power == 0) revert InsufficientVotingPower();
 
-        voterInfo[pid][msg.sender] = ScholarshipTypes.VoterInfo({
-            donatedAmount: 0,
-            remainingVotingPower: 0,
-            votedFor: candidate,
-            confidenceStake: 0,
-            confidenceStakeFor: address(0),
-            hasClaimedYield: false
-        });
-
+        voterInfo[pid][msg.sender].votedFor = candidate;
         applicants[pid][candidate].voteScore += uint128(power);
         programs[pid].totalVotes += uint128(power);
 
-        emit VoteCast(pid, msg.sender, candidate, power);
+        emit VoteCast(pid, msg.sender, candidate, power, useReputation);
     }
 
     function _placeConfidenceStake(uint256 pid, address scholar, uint256 amount) internal {

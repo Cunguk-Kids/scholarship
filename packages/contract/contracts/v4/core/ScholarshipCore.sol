@@ -363,4 +363,14 @@ contract ScholarshipCore is ScholarshipCoreBase {
     function extendVotingDeadline(uint256 pid, uint256 nE) external onlyRole(GOVERNANCE_ROLE) {
         _extendVotingDeadline(pid, nE);
     }
+
+    // ── Public Participation Entry Points ────────────────────────────────────
+
+    function voteForCandidate(uint256 pid, address candidate, bool useReputation) external nonReentrant {
+        _voteForCandidate(pid, candidate, useReputation);
+    }
+
+    function placeConfidenceStake(uint256 pid, address scholar, uint256 amount) external nonReentrant {
+        _placeConfidenceStake(pid, scholar, amount);
+    }
 }

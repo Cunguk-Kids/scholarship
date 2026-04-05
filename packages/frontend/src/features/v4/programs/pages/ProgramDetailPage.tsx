@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useToggleOpenDonation } from '@/lib/contracts/write-hooks';
 import { DonateModal } from '../components/DonateModal';
+import { VoteModal } from '../components/VoteModal';
+import { ConfidenceStakeModal } from '../components/ConfidenceStakeModal';
 import { useParams, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -34,8 +36,8 @@ const TABS: Array<{ key: Tab; label: string; icon: string }> = [
   { key: 'disputes', label: 'Disputes', icon: '⚖️' },
 ];
 
-function formatUSDC(raw: string): string {
-  const n = Number(raw) / 1e6;
+function formatUSDC(raw: string | bigint): string {
+  const n = typeof raw === 'bigint' ? Number(raw) / 1e6 : Number(raw) / 1e6;
   return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 
@@ -44,6 +46,11 @@ export function ProgramDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   const [isDonateOpen, setIsDonateOpen] = useState(false);
+  const [isVoteOpen, setIsVoteOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<{ address: `0x${string}`; name?: string } | null>(null);
+  const [isStakeOpen, setIsStakeOpen] = useState(false);
+  const [selectedScholar, setSelectedScholar] = useState<{ address: `0x${string}`; name?: string } | null>(null);
+
   const { address: userAddress } = useAccount();
   const { toggle, isPending: isToggling } = useToggleOpenDonation();
   const { data: program, isLoading } = useProgram(id);
@@ -136,9 +143,12 @@ export function ProgramDetailPage() {
             </Link>
           )}
           {program.status === 'VOTING' && program.openDonation && (
-            <Link to="/vote">
-              <NeoButton label="Cast Vote" variant="primary" size="md" />
-            </Link>
+            <NeoButton 
+              label="Cast Vote" 
+              variant="primary" 
+              size="md" 
+              onClick={() => setActiveTab('applicants')} 
+            />
           )}
           {program.openDonation && (
             <NeoButton
@@ -157,6 +167,26 @@ export function ProgramDetailPage() {
           onClose={() => setIsDonateOpen(false)}
           programId={program.blockchainId}
           programName={meta?.name}
+        />
+      )}
+
+      {isVoteOpen && selectedCandidate && (
+        <VoteModal
+          isOpen={isVoteOpen}
+          onClose={() => setIsVoteOpen(false)}
+          programId={BigInt(program.blockchainId)}
+          candidateAddress={selectedCandidate.address}
+          candidateName={selectedCandidate.name}
+        />
+      )}
+
+      {isStakeOpen && selectedScholar && (
+        <ConfidenceStakeModal
+          isOpen={isStakeOpen}
+          onClose={() => setIsStakeOpen(false)}
+          programId={BigInt(program.blockchainId)}
+          scholarAddress={selectedScholar.address}
+          scholarName={selectedScholar.name}
         />
       )}
 
@@ -234,7 +264,20 @@ export function ProgramDetailPage() {
                     </p>
                   </div>
                 </div>
-                <NeoBadge status={a.status} />
+                <div className="flex items-center gap-2">
+                  <NeoBadge status={a.status} />
+                  {program.status === 'VOTING' && program.openDonation && a.status === 'SHORTLISTED' && (
+                    <NeoButton
+                      label="Vote"
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedCandidate({ address: a.wallet as `0x${string}` });
+                        setIsVoteOpen(true);
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             )}
           />
@@ -255,7 +298,20 @@ export function ProgramDetailPage() {
                     </p>
                   </div>
                 </div>
-                <NeoBadge status={s.status} />
+                <div className="flex items-center gap-2">
+                  <NeoBadge status={s.status} />
+                  {program.openDonation && s.status === 'ACTIVE' && (
+                    <NeoButton
+                      label="Stake"
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedScholar({ address: s.wallet as `0x${string}` });
+                        setIsStakeOpen(true);
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             )}
           />

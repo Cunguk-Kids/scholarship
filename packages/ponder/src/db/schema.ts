@@ -199,6 +199,7 @@ export const v4Reputation = pgTable("v4_reputation", {
   repBalance: numeric("rep_balance").default("0"),
   totalMinted: numeric("total_minted").default("0"),
   totalBurned: numeric("total_burned").default("0"),
+  remainingVotingPower: numeric("remaining_voting_power").default("0"),
   votingLockedUntil: timestamp("voting_locked_until", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
