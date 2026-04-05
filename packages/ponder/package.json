@@ -10,7 +10,8 @@
     "codegen": "ponder codegen",
     "serve": "ponder serve",
     "lint": "eslint .",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "db:reset": "bun run src/db/reset.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

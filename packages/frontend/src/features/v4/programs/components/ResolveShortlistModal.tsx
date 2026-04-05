@@ -1,0 +1,116 @@
+import { useState, useEffect } from 'react';
+import { NeoModal } from '@/components/ui/NeoModal';
+import { NeoButton } from '@/components/ui/NeoButton';
+import { WalletAvatar, shortenAddress } from '@/components/ui/WalletAvatar';
+import { NeoBadge } from '@/components/ui/NeoBadge';
+import { useResolveShortlist } from '@/lib/contracts/write-hooks';
+import type { Applicant } from '@/lib/api/types';
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  programId: number;
+  applicants: Applicant[];
+}
+
+export function ResolveShortlistModal({ isOpen, onClose, programId, applicants }: Props) {
+  // Auto-sort by screeningScore descending, allow manual reorder via drag
+  const [ranked, setRanked] = useState<Applicant[]>([]);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+
+  const { resolveShortlist, isPending, isSuccess } = useResolveShortlist();
+
+  useEffect(() => {
+    // Auto-sort on open
+    const sorted = [...applicants].sort(
+      (a, b) => Number(b.screeningScore) - Number(a.screeningScore)
+    );
+    setRanked(sorted);
+  }, [applicants, isOpen]);
+
+  useEffect(() => {
+    if (isSuccess) onClose();
+  }, [isSuccess, onClose]);
+
+  const handleDragStart = (idx: number) => setDragIdx(idx);
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    const next = [...ranked];
+    const [moved] = next.splice(dragIdx, 1);
+    next.splice(idx, 0, moved);
+    setRanked(next);
+    setDragIdx(idx);
+  };
+  const handleDragEnd = () => setDragIdx(null);
+
+  const handleConfirm = () => {
+    const wallets = ranked.map((a) => a.wallet as `0x${string}`);
+    resolveShortlist(BigInt(programId), wallets);
+  };
+
+  return (
+    <NeoModal isOpen={isOpen} onClose={onClose} title={`Resolve Shortlist — Program #${programId}`}>
+      <div className="space-y-4">
+        <div className="bg-skyellow-light border-2 border-black rounded-xl p-3 text-sm">
+          <p className="font-bold">📋 Instructions</p>
+          <p className="text-gray-700 mt-1">
+            Applicants are auto-sorted by screening score (highest first). Drag rows to manually reorder.
+            Candidates above the <strong>screening threshold</strong> will be shortlisted; others screened out.
+          </p>
+        </div>
+
+        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+          {ranked.map((a, idx) => (
+            <div
+              key={a.id}
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDragEnd={handleDragEnd}
+              className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-grab active:cursor-grabbing transition-all select-none ${
+                dragIdx === idx ? 'border-skpurple bg-skpurple-light' : 'border-black bg-white hover:bg-gray-50'
+              }`}
+            >
+              {/* Rank badge */}
+              <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold shrink-0">
+                {idx + 1}
+              </div>
+
+              {/* Drag handle */}
+              <div className="text-gray-400 shrink-0">⠿</div>
+
+              <WalletAvatar address={a.wallet} size={28} />
+
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm truncate">{shortenAddress(a.wallet)}</p>
+                <p className="text-xs text-gray-500">
+                  Score: <span className="font-bold">{a.screeningScore}</span>
+                  {' '}• Retries: {a.retryCount}
+                </p>
+              </div>
+
+              <NeoBadge status={a.status} />
+            </div>
+          ))}
+
+          {ranked.length === 0 && (
+            <p className="text-center py-8 text-gray-500">No applicants to rank.</p>
+          )}
+        </div>
+
+        <div className="flex gap-2 pt-2 border-t-2 border-gray-100">
+          <NeoButton label="Cancel" variant="ghost" onClick={onClose} disabled={isPending} fullWidth />
+          <NeoButton
+            label={isPending ? 'Submitting…' : `Confirm Shortlist (${ranked.length} applicants)`}
+            variant="primary"
+            onClick={handleConfirm}
+            loading={isPending}
+            disabled={isPending || ranked.length === 0}
+            fullWidth
+          />
+        </div>
+      </div>
+    </NeoModal>
+  );
+}

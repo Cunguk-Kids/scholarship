@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { formatUnits } from "viem";
 import { useDisputes, useMilestones } from "@/lib/api/hooks";
+import { useTriggerAutoGuilty } from "@/lib/contracts/write-hooks";
 import { NeoCard, NeoCardBody } from "@/components/ui/NeoCard";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoSkeleton } from "@/components/ui/NeoSkeleton";
@@ -22,6 +23,7 @@ export function DisputesPage() {
   // Active Disputes
   const activeDisputes = disputes.filter(d => d.dispute.status === "ACTIVE");
   const pastDisputes = disputes.filter(d => d.dispute.status !== "ACTIVE");
+
 
   const [raiseModalTarget, setRaiseModalTarget] = useState<Milestone | null>(null);
   const [defendModalTarget, setDefendModalTarget] = useState<Dispute | null>(null);
@@ -65,7 +67,7 @@ export function DisputesPage() {
                       <p className="font-paytone text-skgreen text-xl">${formatUnits(BigInt(milestone.amount), 6)}</p>
                       <NeoButton 
                         label="Raise Dispute" 
-                        variant="warning" 
+                        variant="danger" 
                         size="sm" 
                         onClick={() => setRaiseModalTarget(milestone)} 
                         disabled={milestone.scholarWallet.toLowerCase() === address?.toLowerCase()}
@@ -124,12 +126,7 @@ export function DisputesPage() {
                           onClick={() => setDefendModalTarget(dispute)}
                         />
                       ) : (
-                        <NeoButton 
-                          label="Awaiting Scholar Defense" 
-                          variant="ghost" 
-                          disabled 
-                          fullWidth 
-                        />
+                        <ActiveDisputeActions dispute={dispute} />
                       )}
                     </NeoCardBody>
                   </NeoCard>
@@ -168,6 +165,39 @@ export function DisputesPage() {
           onClose={() => setDefendModalTarget(null)} 
           dispute={defendModalTarget} 
         />
+      )}
+    </div>
+  );
+}
+
+function ActiveDisputeActions({ dispute }: { dispute: Dispute }) {
+  const { triggerAutoGuilty, isPending } = useTriggerAutoGuilty();
+
+  const defenseDeadlinePassed =
+    dispute.defenseDeadline !== null && new Date(dispute.defenseDeadline).getTime() < Date.now();
+  const noCounterEvidence = !dispute.counterEvidenceCID;
+  const canAutoGuilty = defenseDeadlinePassed && noCounterEvidence;
+
+  if (canAutoGuilty) {
+    return (
+      <NeoButton
+        label={isPending ? "Triggering…" : "⚡ Trigger Auto-Guilty"}
+        variant="danger"
+        fullWidth
+        loading={isPending}
+        disabled={isPending}
+        onClick={() => triggerAutoGuilty(BigInt(dispute.blockchainId))}
+      />
+    );
+  }
+
+  return (
+    <div className="text-center">
+      <NeoButton label="Awaiting Scholar Defense" variant="ghost" disabled fullWidth />
+      {dispute.defenseDeadline && (
+        <p className="text-xs text-gray-500 mt-1">
+          Deadline: {new Date(dispute.defenseDeadline).toLocaleDateString()}
+        </p>
       )}
     </div>
   );

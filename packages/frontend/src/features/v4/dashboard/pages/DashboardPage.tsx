@@ -1,13 +1,20 @@
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContracts } from 'wagmi';
 import { useDashboard } from '@/lib/api/hooks';
 import { NeoCard, NeoCardBody } from '@/components/ui/NeoCard';
 import { NeoSkeleton } from '@/components/ui/NeoSkeleton';
 import { StatCard } from '@/components/ui/StatCard';
 import { formatUnits } from 'viem';
+import { committeeGovernanceAbi, v4Addresses } from '@/constants/contractsV4';
 
-import { InitiatorPanel, StudentPanel, VoterPanel, BountyHunterPanel } from '../components/Panels';
+import {
+  InitiatorPanel,
+  StudentPanel,
+  VoterPanel,
+  BountyHunterPanel,
+  CommitteePanel,
+} from '../components/Panels';
 import { CreateProgramModal } from '../../programs/components/CreateProgramModal';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { NeoButton } from '@/components/ui/NeoButton';
 
 export function DashboardPage() {
@@ -15,6 +22,26 @@ export function DashboardPage() {
   const { data: dashboard, isLoading } = useDashboard(address || '');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  // ── Committee membership detection ───────────────────────────────────────────
+  // Check if current user is a committee member of any created program
+  const programIds = dashboard?.programsCreated.map((p) => p.blockchainId) ?? [];
+
+  const committeeChecks = useReadContracts({
+    contracts: programIds.map((pid) => ({
+      address: v4Addresses.CommitteeGovernance as `0x${string}`,
+      abi: committeeGovernanceAbi,
+      functionName: 'isCommitteeMember' as const,
+      args: [BigInt(pid), address ?? '0x0000000000000000000000000000000000000000'],
+    })),
+    query: { enabled: !!address && programIds.length > 0 },
+  });
+
+  const committeeProgramIds = useMemo(() => {
+    if (!committeeChecks.data) return [];
+    return programIds.filter((_, i) => committeeChecks.data?.[i]?.result === true);
+  }, [committeeChecks.data, programIds]);
+
+  // ── Role detection ────────────────────────────────────────────────────────────
   if (!address) {
     return (
       <div className="max-w-5xl mx-auto px-6 py-20 text-center">
@@ -45,35 +72,44 @@ export function DashboardPage() {
 
   const { summary, programsCreated, scholarships, votes, stakes, disputes, reputation } = dashboard;
 
-  const roles = [];
+  const roles: string[] = [];
   if (programsCreated.length > 0) roles.push('INITIATOR');
   if (scholarships.length > 0) roles.push('SCHOLAR');
   if (votes.length > 0 || stakes.length > 0) roles.push('VOTER');
   if (disputes.length > 0) roles.push('BOUNTY_HUNTER');
+  if (committeeProgramIds.length > 0) roles.push('COMMITTEE');
+
+  const roleColors: Record<string, string> = {
+    INITIATOR: 'bg-skpink-light',
+    SCHOLAR: 'bg-skblue-light',
+    VOTER: 'bg-skpurple-light',
+    BOUNTY_HUNTER: 'bg-skgreen-light',
+    COMMITTEE: 'bg-skyellow-light',
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
+      {/* Header */}
       <div className="mb-8">
         <div className="flex flex-row justify-between items-center">
           <div>
             <h1 className="font-paytone text-5xl mb-2">My Dashboard</h1>
             <p className="text-gray-600 text-lg font-mono">{address}</p>
           </div>
-          {roles.includes('INITIATOR') && (
-            <NeoButton
-              label="Create Program"
-              variant="primary"
-              size="lg"
-              onClick={() => setIsCreateModalOpen(true)}
-            />
-          )}
+          <NeoButton
+            label="Create Program"
+            variant="primary"
+            size="lg"
+            onClick={() => setIsCreateModalOpen(true)}
+          />
         </div>
 
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-4">
           {roles.map((r) => (
             <span
               key={r}
-              className="px-3 py-1 bg-skpurple-light border-2 border-black rounded-lg text-xs font-bold uppercase">
+              className={`px-3 py-1 ${roleColors[r] ?? 'bg-gray-100'} border-2 border-black rounded-lg text-xs font-bold uppercase`}
+            >
               {r.replace('_', ' ')}
             </span>
           ))}
@@ -85,13 +121,15 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Overview Stats */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
         <StatCard
           icon="🏆"
           label="Reputation"
           value={
-            reputation ? Number(formatUnits(BigInt(reputation.repBalance), 18)).toFixed(2) : '0'
+            reputation
+              ? Number(formatUnits(BigInt(reputation.repBalance), 18)).toFixed(2)
+              : '0'
           }
         />
         <StatCard icon="🎓" label="Scholarships" value={summary.scholarshipsCount.toString()} />
@@ -99,29 +137,46 @@ export function DashboardPage() {
         <StatCard icon="⚖️" label="Disputes" value={summary.disputesCount.toString()} />
       </div>
 
+      {/* Role Panels */}
       <div className="space-y-12">
         {roles.includes('INITIATOR') && <InitiatorPanel programs={programsCreated} />}
+
         {roles.includes('SCHOLAR') && (
           <StudentPanel scholarships={scholarships} dashboardData={dashboard} />
         )}
+
         {roles.includes('VOTER') && (
           <VoterPanel votes={votes} stakes={stakes} dashboardData={dashboard} />
         )}
+
         {roles.includes('BOUNTY_HUNTER') && (
           <BountyHunterPanel disputes={disputes} dashboardData={dashboard} />
         )}
 
+        {roles.includes('COMMITTEE') && (
+          <CommitteePanel
+            programIds={committeeProgramIds}
+            dashboardData={dashboard}
+            address={address}
+          />
+        )}
+
         {roles.length === 0 && (
-          <NeoCard className="p-8 text-center bg-skyellow-light">
-            <h2 className="font-paytone text-2xl mb-2">Welcome to Scholarship V4</h2>
-            <p className="text-gray-700">
-              Explore programs to apply or vote, or create your own program to fund students.
-            </p>
+          <NeoCard className="bg-skyellow-light text-center">
+            <NeoCardBody>
+              <h2 className="font-paytone text-2xl mb-2">Welcome to Scholarship V4</h2>
+              <p className="text-gray-700">
+                Explore programs to apply as a student, donate to earn voting power, or create your own program.
+              </p>
+            </NeoCardBody>
           </NeoCard>
         )}
       </div>
 
-      <CreateProgramModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      <CreateProgramModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }
