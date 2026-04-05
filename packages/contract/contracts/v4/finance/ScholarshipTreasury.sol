@@ -87,6 +87,9 @@ contract ScholarshipTreasury is
     // -- Protocol fee accumulator ------------------------------------------
     uint256 public protocolFeeAccumulated;
 
+    // -- Admin-configurable cap for push-refund ---------------------------
+    uint8   public maxPushRefundDonors;
+
     // ── Events ───────────────────────────────────────────────────────────────
 
     event FundDeposited(uint256 indexed programId, address depositor, uint256 amount);
@@ -148,6 +151,7 @@ contract ScholarshipTreasury is
 
         usdc                 = IERC20(_usdc);
         protocolFeeRecipient = _protocolFeeRecipient;
+        maxPushRefundDonors  = ScholarshipTypes.DEFAULT_MAX_PUSH_REFUND_DONORS;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -389,7 +393,7 @@ contract ScholarshipTreasury is
         external override nonReentrant onlyRole(CORE_ROLE)
     {
         address[] memory donors  = _programDonors[programId];
-        if (donors.length > ScholarshipTypes.MAX_PUSH_REFUND_DONORS)
+        if (donors.length > maxPushRefundDonors)
             revert TooManyDonorsForPushRefund();
         uint256          balance = programBalance[programId];
         uint256          total   = programTotalDonated[programId];
@@ -469,6 +473,15 @@ contract ScholarshipTreasury is
         external onlyRole(DEFAULT_ADMIN_ROLE)
     {
         protocolFeeRecipient = newRecipient;
+    }
+
+    /**
+     * @notice Update the max number of donors allowed in a push-refund (gas safety cap).
+     *         Only DEFAULT_ADMIN_ROLE may call.
+     */
+    function setMaxPushRefundDonors(uint8 newMax) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newMax > 0, "max=0");
+        maxPushRefundDonors = newMax;
     }
 
     // ── UUPS ─────────────────────────────────────────────────────────────────

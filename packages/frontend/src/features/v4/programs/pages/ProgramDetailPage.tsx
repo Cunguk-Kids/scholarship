@@ -344,10 +344,14 @@ function OverviewTab({ program }: { program: any; meta?: ProgramMetadata }) {
           <h3 className="font-paytone text-lg">Financial Summary</h3>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-gray-500">Total Fund</dt>
-              <dd className="font-bold text-green-700">${formatUSDC(program.totalFund)}</dd>
+              <dt className="text-gray-500">Gross Total (incl. Fee)</dt>
+              <dd className="font-bold">${formatUSDC(BigInt(program.totalFund) + BigInt(program.protocolFeeCollected || 0))}</dd>
             </div>
             <div className="flex justify-between">
+              <dt className="text-gray-500 text-skpurple font-bold">Net Total Fund</dt>
+              <dd className="font-bold text-skpurple">${formatUSDC(program.totalFund)}</dd>
+            </div>
+            <div className="flex justify-between border-t border-gray-200 pt-1 mt-1">
               <dt className="text-gray-500">Allocated</dt>
               <dd className="font-bold">${formatUSDC(program.allocatedFund)}</dd>
             </div>
@@ -357,26 +361,30 @@ function OverviewTab({ program }: { program: any; meta?: ProgramMetadata }) {
             </div>
             <div className="flex justify-between">
               <dt className="text-gray-500">Yield Accrued</dt>
-              <dd className="font-bold text-skpurple">${formatUSDC(program.yieldAccrued)}</dd>
+              <dd className="font-bold text-skblue">${formatUSDC(program.yieldAccrued)}</dd>
             </div>
           </dl>
 
-          {/* Fund bar */}
-          <div className="space-y-1">
-            <div className="h-4 w-full bg-gray-200 rounded-full border-2 border-black overflow-hidden">
+          {/* Allocation Breakdown Bar */}
+          <div className="pt-2">
+            <h4 className="font-bold text-xs uppercase text-gray-500 mb-2">Fund Allocation Breakdown</h4>
+            <div className="flex h-5 w-full bg-gray-200 border-2 border-black overflow-hidden rounded-md cursor-help">
               <div
-                className="h-full bg-skgreen transition-all duration-500 rounded-full"
-                style={{
-                  width: `${Math.min(100, (Number(program.spentFund) / Math.max(1, Number(program.totalFund))) * 100)}%`,
-                }}
+                className="h-full bg-skgreen transition-all"
+                style={{ width: `${(Number(program.spentFund) / Math.max(1, Number(program.totalFund))) * 100}%` }}
+                title={`Spent: $${formatUSDC(program.spentFund)}`}
+              />
+              <div
+                className="h-full bg-skyellow transition-all"
+                style={{ width: `${((Number(program.allocatedFund) - Number(program.spentFund)) / Math.max(1, Number(program.totalFund))) * 100}%` }}
+                title={`Pending Allocation: $${formatUSDC(BigInt(program.allocatedFund) - BigInt(program.spentFund))}`}
               />
             </div>
-            <p className="text-xs text-gray-500 text-right">
-              {((Number(program.spentFund) / Math.max(1, Number(program.totalFund))) * 100).toFixed(
-                1,
-              )}
-              % disbursed
-            </p>
+            <div className="flex justify-between text-[10px] font-bold text-gray-600 mt-1 uppercase">
+              <span className="text-green-700">Spent: {((Number(program.spentFund) / Math.max(1, Number(program.totalFund))) * 100).toFixed(1)}%</span>
+              <span className="text-yellow-600">Pending: {(((Number(program.allocatedFund) - Number(program.spentFund)) / Math.max(1, Number(program.totalFund))) * 100).toFixed(1)}%</span>
+              <span>Unallocated: {(((Number(program.totalFund) - Number(program.allocatedFund)) / Math.max(1, Number(program.totalFund))) * 100).toFixed(1)}%</span>
+            </div>
           </div>
         </NeoCardBody>
       </NeoCard>

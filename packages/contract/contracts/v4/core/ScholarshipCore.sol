@@ -27,10 +27,11 @@ import {ScholarshipCoreBase}    from "./ScholarshipCoreBase.sol";
 contract ScholarshipCore is ScholarshipCoreBase {
     using SafeERC20 for IERC20;
 
-    // ── Events ───────────────────────────────────────────────────────────────
+    // ── Events ────────────────────────────────────────────────────────────────
     event ProgramCreated(uint256 indexed programId, address indexed initiator, string metadataCID);
     event CommitteeAssigned(uint256 indexed programId, address committeeContract);
     event DonationReceived(uint256 indexed programId, address indexed donor, uint256 grossAmount, uint256 netAmount);
+    event ProtocolFeeCollected(uint256 indexed programId, address indexed donor, uint256 feeAmount);
     event StudentApplied(uint256 indexed programId, address indexed student, uint8 retryCount);
     event StudentShortlisted(uint256 indexed programId, address indexed student, uint256 score);
     event StudentScreenedOut(uint256 indexed programId, address indexed student, uint256 score, bool locked);
@@ -68,6 +69,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
         address _milestoneManager
     ) external initializer {
         _initReentrancy();
+        _initConfig();   // ← load protocol defaults
         admin            = _admin;
         _roles[UPGRADER_ROLE][_admin] = true;
         usdc             = IERC20(_usdc);
@@ -100,11 +102,11 @@ contract ScholarshipCore is ScholarshipCoreBase {
     ) external nonReentrant {
         { uint256 wSum = uint256(weights.academicWeight) + weights.incomeWeight + weights.essayWeight + weights.recommendWeight + weights.extracurricWeight; if (wSum != 100) revert InvalidScoreWeights(); }
         { uint256 sSum = uint256(slashDist.bountyHunterPercent) + slashDist.treasuryPercent + slashDist.protocolPercent; if (sSum != 100) revert InvalidSlashDistribution(); }
-        if (maxCandidates < ScholarshipTypes.MIN_CANDIDATES || maxCandidates > ScholarshipTypes.MAX_CANDIDATES) revert InvalidCandidateRange();
+        if (maxCandidates < _config.minCandidates || maxCandidates > _config.maxCandidates) revert InvalidCandidateRange();
         if (targetWinners == 0 || targetWinners > maxCandidates) revert TargetWinnersExceedsMax();
         if (timeline[0] >= timeline[1] || timeline[2] >= timeline[3] || timeline[1] >= timeline[2]) revert InvalidTimeline();
         if (totalFund == 0) revert InsufficientFund();
-        if (maxOptionalMilestones > ScholarshipTypes.MAX_OPTIONAL_MILESTONES) revert InvalidMaxOptional();
+        if (maxOptionalMilestones > _config.maxOptionalMilestones) revert InvalidMaxOptional();
 
         uint256 dw = (milestoneDisputeWindow < 7 days || milestoneDisputeWindow > 14 days) ? 7 days : milestoneDisputeWindow;
         usdc.safeTransferFrom(msg.sender, address(treasury), totalFund);
@@ -169,15 +171,17 @@ contract ScholarshipCore is ScholarshipCoreBase {
     function donate(uint256 programId, uint256 grossAmount, string calldata nftMetadataURI)
         external nonReentrant programExists(programId) inStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN)
     {
-        if (grossAmount < ScholarshipTypes.MIN_DONATION) revert InsufficientDonation();
+        if (grossAmount < _config.minDonation) revert InsufficientDonation();
         ScholarshipTypes.VoterInfo storage voter = voterInfo[programId][msg.sender];
         if (voter.donatedAmount > 0) revert AlreadyDonated();
         usdc.safeTransferFrom(msg.sender, address(treasury), grossAmount);
-        uint256 net = grossAmount - ScholarshipTypes.TRANSACTION_FEE;
+        uint256 fee = _config.transactionFee;
+        uint256 net = grossAmount - fee;
         voter.donatedAmount = net; voter.remainingVotingPower = net;
         treasury.recordDonation(programId, msg.sender, net);
         donorNFT.mint(msg.sender, programId, nftMetadataURI);
         emit DonationReceived(programId, msg.sender, grossAmount, net);
+        emit ProtocolFeeCollected(programId, msg.sender, fee);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -192,7 +196,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
         ScholarshipTypes.Program storage prog = programs[programId];
         _requireStudentEligible(msg.sender);
         if (msg.sender == prog.initiator) revert CannotApplyToOwnProgram();
-        if (retryCount[programId][msg.sender] >= ScholarshipTypes.MAX_RETRY) revert MaxRetriesExceeded();
+        if (retryCount[programId][msg.sender] >= _config.maxRetry) revert MaxRetriesExceeded();
         ScholarshipTypes.ApplicationStatus es = applicants[programId][msg.sender].status;
         if (es == ScholarshipTypes.ApplicationStatus.SHORTLISTED) revert AlreadyApplied();
         if (es == ScholarshipTypes.ApplicationStatus.LOCKED) revert MaxRetriesExceeded();
@@ -244,7 +248,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
 
     function _markScreenedOut(uint256 programId, address student) internal {
         ScholarshipTypes.Applicant storage app = applicants[programId][student];
-        bool locked = app.retryCount >= ScholarshipTypes.MAX_RETRY;
+        bool locked = app.retryCount >= _config.maxRetry;
         app.status = locked ? ScholarshipTypes.ApplicationStatus.LOCKED : ScholarshipTypes.ApplicationStatus.SCREENED_OUT;
         emit StudentScreenedOut(programId, student, app.screeningScore, locked);
     }

@@ -30,6 +30,9 @@ import { ResolveShortlistModal } from '../../programs/components/ResolveShortlis
 import { SelectWinnersModal } from '../../programs/components/SelectWinnersModal';
 import { ProposeMilestoneModal } from './ProposeMilestoneModal';
 import { CommitteeScoreModal } from './CommitteeScoreModal';
+import { SubmitMilestoneModal } from './SubmitMilestoneModal';
+import { ExtendDeadlineModal } from './ExtendDeadlineModal';
+import { BountyHunterRaiseDisputeModal } from './BountyHunterRaiseDisputeModal';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Initiator Panel
@@ -130,6 +133,8 @@ function InitiatorProgramCard({
   const { cancelProgram, isPending: cancelling } = useCancelProgram();
   const { claimYield, isPending: claiming } = useClaimYield();
 
+  const [isExtending, setIsExtending] = useState(false);
+
   const isFinal = ['COMPLETED', 'CANCELLED'].includes(program.status);
 
   return (
@@ -172,16 +177,26 @@ function InitiatorProgramCard({
           )}
 
           {program.status === 'APPLICATION_OPEN' && (
-            <div className="col-span-2">
-              <NeoButton
-                label={openingScreen ? 'Opening…' : 'Open Screening'}
-                variant="primary"
-                fullWidth
-                loading={openingScreen}
-                disabled={openingScreen}
-                onClick={() => openScreening(BigInt(program.blockchainId))}
-              />
-            </div>
+            <>
+              <div className="col-span-1">
+                <NeoButton
+                  label={openingScreen ? 'Opening…' : 'Screening'}
+                  variant="primary"
+                  fullWidth
+                  loading={openingScreen}
+                  disabled={openingScreen}
+                  onClick={() => openScreening(BigInt(program.blockchainId))}
+                />
+              </div>
+              <div className="col-span-1">
+                <NeoButton
+                  label="Extend Deadline"
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => setIsExtending(true)}
+                />
+              </div>
+            </>
           )}
 
           {program.status === 'SCREENING' && (
@@ -196,14 +211,24 @@ function InitiatorProgramCard({
           )}
 
           {program.status === 'VOTING' && (
-            <div className="col-span-2">
-              <NeoButton
-                label="Select Winners"
-                variant="success"
-                fullWidth
-                onClick={onSelectWinners}
-              />
-            </div>
+            <>
+              <div className="col-span-1">
+                <NeoButton
+                  label="Select Winners"
+                  variant="success"
+                  fullWidth
+                  onClick={onSelectWinners}
+                />
+              </div>
+              <div className="col-span-1">
+                <NeoButton
+                  label="Extend Deadline"
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => setIsExtending(true)}
+                />
+              </div>
+            </>
           )}
 
           {!isFinal && (
@@ -243,6 +268,14 @@ function InitiatorProgramCard({
           )}
         </div>
       </NeoCardBody>
+
+      {isExtending && (
+        <ExtendDeadlineModal
+          isOpen
+          onClose={() => setIsExtending(false)}
+          program={program}
+        />
+      )}
     </NeoCard>
   );
 }
@@ -302,6 +335,8 @@ function ScholarCard({
   const { submitMilestone, isPending: isSubmitting } = useSubmitMilestone();
   const { executeMilestone, isPending: isExecuting } = useExecuteMilestone();
 
+  const [submitMilestoneFor, setSubmitMilestoneFor] = useState<Milestone | null>(null);
+
   const nextPending = milestones.find((m) => m.status === 'PENDING');
   const executables = milestones.filter(
     (m) =>
@@ -344,16 +379,25 @@ function ScholarCard({
                 {scholar.freezeUntil ? new Date(scholar.freezeUntil).toLocaleDateString() : '—'}
               </div>
             ) : nextPending ? (
-              <NeoButton
-                label={
-                  isSubmitting ? 'Submitting…' : `Submit Milestone #${nextPending.blockchainId}`
-                }
-                variant="primary"
-                fullWidth
-                loading={isSubmitting}
-                disabled={isSubmitting}
-                onClick={() => submitMilestone(BigInt(nextPending.blockchainId), 'QmProofCID')}
-              />
+              nextPending.kind === 'MANDATORY' && !nextPending.requiresProof ? (
+                <NeoButton
+                  label={
+                    isSubmitting ? 'Triggering…' : `Trigger Delivery #${nextPending.blockchainId}`
+                  }
+                  variant="primary"
+                  fullWidth
+                  loading={isSubmitting}
+                  disabled={isSubmitting}
+                  onClick={() => submitMilestone(BigInt(nextPending.blockchainId), 'NO_PROOF_REQUIRED')}
+                />
+              ) : (
+                <NeoButton
+                  label={`Submit Proof #${nextPending.blockchainId}`}
+                  variant="primary"
+                  fullWidth
+                  onClick={() => setSubmitMilestoneFor(nextPending)}
+                />
+              )
             ) : (
               <NeoButton label="All Milestones Done ✓" variant="ghost" disabled fullWidth />
             )}
@@ -393,6 +437,9 @@ function ScholarCard({
                   className="flex items-center justify-between text-sm bg-gray-50 px-3 py-2 rounded border border-gray-200">
                   <div>
                     <span className="font-bold">#{m.blockchainId}</span>
+                    <span className="ml-2 text-xs font-bold uppercase px-1.5 py-0.5 rounded-sm bg-gray-200 text-gray-700">
+                      {m.kind}
+                    </span>
                     <span className="text-gray-500 ml-2">
                       ${formatUnits(BigInt(m.amount), 6)} USDC
                     </span>
@@ -404,6 +451,14 @@ function ScholarCard({
           </div>
         )}
       </NeoCardBody>
+
+      {submitMilestoneFor !== null && (
+        <SubmitMilestoneModal
+          isOpen
+          onClose={() => setSubmitMilestoneFor(null)}
+          milestone={submitMilestoneFor}
+        />
+      )}
     </NeoCard>
   );
 }
@@ -501,15 +556,54 @@ export function VoterPanel({
 
 export function BountyHunterPanel({
   disputes,
+  dashboardData,
 }: {
   disputes: DashboardData['disputes'];
   dashboardData: DashboardData;
 }) {
+  const [raiseDisputeOpen, setRaiseDisputeOpen] = useState(false);
+
+  const wonCount = disputes.filter(d => d.status.includes('WON') || d.status.includes('GUILTY') || d.status.includes('CONCEDED')).length;
+  const lostCount = disputes.filter(d => d.status.includes('LOST') || d.status.includes('REJECTED')).length;
+  const activeCount = disputes.filter(d => d.status === 'ACTIVE').length;
+  const totalReward = disputes.reduce((acc, obj) => acc + Number(formatUnits(BigInt(obj.bhRewardPaid || '0'), 6)), 0);
+
   return (
     <section>
-      <h2 className="font-paytone text-3xl mb-4 border-l-8 border-skgreen pl-4 leading-none">
-        Bounty Hunter Activity
-      </h2>
+      <div className="flex justify-between items-end mb-4">
+        <h2 className="font-paytone text-3xl border-l-8 border-skgreen pl-4 leading-none">
+          Bounty Hunter Activity
+        </h2>
+        <NeoButton label="+ Raise Dispute" variant="danger" size="sm" onClick={() => setRaiseDisputeOpen(true)} />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <NeoCard hoverable={false} className="bg-skgreen-light">
+          <NeoCardBody className="p-3 text-center">
+            <p className="text-xs text-gray-500 font-bold uppercase">Disputes Won</p>
+            <p className="font-paytone text-2xl text-skgreen">{wonCount}</p>
+          </NeoCardBody>
+        </NeoCard>
+        <NeoCard hoverable={false} className="bg-skred-light">
+          <NeoCardBody className="p-3 text-center">
+            <p className="text-xs text-gray-500 font-bold uppercase">Disputes Lost</p>
+            <p className="font-paytone text-2xl text-skred">{lostCount}</p>
+          </NeoCardBody>
+        </NeoCard>
+        <NeoCard hoverable={false} className="bg-skyellow-light">
+          <NeoCardBody className="p-3 text-center">
+            <p className="text-xs text-gray-500 font-bold uppercase">Active</p>
+            <p className="font-paytone text-2xl text-skyellow-dark">{activeCount}</p>
+          </NeoCardBody>
+        </NeoCard>
+        <NeoCard hoverable={false}>
+          <NeoCardBody className="p-3 text-center">
+            <p className="text-xs text-gray-500 font-bold uppercase">Total Rewards</p>
+            <p className="font-paytone text-2xl">${totalReward.toFixed(2)}</p>
+          </NeoCardBody>
+        </NeoCard>
+      </div>
+
       {disputes.length === 0 ? (
         <p className="text-gray-500">No disputes raised yet.</p>
       ) : (
@@ -518,6 +612,14 @@ export function BountyHunterPanel({
             <BountyDisputeCard key={d.id} dispute={d} />
           ))}
         </div>
+      )}
+
+      {raiseDisputeOpen && (
+        <BountyHunterRaiseDisputeModal 
+          isOpen 
+          onClose={() => setRaiseDisputeOpen(false)} 
+          dashboardData={dashboardData} 
+        />
       )}
     </section>
   );
@@ -618,12 +720,12 @@ function CommitteeProgramSection({
   programId: number;
   dashboardData: DashboardData;
 }) {
-  const programRecord = dashboardData.programsCreated.find((p) => p.blockchainId === programId);
+  const programRecord = dashboardData.committeePrograms.find((p) => p.blockchainId === programId);
   const { data: allApplicants = [] } = useProgramApplicants(programRecord?.id ?? '');
   const { data: allMilestones = [] } = useProgramMilestones(programRecord?.id ?? '');
 
   const pendingApplicants = allApplicants.filter((a) => a.status === 'PENDING_REVIEW');
-  const proposedMilestones = allMilestones.filter((m) => m.status === 'PENDING');
+  const proposedMilestones = allMilestones.filter((m) => m.status === 'PROPOSED');
   const activeDisputes = dashboardData.disputes.filter((d) => d.status === 'ACTIVE');
 
   const [scoreTarget, setScoreTarget] = useState<Applicant | null>(null);

@@ -1,0 +1,102 @@
+import { useState, useEffect } from 'react';
+import { NeoModal } from '@/components/ui/NeoModal';
+import { NeoButton } from '@/components/ui/NeoButton';
+import { useExtendApplicationDeadline, useExtendVotingDeadline } from '@/lib/contracts/write-hooks';
+import type { Program } from '@/lib/api/types';
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  program: Program;
+}
+
+export function ExtendDeadlineModal({ isOpen, onClose, program }: Props) {
+  const isAppOpen = program.status === 'APPLICATION_OPEN';
+  const isVoting = program.status === 'VOTING';
+  
+  const currentEnd = isAppOpen ? (program.applicationEnd ? Number(program.applicationEnd) : 0) : (program.votingEnd ? Number(program.votingEnd) : 0);
+  
+  // Start with default next day
+  const [newEndStr, setNewEndStr] = useState(() => {
+    if (!currentEnd) return '';
+    const d = new Date((currentEnd + 86400) * 1000);
+    // Format YYYY-MM-DDThh:mm
+    return d.toISOString().slice(0, 16);
+  });
+
+  const { extendApplicationDeadline, isPending: appPending, isSuccess: appSuccess } = useExtendApplicationDeadline();
+  const { extendVotingDeadline, isPending: votePending, isSuccess: voteSuccess } = useExtendVotingDeadline();
+
+  useEffect(() => {
+    if (appSuccess || voteSuccess) {
+      onClose();
+    }
+  }, [appSuccess, voteSuccess, onClose]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEndStr) return;
+    
+    // Convert to seconds timestamp
+    const newEndTimestamp = Math.floor(new Date(newEndStr).getTime() / 1000);
+    
+    if (isAppOpen) {
+      extendApplicationDeadline(BigInt(program.blockchainId), BigInt(newEndTimestamp));
+    } else if (isVoting) {
+      extendVotingDeadline(BigInt(program.blockchainId), BigInt(newEndTimestamp));
+    }
+  };
+
+  const isPending = appPending || votePending;
+  const oldDate = new Date(currentEnd * 1000).toLocaleString();
+
+  if (!isAppOpen && !isVoting) {
+    return (
+      <NeoModal isOpen={isOpen} onClose={onClose} title="Cannot Extend Deadline">
+        <p className="p-4 text-center text-gray-500">Deadlines can only be extended when Applications are Open or Voting is active.</p>
+      </NeoModal>
+    );
+  }
+
+  return (
+    <NeoModal isOpen={isOpen} onClose={onClose} title={`Extend ${isAppOpen ? 'Application' : 'Voting'} Deadline`}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-skyellow-light border-2 border-black rounded p-3 text-sm">
+          <p className="font-bold">⚠️ Extension Policy</p>
+          <ul className="list-disc ml-5 mt-1 text-gray-700">
+            <li>You can only extend the deadline (cannot shorten).</li>
+            <li>Maximum extension per time is 7 days (by default limits).</li>
+            <li>Maximum 2 extensions total.</li>
+          </ul>
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold mb-1">Current Deadline</label>
+          <input
+            type="text"
+            disabled
+            value={oldDate}
+            className="w-full border-2 border-gray-300 bg-gray-100 p-2 rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold mb-1">New Deadline <span className="text-red-500">*</span></label>
+          <input
+            type="datetime-local"
+            required
+            min={new Date((currentEnd + 1) * 1000).toISOString().slice(0, 16)}
+            value={newEndStr}
+            onChange={(e) => setNewEndStr(e.target.value)}
+            className="w-full border-2 border-black p-2 rounded focus:outline-none focus:border-skpurple"
+          />
+        </div>
+
+        <div className="flex gap-2 pt-2 border-t border-gray-200">
+          <NeoButton label="Cancel" variant="ghost" fullWidth onClick={onClose} disabled={isPending} type="button" />
+          <NeoButton label={isPending ? 'Extending…' : 'Confirm'} variant="primary" fullWidth loading={isPending} disabled={isPending || !newEndStr} type="submit" />
+        </div>
+      </form>
+    </NeoModal>
+  );
+}

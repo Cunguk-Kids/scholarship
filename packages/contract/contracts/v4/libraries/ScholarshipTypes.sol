@@ -291,30 +291,96 @@ library ScholarshipTypes {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // CONSTANTS
+    // PROTOCOL CONSTANTS (compile-time defaults — overridable via ProtocolConfig)
     // ═══════════════════════════════════════════════════════════════════
 
-    uint256 constant MIN_DONATION               = 50  * 1e6;
-    uint256 constant TRANSACTION_FEE            = 10  * 1e6;
-    uint256 constant MIN_CANDIDATES             = 5;
-    uint256 constant MAX_CANDIDATES             = 20;
-    uint256 constant MAX_RETRY                  = 3;
-    uint256 constant DEFENSE_WINDOW             = 7 days;
-    uint256 constant BH_COOLDOWN_NORMAL         = 30 days;
-    uint256 constant BH_COOLDOWN_FLAGGED        = 90 days;
-    uint256 constant BH_STAKE_PERCENT           = 10;
-    uint256 constant FREEZE_LIGHT               = 180 days;
-    uint256 constant FREEZE_MILESTONE           = 365 days;
-    uint256 constant FREEZE_HEAVY               = 730 days;
-    uint256 constant SCORE_MAX                  = 1000;
-    uint256 constant SCREENING_THRESHOLD        = 600;
-    uint256 constant QUORUM_PERCENT             = 50;
-    uint256 constant CONFIDENCE_SLASH_PCT       = 50;
-    uint256 constant CONFIDENCE_BONUS_PCT       = 20;
-    uint256 constant MAX_COMMITTEE_MEMBERS      = 15;
-    uint256 constant MAX_PUSH_REFUND_DONORS     = 50;
-    // v5 additions
-    uint256 constant MAX_MANDATORY_MILESTONES   = 10; // per scholar per program
-    uint256 constant MAX_OPTIONAL_MILESTONES    = 5;  // per scholar per program
-    uint256 constant OPTIONAL_APPROVAL_WINDOW   = 7 days; // committee must act within this
+    uint256 constant DEFAULT_MIN_DONATION             = 50  * 1e6;
+    uint256 constant DEFAULT_TRANSACTION_FEE          = 10  * 1e6;
+    uint8   constant DEFAULT_MIN_CANDIDATES           = 5;
+    uint8   constant DEFAULT_MAX_CANDIDATES           = 20;
+    uint8   constant DEFAULT_MAX_RETRY                = 3;
+    uint256 constant DEFAULT_DEFENSE_WINDOW           = 7 days;
+    uint256 constant DEFAULT_BH_COOLDOWN_NORMAL       = 30 days;
+    uint256 constant DEFAULT_BH_COOLDOWN_FLAGGED      = 90 days;
+    uint8   constant DEFAULT_BH_STAKE_PERCENT         = 10;
+    uint256 constant DEFAULT_FREEZE_LIGHT             = 180 days;
+    uint256 constant DEFAULT_FREEZE_MILESTONE         = 365 days;
+    uint256 constant DEFAULT_FREEZE_HEAVY             = 730 days;
+    uint256 constant DEFAULT_SCORE_MAX                = 1000;
+    uint256 constant DEFAULT_SCREENING_THRESHOLD      = 600;
+    uint8   constant DEFAULT_QUORUM_PERCENT           = 50;
+    uint8   constant DEFAULT_CONFIDENCE_SLASH_PCT     = 50;
+    uint8   constant DEFAULT_CONFIDENCE_BONUS_PCT     = 20;
+    uint8   constant DEFAULT_MAX_COMMITTEE_MEMBERS    = 15;
+    uint8   constant DEFAULT_MAX_PUSH_REFUND_DONORS   = 50;
+    uint8   constant DEFAULT_MAX_MANDATORY_MILESTONES = 10;
+    uint8   constant DEFAULT_MAX_OPTIONAL_MILESTONES  = 5;
+    uint256 constant DEFAULT_OPTIONAL_APPROVAL_WINDOW = 7 days;
+
+    // Backward-compat aliases so existing code compiles without changes
+    uint256 constant MIN_DONATION               = DEFAULT_MIN_DONATION;
+    uint256 constant TRANSACTION_FEE            = DEFAULT_TRANSACTION_FEE;
+    uint256 constant MIN_CANDIDATES             = DEFAULT_MIN_CANDIDATES;
+    uint256 constant MAX_CANDIDATES             = DEFAULT_MAX_CANDIDATES;
+    uint256 constant MAX_RETRY                  = DEFAULT_MAX_RETRY;
+    uint256 constant DEFENSE_WINDOW             = DEFAULT_DEFENSE_WINDOW;
+    uint256 constant BH_COOLDOWN_NORMAL         = DEFAULT_BH_COOLDOWN_NORMAL;
+    uint256 constant BH_COOLDOWN_FLAGGED        = DEFAULT_BH_COOLDOWN_FLAGGED;
+    uint256 constant BH_STAKE_PERCENT           = DEFAULT_BH_STAKE_PERCENT;
+    uint256 constant FREEZE_LIGHT               = DEFAULT_FREEZE_LIGHT;
+    uint256 constant FREEZE_MILESTONE           = DEFAULT_FREEZE_MILESTONE;
+    uint256 constant FREEZE_HEAVY               = DEFAULT_FREEZE_HEAVY;
+    uint256 constant SCORE_MAX                  = DEFAULT_SCORE_MAX;
+    uint256 constant SCREENING_THRESHOLD        = DEFAULT_SCREENING_THRESHOLD;
+    uint256 constant QUORUM_PERCENT             = DEFAULT_QUORUM_PERCENT;
+    uint256 constant CONFIDENCE_SLASH_PCT       = DEFAULT_CONFIDENCE_SLASH_PCT;
+    uint256 constant CONFIDENCE_BONUS_PCT       = DEFAULT_CONFIDENCE_BONUS_PCT;
+    uint256 constant MAX_COMMITTEE_MEMBERS      = DEFAULT_MAX_COMMITTEE_MEMBERS;
+    uint256 constant MAX_PUSH_REFUND_DONORS     = DEFAULT_MAX_PUSH_REFUND_DONORS;
+    uint256 constant MAX_MANDATORY_MILESTONES   = DEFAULT_MAX_MANDATORY_MILESTONES;
+    uint256 constant MAX_OPTIONAL_MILESTONES    = DEFAULT_MAX_OPTIONAL_MILESTONES;
+    uint256 constant OPTIONAL_APPROVAL_WINDOW   = DEFAULT_OPTIONAL_APPROVAL_WINDOW;
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PROTOCOL CONFIG STRUCT (stored on-chain, admin-updatable)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * @notice Runtime-configurable protocol parameters.
+     *         Stored in ScholarshipCoreBase and readable by all contracts via IScholarshipCoreMin.
+     *         Admin can call setProtocolConfig() to update any field.
+     */
+    struct ProtocolConfig {
+        // Donations
+        uint256 minDonation;            // Minimum donation (USDC, 6 decimals)
+        uint256 transactionFee;         // Protocol fee per donation (USDC, 6 decimals)
+        // Program creation
+        uint8   minCandidates;          // Minimum maxCandidates value
+        uint8   maxCandidates;          // Maximum maxCandidates value
+        uint8   maxRetry;               // Max application retries per student per program
+        // Bounty / Dispute
+        uint256 defenseWindow;          // Seconds student has to submit counter-evidence
+        uint256 bhCooldownNormal;       // BH normal cooldown after dispute
+        uint256 bhCooldownFlagged;      // BH cooldown when flagged
+        uint8   bhStakePercent;         // % of program balance as BH stake
+        // Scholar freeze durations
+        uint256 freezeLight;
+        uint256 freezeMilestone;
+        uint256 freezeHeavy;
+        // Scoring
+        uint256 scoreMax;               // Maximum raw score
+        uint256 screeningThreshold;     // Minimum score to be shortlisted
+        uint8   quorumPercent;          // % of totalDonated that must vote
+        // Confidence stakes
+        uint8   confidenceSlashPct;     // % of stake slashed on scholar fail
+        uint8   confidenceBonusPct;     // % bonus from yield pool on scholar success
+        // Committee
+        uint8   maxCommitteeMembers;    // Per program
+        // Treasury
+        uint8   maxPushRefundDonors;    // Max donors for push-refund (gas limit)
+        // Milestones
+        uint8   maxMandatoryMilestones; // Per scholar per program
+        uint8   maxOptionalMilestones;  // Per scholar per program
+        uint256 optionalApprovalWindow; // Window for committee to act on proposal
+    }
 }

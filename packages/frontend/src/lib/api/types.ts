@@ -16,7 +16,7 @@ export type ScholarStatus =
   | "ACTIVE" | "COMPLETED" | "FROZEN" | "BLACKLISTED";
 
 export type MilestoneStatus =
-  | "PENDING" | "SUBMITTED" | "DISPUTED" | "COMPLETED" | "FROZEN";
+  | "PROPOSED" | "REJECTED" | "PENDING" | "SUBMITTED" | "DISPUTED" | "COMPLETED" | "FROZEN";
 
 export type DisputeType =
   | "LIGHT_FRAUD" | "MILESTONE_FRAUD" | "HEAVY_FRAUD";
@@ -38,6 +38,7 @@ export interface Program {
   targetWinners: number;
   committeeContract: string;
   totalFund: string;
+  protocolFeeCollected: string;
   allocatedFund: string;
   spentFund: string;
   yieldAccrued: string;
@@ -99,6 +100,8 @@ export interface Milestone {
   programId: string | null;
   scholarId: string | null;
   scholarWallet: string;
+  kind: "MANDATORY" | "OPTIONAL" | "NEGOTIATED";
+  requiresProof: boolean;
   amount: string;
   proofCID: string;
   status: MilestoneStatus;

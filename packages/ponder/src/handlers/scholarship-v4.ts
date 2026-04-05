@@ -196,6 +196,30 @@ export const scholarshipCoreHandlers = () => {
     }
   });
 
+  ponder.on("ScholarshipCore:ProtocolFeeCollected", async ({ event }) => {
+    try {
+      const { programId, donor, feeAmount } = event.args;
+      logger.info({ programId, donor, feeAmount: feeAmount.toString() }, "ProtocolFeeCollected");
+
+      const [prog] = await db.select({ protocolFeeCollected: v4Programs.protocolFeeCollected })
+        .from(v4Programs)
+        .where(eq(v4Programs.blockchainId, Number(programId)))
+        .limit(1);
+
+      if (prog) {
+        const prevFee = BigInt(prog.protocolFeeCollected ?? "0");
+        await db.update(v4Programs)
+          .set({ protocolFeeCollected: String(prevFee + BigInt(feeAmount)), updatedAt: new Date() })
+          .where(eq(v4Programs.blockchainId, Number(programId)));
+      }
+
+      await insertBlock({ event, eventName: "ScholarshipCore:ProtocolFeeCollected" });
+      await sendSseToAll("main", { step: "ProtocolFeeCollected", data: { programId, donor, feeAmount: String(feeAmount) }, status: true, blockHash: event.block.hash });
+    } catch (err) {
+      logger.error({ err }, "ProtocolFeeCollected handler error");
+    }
+  });
+
   // ── Phase 2: Application ──────────────────────────────────────────────
 
   ponder.on("ScholarshipCore:StudentApplied", async ({ event }) => {
@@ -352,10 +376,18 @@ export const scholarshipCoreHandlers = () => {
         set: { status: "ACTIVE", updatedAt: new Date() },
       });
 
-      // Update active scholar count
+      const progSync: any = await context.client.readContract({
+        abi: scholarshipCoreAbi,
+        address: event.log.address as `0x${string}`,
+        functionName: "getProgram",
+        args: [programId],
+      });
+
+      // Update active scholar count and allocated fund from contract
       await db.update(v4Programs)
         .set({
           activeScholarCount: sql`(SELECT COUNT(*) FROM v4_scholars WHERE blockchain_program_id = ${Number(programId)} AND status = 'ACTIVE')`,
+          allocatedFund: String(progSync.allocatedFund),
           updatedAt: new Date(),
         })
         .where(eq(v4Programs.blockchainId, Number(programId)));
@@ -1122,10 +1154,11 @@ export const milestoneManagerHandlers = () => {
         scholarId: scholarRow?.id ?? undefined,
         scholarWallet: String(scholar),
         kind: kindStr,
+        requiresProof: kindStr !== "MANDATORY",
         status: "PENDING",
       }).onConflictDoUpdate({
         target: [v4Milestones.blockchainId],
-        set: { kind: kindStr, status: "PENDING", updatedAt: new Date() },
+        set: { kind: kindStr, requiresProof: kindStr !== "MANDATORY", status: "PENDING", updatedAt: new Date() },
       });
 
       await insertBlock({ event, eventName: "MilestoneManager:MilestoneCreated" });
@@ -1167,11 +1200,12 @@ export const milestoneManagerHandlers = () => {
         scholarId: scholarRow?.id ?? undefined,
         scholarWallet: String(scholar),
         kind: kindStr,
+        requiresProof: kindStr !== "MANDATORY",
         proposedBy: String(scholar),
         status: "PROPOSED",
       }).onConflictDoUpdate({
         target: [v4Milestones.blockchainId],
-        set: { status: "PROPOSED", proposedBy: String(scholar), updatedAt: new Date() },
+        set: { status: "PROPOSED", requiresProof: kindStr !== "MANDATORY", proposedBy: String(scholar), updatedAt: new Date() },
       });
 
       await insertBlock({ event, eventName: "MilestoneManager:MilestoneProposed" });
@@ -1195,6 +1229,32 @@ export const milestoneManagerHandlers = () => {
       await db.update(v4Milestones)
         .set({ status: "PENDING", approvedBy: String(approvedBy), updatedAt: new Date() })
         .where(eq(v4Milestones.blockchainId, Number(id)));
+
+      // Need to find programId to sync allocated fund
+      const [mRow] = await db.select({ programId: v4Milestones.programId })
+        .from(v4Milestones).where(eq(v4Milestones.blockchainId, Number(id))).limit(1);
+
+      if (mRow && mRow.programId) {
+        const [prog] = await db.select({ blockchainId: v4Programs.blockchainId })
+          .from(v4Programs).where(eq(v4Programs.id, mRow.programId)).limit(1);
+
+        if (prog) {
+          const coreAddress = await context.client.readContract({
+            abi: [{ "inputs": [], "name": "_coreContract", "outputs": [{ "internalType": "contract IScholarshipCoreMin", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }],
+            address: event.log.address as `0x${string}`,
+            functionName: "_coreContract"
+          });
+          const progSync: any = await context.client.readContract({
+            abi: scholarshipCoreAbi,
+            address: coreAddress as `0x${string}`,
+            functionName: "getProgram",
+            args: [BigInt(prog.blockchainId)],
+          });
+          await db.update(v4Programs)
+            .set({ allocatedFund: String(progSync.allocatedFund), updatedAt: new Date() })
+            .where(eq(v4Programs.id, mRow.programId));
+        }
+      }
 
       await insertBlock({ event, eventName: "MilestoneManager:MilestoneApproved" });
       await sendSseToAll("main", {
@@ -1303,6 +1363,33 @@ export const milestoneManagerHandlers = () => {
           await db.update(v4Scholars)
             .set({ totalReceived: String(prev + BigInt(amount)), updatedAt: new Date() })
             .where(eq(v4Scholars.id, milestone.scholarId));
+        }
+
+        // Sync spentFund and allocatedFund back to v4Programs
+        const [prog] = await db.select({ blockchainId: v4Programs.blockchainId })
+          .from(v4Programs)
+          .where(eq(v4Programs.id, milestone.programId!))
+          .limit(1);
+
+        if (prog) {
+          const coreAddress = await context.client.readContract({
+            abi: [{ "inputs": [], "name": "_coreContract", "outputs": [{ "internalType": "contract IScholarshipCoreMin", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }],
+            address: event.log.address as `0x${string}`,
+            functionName: "_coreContract"
+          });
+          const progSync: any = await context.client.readContract({
+            abi: scholarshipCoreAbi,
+            address: coreAddress as `0x${string}`,
+            functionName: "getProgram",
+            args: [BigInt(prog.blockchainId)],
+          });
+          await db.update(v4Programs)
+            .set({ 
+              spentFund: String(progSync.spentFund),
+              allocatedFund: String(progSync.allocatedFund), 
+              updatedAt: new Date() 
+            })
+            .where(eq(v4Programs.blockchainId, prog.blockchainId));
         }
       }
 

@@ -6,6 +6,7 @@ import { v4Addresses, scholarshipCoreAbi } from "@/constants/contractsV4";
 import { parseAbi } from "viem";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { AdminControlModal } from "../components/AdminControlModal";
+import { AdminProtocolConfig } from "../components/AdminProtocolConfig";
 import { formatUnits } from "viem";
 
 export function AdminDashboardPage() {
@@ -35,7 +36,7 @@ export function AdminDashboardPage() {
     functionName: "protocolFeeAccumulated",
   });
 
-  const [activeTab, setActiveTab] = useState<"programs" | "users" | "treasury">("programs");
+  const [activeTab, setActiveTab] = useState<"programs" | "users" | "treasury" | "config">("programs");
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
 
   if (isContractLoading || isOverviewLoading) {
@@ -89,6 +90,12 @@ export function AdminDashboardPage() {
           onClick={() => setActiveTab("treasury")}
         >
           Treasury
+        </button>
+        <button 
+          className={`py-3 px-6 font-black text-xl border-t-4 border-l-4 border-r-4 border-black rounded-t-xl transition-colors ${activeTab === 'config' ? 'bg-black text-white' : 'bg-gray-100 hover:bg-gray-200 text-black'}`}
+          onClick={() => setActiveTab("config")}
+        >
+          Protocol Config
         </button>
       </div>
 
@@ -220,6 +227,10 @@ export function AdminDashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {activeTab === "config" && (
+        <AdminProtocolConfig />
       )}
 
       {selectedProgram && (

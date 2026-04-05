@@ -44,6 +44,7 @@ export const v4Programs = pgTable("v4_programs", {
   allocatedFund: numeric("allocated_fund").default("0"),
   spentFund: numeric("spent_fund").default("0"),
   yieldAccrued: numeric("yield_accrued").default("0"),
+  protocolFeeCollected: numeric("protocol_fee_collected").default("0"),
   applicantCount: integer("applicant_count").default(0),
   shortlistedCount: integer("shortlisted_count").default(0),
   activeScholarCount: integer("active_scholar_count").default(0),
@@ -108,6 +109,7 @@ export const v4Milestones = pgTable("v4_milestones", {
   scholarId: uuid("scholar_id").references(() => v4Scholars.id),
   scholarWallet: varchar("scholar_wallet", { length: 42 }),
   kind: varchar("kind", { length: 20 }).default("MANDATORY"), // MANDATORY | OPTIONAL | NEGOTIATED
+  requiresProof: boolean("requires_proof").default(false),
   amount: numeric("amount").default("0"),
   proofCID: varchar("proof_cid", { length: 255 }).default(""),
   status: milestoneStatusEnum("status").default("PENDING"),

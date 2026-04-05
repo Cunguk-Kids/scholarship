@@ -542,3 +542,88 @@ export function useVoteOnMilestone() {
 
   return { voteOnMilestone, isPending, isSuccess, error, hash };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin & Timeline Write Hooks (Phase D)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function useExtendApplicationDeadline() {
+  const { writeContract, isPending, isSuccess, error, hash } = useTxHook();
+
+  const extendApplicationDeadline = (programId: bigint, newEnd: bigint) => {
+    writeContract({
+      address: CORE_ADDRESS as `0x${string}`,
+      abi: scholarshipCoreAbi,
+      functionName: "extendApplicationDeadline",
+      args: [programId, newEnd],
+    });
+  };
+
+  return { extendApplicationDeadline, isPending, isSuccess, error, hash };
+}
+
+export function useExtendVotingDeadline() {
+  const { writeContract, isPending, isSuccess, error, hash } = useTxHook();
+
+  const extendVotingDeadline = (programId: bigint, newEnd: bigint) => {
+    writeContract({
+      address: CORE_ADDRESS as `0x${string}`,
+      abi: scholarshipCoreAbi,
+      functionName: "extendVotingDeadline",
+      args: [programId, newEnd],
+    });
+  };
+
+  return { extendVotingDeadline, isPending, isSuccess, error, hash };
+}
+
+export function useAdminForceStatus() {
+  const { writeContract, isPending, isSuccess, error, hash } = useTxHook();
+
+  const adminForceStatus = (programId: bigint, newStatus: number) => {
+    writeContract({
+      address: CORE_ADDRESS as `0x${string}`,
+      abi: scholarshipCoreAbi,
+      functionName: "adminForceStatus",
+      args: [programId, newStatus],
+    });
+  };
+
+  return { adminForceStatus, isPending, isSuccess, error, hash };
+}
+
+export function useAdminUpdateDates() {
+  const { writeContract, isPending, isSuccess, error, hash } = useTxHook();
+
+  const adminUpdateDates = (
+    programId: bigint,
+    appStart: bigint,
+    appEnd: bigint,
+    voteStart: bigint,
+    voteEnd: bigint
+  ) => {
+    writeContract({
+      address: CORE_ADDRESS as `0x${string}`,
+      abi: scholarshipCoreAbi,
+      functionName: "adminUpdateDates",
+      args: [programId, appStart, appEnd, voteStart, voteEnd],
+    });
+  };
+
+  return { adminUpdateDates, isPending, isSuccess, error, hash };
+}
+
+export function useUpdateProtocolConfig() {
+  const { writeContract, isPending, isSuccess, error, hash } = useTxHook();
+
+  const updateProtocolConfig = (newConfig: any) => {
+    writeContract({
+      address: CORE_ADDRESS as `0x${string}`,
+      abi: scholarshipCoreAbi,
+      functionName: "setProtocolConfig",
+      args: [newConfig],
+    });
+  };
+
+  return { updateProtocolConfig, isPending, isSuccess, error, hash };
+}

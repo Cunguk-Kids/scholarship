@@ -79,6 +79,52 @@ abstract contract ScholarshipCoreBase is Initializable {
     function _requireRole(bytes32 role) internal view { if (!_roles[role][msg.sender]) revert MissingRole(role, msg.sender); }
     modifier onlyRole(bytes32 role) { _requireRole(role); _; }
 
+    ScholarshipTypes.ProtocolConfig internal _config;
+
+    event ProtocolConfigUpdated(address indexed updatedBy);
+    error InvalidConfig();
+
+    /// @notice Initialize _config with compile-time defaults. Called once in initialize().
+    function _initConfig() internal {
+        _config.minDonation            = ScholarshipTypes.DEFAULT_MIN_DONATION;
+        _config.transactionFee         = ScholarshipTypes.DEFAULT_TRANSACTION_FEE;
+        _config.minCandidates          = ScholarshipTypes.DEFAULT_MIN_CANDIDATES;
+        _config.maxCandidates          = ScholarshipTypes.DEFAULT_MAX_CANDIDATES;
+        _config.maxRetry               = ScholarshipTypes.DEFAULT_MAX_RETRY;
+        _config.defenseWindow          = ScholarshipTypes.DEFAULT_DEFENSE_WINDOW;
+        _config.bhCooldownNormal       = ScholarshipTypes.DEFAULT_BH_COOLDOWN_NORMAL;
+        _config.bhCooldownFlagged      = ScholarshipTypes.DEFAULT_BH_COOLDOWN_FLAGGED;
+        _config.bhStakePercent         = ScholarshipTypes.DEFAULT_BH_STAKE_PERCENT;
+        _config.freezeLight            = ScholarshipTypes.DEFAULT_FREEZE_LIGHT;
+        _config.freezeMilestone        = ScholarshipTypes.DEFAULT_FREEZE_MILESTONE;
+        _config.freezeHeavy            = ScholarshipTypes.DEFAULT_FREEZE_HEAVY;
+        _config.scoreMax               = ScholarshipTypes.DEFAULT_SCORE_MAX;
+        _config.screeningThreshold     = ScholarshipTypes.DEFAULT_SCREENING_THRESHOLD;
+        _config.quorumPercent          = ScholarshipTypes.DEFAULT_QUORUM_PERCENT;
+        _config.confidenceSlashPct     = ScholarshipTypes.DEFAULT_CONFIDENCE_SLASH_PCT;
+        _config.confidenceBonusPct     = ScholarshipTypes.DEFAULT_CONFIDENCE_BONUS_PCT;
+        _config.maxCommitteeMembers    = ScholarshipTypes.DEFAULT_MAX_COMMITTEE_MEMBERS;
+        _config.maxPushRefundDonors    = ScholarshipTypes.DEFAULT_MAX_PUSH_REFUND_DONORS;
+        _config.maxMandatoryMilestones = ScholarshipTypes.DEFAULT_MAX_MANDATORY_MILESTONES;
+        _config.maxOptionalMilestones  = ScholarshipTypes.DEFAULT_MAX_OPTIONAL_MILESTONES;
+        _config.optionalApprovalWindow = ScholarshipTypes.DEFAULT_OPTIONAL_APPROVAL_WINDOW;
+    }
+
+    /// @notice Admin-only: update protocol constants. Validate off-chain before calling.
+    function setProtocolConfig(ScholarshipTypes.ProtocolConfig calldata c) external {
+        if (msg.sender != admin) revert NotAdmin();
+        if (c.minDonation == 0 || c.minCandidates == 0 || c.minCandidates > c.maxCandidates) revert InvalidConfig();
+        if (c.quorumPercent > 100 || c.bhStakePercent > 100) revert InvalidConfig();
+        if (uint256(c.confidenceSlashPct) + c.confidenceBonusPct > 100) revert InvalidConfig();
+        _config = c;
+        emit ProtocolConfigUpdated(msg.sender);
+    }
+
+    /// @notice Read current protocol config — used by MilestoneManager, Bounty, Treasury via interface.
+    function getProtocolConfig() external view returns (ScholarshipTypes.ProtocolConfig memory) {
+        return _config;
+    }
+
     // ── External contracts ───────────────────────────────────────────────────
     IERC20                 public usdc;
     IScholarshipTreasury   public treasury;
@@ -256,7 +302,7 @@ abstract contract ScholarshipCoreBase is Initializable {
         });
         programs[programId].activeScholarCount++;
         programs[programId].allocatedFund += _sumArray(amt);
-        // Delegate milestone creation to MilestoneManager
+        // Delegate milestone creation to MilestoneManager (pass config so it validates limits)
         milestoneManager.createMandatoryBatch(programId, winner, amt, descs);
         emit ScholarSelected(programId, winner);
     }
@@ -347,9 +393,9 @@ abstract contract ScholarshipCoreBase is Initializable {
         ScholarshipTypes.Scholar storage scholar = scholars[wallet][programId];
         scholar.status = ScholarshipTypes.StudentStatus.FROZEN;
         uint256 fd; bool bl = false;
-        if      (disputeType == ScholarshipTypes.DisputeType.LIGHT_FRAUD)     fd = ScholarshipTypes.FREEZE_LIGHT;
-        else if (disputeType == ScholarshipTypes.DisputeType.MILESTONE_FRAUD) fd = ScholarshipTypes.FREEZE_MILESTONE;
-        else                                                                   { fd = ScholarshipTypes.FREEZE_HEAVY; bl = true; }
+        if      (disputeType == ScholarshipTypes.DisputeType.LIGHT_FRAUD)     fd = _config.freezeLight;
+        else if (disputeType == ScholarshipTypes.DisputeType.MILESTONE_FRAUD) fd = _config.freezeMilestone;
+        else                                                                   { fd = _config.freezeHeavy; bl = true; }
         globalFreezeUntil[wallet] = block.timestamp + fd;
         globalStudentStatus[wallet] = bl ? ScholarshipTypes.StudentStatus.BLACKLISTED : ScholarshipTypes.StudentStatus.FROZEN;
         if (bl) scholar.isBlacklisted = true;
@@ -395,6 +441,10 @@ abstract contract ScholarshipCoreBase is Initializable {
         ScholarshipTypes.StudentStatus status = globalStudentStatus[wallet];
         if (status == ScholarshipTypes.StudentStatus.BLACKLISTED) revert StudentBlacklisted();
         if (status == ScholarshipTypes.StudentStatus.FROZEN && block.timestamp < globalFreezeUntil[wallet]) revert StudentFrozen(globalFreezeUntil[wallet]);
+    }
+
+    function _requireStudentEligibleView(address wallet) internal view {
+        _requireStudentEligible(wallet);
     }
 
     // _requireStatus is defined above for the modifier, so we'll just remove the duplicate here.

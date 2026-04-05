@@ -151,7 +151,8 @@ contract MilestoneManager is Initializable {
         string[] calldata descs
     ) external onlyCore {
         uint256 n = amounts.length;
-        if (n == 0 || n > ScholarshipTypes.MAX_MANDATORY_MILESTONES) revert TooManyMandatory();
+        uint8 maxMandatory = _coreContract.getProtocolConfig().maxMandatoryMilestones;
+        if (n == 0 || n > maxMandatory) revert TooManyMandatory();
         // descs length must match or be 0 (all empty)
         bool hasDescs = descs.length == n;
 
@@ -212,9 +213,10 @@ contract MilestoneManager is Initializable {
         ScholarshipTypes.Program memory prog = _coreContract.getProgram(programId);
         if (prog.maxOptionalMilestones == 0) revert OptionalDisabled();
 
-        // Cap check
+        // Cap check (use runtime config)
+        uint8 maxOptional = _coreContract.getProtocolConfig().maxOptionalMilestones;
         uint256 existing = optionalIds[programId][msg.sender].length;
-        if (existing >= prog.maxOptionalMilestones) revert TooManyOptional();
+        if (existing >= (prog.maxOptionalMilestones < maxOptional ? prog.maxOptionalMilestones : maxOptional)) revert TooManyOptional();
 
         // Committee must be set
         if (programCommittee[programId] == address(0)) revert CommitteeNotSet();
@@ -425,6 +427,7 @@ interface IScholarshipCoreMin {
     function getScholar(address wallet, uint256 programId) external view returns (ScholarshipTypes.Scholar memory);
     function getProgram(uint256 programId) external view returns (ScholarshipTypes.Program memory);
     function hasBountyRole(address account) external view returns (bool);
+    function getProtocolConfig() external view returns (ScholarshipTypes.ProtocolConfig memory);
     /// @notice Increment scholar.optionalApproved and program.allocatedFund
     function onOptionalApproved(uint256 programId, address scholar, uint256 amount) external;
     /// @notice Progress tracking after a milestone completes
