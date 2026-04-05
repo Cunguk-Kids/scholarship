@@ -157,19 +157,19 @@ export function useCancelProgram() {
   return { cancelProgram, isPending, isSuccess, error, hash };
 }
 
-export function useResolveShortlist() {
+export function useResolveShortlistBatch() {
   const { writeContract, isPending, isSuccess, error, hash } = useTxHook();
 
-  const resolveShortlist = (programId: bigint, ranked: `0x${string}`[]) => {
+  const resolveShortlistBatch = (programId: bigint, rankedSegment: `0x${string}`[], isLastBatch: boolean) => {
     writeContract({
       address: CORE_ADDRESS as `0x${string}`,
       abi: scholarshipCoreAbi,
-      functionName: "resolveShortlist",
-      args: [programId, ranked],
+      functionName: "resolveShortlistBatch",
+      args: [programId, rankedSegment, isLastBatch],
     });
   };
 
-  return { resolveShortlist, isPending, isSuccess, error, hash };
+  return { resolveShortlistBatch, isPending, isSuccess, error, hash };
 }
 
 export function useSelectWinners() {

@@ -118,6 +118,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     mapping(uint256 => mapping(address => uint8))                             public retryCount;
     mapping(uint256 => address)                                               public programCommittee;
     mapping(uint256 => uint256)                                               public programCompletedScholars;
+    mapping(uint256 => uint32)                                                public resolveProgress;
 
     mapping(uint256 => uint8) public applicationExtensionCount;
     mapping(uint256 => uint8) public votingExtensionCount;

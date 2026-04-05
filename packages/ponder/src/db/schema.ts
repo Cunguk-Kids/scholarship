@@ -182,6 +182,8 @@ export const v4Disputes = pgTable("v4_disputes", {
   raisedAt: timestamp("raised_at", { withTimezone: true }),
   defenseDeadline: timestamp("defense_deadline", { withTimezone: true }),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  isLateDispute: boolean("is_late_dispute").default(false),
+  griefingStakeOriginal: numeric("griefing_stake_original").default("0"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });

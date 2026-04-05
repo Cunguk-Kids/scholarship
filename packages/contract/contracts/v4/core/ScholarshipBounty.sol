@@ -110,6 +110,7 @@ contract ScholarshipBounty is
     );
     event BHFlagged(address indexed bountyHunter, uint256 cooldownUntil);
     event ForfeitedStakesWithdrawn(address recipient, uint256 amount);
+    event GriefingStakeApplied(uint256 indexed disputeId, uint256 originalStake, uint256 appliedStake);
 
     // ── Errors ───────────────────────────────────────────────────────────────
 
@@ -204,6 +205,16 @@ contract ScholarshipBounty is
 
         uint256 potentialReward  = (remainingFund * prog.slashDist.bountyHunterPercent) / 100;
         uint256 stakeRequired    = (potentialReward * ScholarshipTypes.BH_STAKE_PERCENT) / 100;
+
+        // Anti-griefing: 2x stake if raised within 6 hours of milestone deadline
+        if (milestoneId != 0) {
+            ScholarshipTypes.Milestone memory m = milestone.getMilestone(milestoneId);
+            if (m.disputeDeadline > 0 && block.timestamp > m.disputeDeadline - 6 hours) {
+                uint256 original = stakeRequired;
+                stakeRequired *= 2;
+                emit GriefingStakeApplied(_nextDisputeId + 1, original, stakeRequired);
+            }
+        }
 
         if (stakeRequired > 0) {
             usdc.safeTransferFrom(msg.sender, address(this), stakeRequired);

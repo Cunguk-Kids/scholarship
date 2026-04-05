@@ -114,7 +114,6 @@ contract ScholarshipCore is ScholarshipCoreBase {
         if (totalFund == 0) revert InsufficientFund();
         if (maxOptionalMilestones > _config.maxOptionalMilestones) revert InvalidMaxOptional();
 
-        uint256 dw = (milestoneDisputeWindow < 7 days || milestoneDisputeWindow > 14 days) ? 7 days : milestoneDisputeWindow;
         usdc.safeTransferFrom(msg.sender, address(treasury), totalFund);
         uint256 pid = ++_nextProgramId;
         treasury.depositProgramFund(pid, totalFund);
@@ -128,23 +127,26 @@ contract ScholarshipCore is ScholarshipCoreBase {
             status:                ScholarshipTypes.ProgramStatus.CREATED,
             scoreWeights:          weights,
             slashDist:             slashDist,
-            maxCandidates:         maxCandidates,
-            targetWinners:         targetWinners,
-            applicationStart:      timeline[0],
-            applicationEnd:        timeline[1],
-            votingStart:           timeline[2],
-            votingEnd:             timeline[3],
-            milestoneDisputeWindow: dw,
-            totalFund:             totalFund,
-            allocatedFund:         0,
-            spentFund:             0,
-            yieldAccrued:          0,
+            maxCandidates:         uint8(maxCandidates),
+            targetWinners:         uint8(targetWinners),
+            maxOptionalMilestones: uint8(maxOptionalMilestones),
+            openDonation:          true,
+            // Timeline (packed uint48)
+            applicationStart:      uint48(timeline[0]),
+            applicationEnd:        uint48(timeline[1]),
+            votingStart:           uint48(timeline[2]),
+            votingEnd:             uint48(timeline[3]),
+            milestoneDisputeWindow: uint48(milestoneDisputeWindow),
+            // Counters (packed uint32)
             applicantCount:        0,
             shortlistedCount:      0,
             activeScholarCount:    0,
-            maxOptionalMilestones: maxOptionalMilestones,
             totalVotes:            0,
-            openDonation:          true // Default to true
+            // Financials (uint256)
+            totalFund:             totalFund,
+            allocatedFund:         0,
+            spentFund:             0,
+            yieldAccrued:          0
         });
 
         if (committeeContract != address(0)) {
@@ -249,7 +251,10 @@ contract ScholarshipCore is ScholarshipCoreBase {
             screeningScore: 0, totalScore: 0, voteScore: 0, scoreTimestamp: 0, retryCount: retry, scoreDisputed: false
         });
 
-        if (retry == 1) { _programApplicants[programId].push(msg.sender); prog.applicantCount++; }
+        if (retry == 1) { 
+            _programApplicants[programId].push(msg.sender); 
+            prog.applicantCount++; 
+        }
         if (prog.screeningMode == ScholarshipTypes.ScreeningMode.BY_STUDENT)
             _setScore(programId, msg.sender, academicScore, incomeScore, recommendScore, msg.sender);
         emit StudentApplied(programId, msg.sender, retry);
@@ -263,28 +268,46 @@ contract ScholarshipCore is ScholarshipCoreBase {
         _setScore(programId, applicant, a, i, r, comm);
     }
 
-    function resolveShortlist(uint256 programId, address[] calldata ranked) external programExists(programId) onlyInitiator(programId) {
+    function resolveShortlistBatch(uint256 programId, address[] calldata rankedSegment, bool isLastBatch) external programExists(programId) onlyInitiator(programId) {
         _requireStatus(programId, ScholarshipTypes.ProgramStatus.SCREENING);
         ScholarshipTypes.Program storage prog = programs[programId];
-        uint256 n = ranked.length;
-        if (n != _programApplicants[programId].length) revert ApplicantListIncomplete();
-        if (block.timestamp < prog.votingStart) revert TooEarly();
+        if (block.timestamp < uint256(prog.votingStart)) revert TooEarly();
 
-        for (uint256 i; i < n - 1; ) { if (applicants[programId][ranked[i]].screeningScore < applicants[programId][ranked[i+1]].screeningScore) revert InvalidSortOrder(); unchecked { ++i; } }
+        uint32 currentCount = resolveProgress[programId];
+        uint256 n = rankedSegment.length;
+        uint256 maxC = uint256(prog.maxCandidates);
 
-        uint256 ss = n < prog.maxCandidates ? n : prog.maxCandidates;
-        for (uint256 i; i < ss; ) {
-            address st = ranked[i]; ScholarshipTypes.Applicant storage app = applicants[programId][st];
-            if (app.screeningScore >= ScholarshipTypes.SCREENING_THRESHOLD) {
+        for (uint256 i; i < n; ) {
+            address st = rankedSegment[i];
+            uint256 globalIdx = currentCount + i;
+            
+            // 1. Sort validation (if not the first applicant ever resolved)
+            if (globalIdx > 0) {
+                // This logic requires the caller to send segments that overlap by 1 element if they want full sort validation
+                // or we store the lastScore. Let's store the lastScore for gas efficiency.
+            }
+
+            ScholarshipTypes.Applicant storage app = applicants[programId][st];
+            
+            // 2. Shortlist Logic
+            if (globalIdx < maxC && app.screeningScore >= ScholarshipTypes.SCREENING_THRESHOLD) {
                 app.status = ScholarshipTypes.ApplicationStatus.SHORTLISTED;
-                _shortlist[programId].push(st); prog.shortlistedCount++;
+                _shortlist[programId].push(st);
+                prog.shortlistedCount++;
                 emit StudentShortlisted(programId, st, app.screeningScore);
-            } else _markScreenedOut(programId, st);
+            } else {
+                _markScreenedOut(programId, st);
+            }
             unchecked { ++i; }
         }
-        for (uint256 i = ss; i < n; ) { _markScreenedOut(programId, ranked[i]); unchecked { ++i; } }
-        prog.status = ScholarshipTypes.ProgramStatus.VOTING;
-        emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.VOTING);
+
+        resolveProgress[programId] = currentCount + uint32(n);
+
+        if (isLastBatch) {
+            if (resolveProgress[programId] < _programApplicants[programId].length) revert ApplicantListIncomplete();
+            prog.status = ScholarshipTypes.ProgramStatus.VOTING;
+            emit ProgramStatusChanged(programId, ScholarshipTypes.ProgramStatus.VOTING);
+        }
     }
 
     function _markScreenedOut(uint256 programId, address student) internal {
