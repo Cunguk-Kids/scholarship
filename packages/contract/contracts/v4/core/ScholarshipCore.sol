@@ -37,6 +37,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
     event StudentScreenedOut(uint256 indexed programId, address indexed student, uint256 score, bool locked);
     event ProgramCancelled(uint256 indexed programId);
 
+
     // ── Errors ───────────────────────────────────────────────────────────────
     error InvalidScoreWeights();
     error InvalidSlashDistribution();
@@ -52,6 +53,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
     error ApplicantListIncomplete();
     error TooEarly();
     error InvalidMaxOptional();
+
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() { _disableInitializers(); }
@@ -283,4 +285,134 @@ contract ScholarshipCore is ScholarshipCoreBase {
         treasury.refundDonors(programId);
         emit ProgramCancelled(programId);
     }
+    // ═══════════════════════════════════════════════════════════════════════
+    // DATE MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// Extension counters per program (not on Program struct — avoids layout change)
+    mapping(uint256 => uint8) public applicationExtensionCount;
+    mapping(uint256 => uint8) public votingExtensionCount;
+
+    uint8   public constant MAX_EXTENSIONS       = 2;
+    uint256 public constant MAX_EXTENSION_DURATION = 30 days;
+
+    // Events
+    event ApplicationDeadlineExtended(uint256 indexed programId, uint256 oldEnd, uint256 newEnd, uint8 extensionCount);
+    event VotingDeadlineExtended(uint256 indexed programId, uint256 oldEnd, uint256 newEnd, uint8 extensionCount);
+    event AdminBypassStatusForced(uint256 indexed programId, ScholarshipTypes.ProgramStatus newStatus, address admin);
+    event AdminBypassDatesUpdated(uint256 indexed programId, uint256 appStart, uint256 appEnd, uint256 voteStart, uint256 voteEnd, address admin);
+
+    // Errors
+    error CannotShortenDeadline();
+    error NewEndMustBeBeforeVotingStart();
+    error NewVotingEndMustBeAfterVotingStart();
+    error MaxExtensionsReached();
+    error ExtensionTooLong();
+
+    /**
+     * @notice Extend the application deadline. Initiator only.
+     *         - Only during APPLICATION_OPEN status
+     *         - Can only extend (not shorten)
+     *         - newEnd must be < votingStart
+     *         - Max 30 days per extension, max 2 extensions total
+     */
+    function extendApplicationDeadline(
+        uint256 programId,
+        uint256 newEnd
+    ) external programExists(programId) onlyInitiator(programId)
+      inStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN)
+    {
+        if (applicationExtensionCount[programId] >= MAX_EXTENSIONS)
+            revert MaxExtensionsReached();
+
+        ScholarshipTypes.Program storage prog = programs[programId];
+        uint256 oldEnd = prog.applicationEnd;
+
+        if (newEnd <= oldEnd)               revert CannotShortenDeadline();
+        if (newEnd >= prog.votingStart)     revert NewEndMustBeBeforeVotingStart();
+        if (newEnd - oldEnd > MAX_EXTENSION_DURATION) revert ExtensionTooLong();
+
+        prog.applicationEnd = newEnd;
+        uint8 count = ++applicationExtensionCount[programId];
+        emit ApplicationDeadlineExtended(programId, oldEnd, newEnd, count);
+    }
+
+    /**
+     * @notice Extend the voting deadline. Initiator only.
+     *         - Only during VOTING status
+     *         - Can only extend (not shorten)
+     *         - Max 30 days per extension, max 2 extensions total
+     */
+    function extendVotingDeadline(
+        uint256 programId,
+        uint256 newEnd
+    ) external programExists(programId) onlyInitiator(programId)
+      inStatus(programId, ScholarshipTypes.ProgramStatus.VOTING)
+    {
+        if (votingExtensionCount[programId] >= MAX_EXTENSIONS)
+            revert MaxExtensionsReached();
+
+        ScholarshipTypes.Program storage prog = programs[programId];
+        uint256 oldEnd = prog.votingEnd;
+
+        if (newEnd <= oldEnd)               revert CannotShortenDeadline();
+        if (newEnd <= prog.votingStart)     revert NewVotingEndMustBeAfterVotingStart();
+        if (newEnd - oldEnd > MAX_EXTENSION_DURATION) revert ExtensionTooLong();
+
+        prog.votingEnd = newEnd;
+        uint8 count = ++votingExtensionCount[programId];
+        emit VotingDeadlineExtended(programId, oldEnd, newEnd, count);
+    }
+
+    /**
+     * @notice ADMIN ONLY — force program to any status, skipping all checks.
+     *         Cannot force CANCELLED (use cancelProgram) or COMPLETED
+     *         (side-effects must run normally).
+     *         Always emits event for on-chain auditability.
+     */
+    function adminForceStatus(
+        uint256 programId,
+        ScholarshipTypes.ProgramStatus newStatus
+    ) external programExists(programId) {
+        if (msg.sender != admin) revert NotAdmin();
+        require(
+            newStatus != ScholarshipTypes.ProgramStatus.CANCELLED &&
+            newStatus != ScholarshipTypes.ProgramStatus.COMPLETED,
+            "ScholarshipCore: use cancelProgram or normal completion flow"
+        );
+        programs[programId].status = newStatus;
+        emit AdminBypassStatusForced(programId, newStatus, msg.sender);
+        emit ProgramStatusChanged(programId, newStatus);
+    }
+
+    /**
+     * @notice ADMIN ONLY — overwrite all four timeline dates at once.
+     *         Bypasses TooEarly, CannotShortenDeadline, MaxExtensionsReached.
+     *         Resets extension counters so normal flow works cleanly after.
+     *         Basic coherence (appStart < appEnd < voteStart < voteEnd) enforced.
+     */
+    function adminUpdateDates(
+        uint256 programId,
+        uint256 appStart,
+        uint256 appEnd,
+        uint256 voteStart,
+        uint256 voteEnd
+    ) external programExists(programId) {
+        if (msg.sender != admin) revert NotAdmin();
+        if (appStart >= appEnd || appEnd >= voteStart || voteStart >= voteEnd)
+            revert InvalidTimeline();
+
+        ScholarshipTypes.Program storage prog = programs[programId];
+        prog.applicationStart = appStart;
+        prog.applicationEnd   = appEnd;
+        prog.votingStart      = voteStart;
+        prog.votingEnd        = voteEnd;
+
+        applicationExtensionCount[programId] = 0;
+        votingExtensionCount[programId]      = 0;
+
+        emit AdminBypassDatesUpdated(programId, appStart, appEnd, voteStart, voteEnd, msg.sender);
+    }
+
 }
+
