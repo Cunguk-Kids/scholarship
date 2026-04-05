@@ -7,6 +7,11 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
+    "name": "AdminCannotForceTerminalStatus",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "AlreadyApplied",
     "type": "error"
   },
@@ -32,6 +37,11 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
+    "name": "CannotShortenDeadline",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ConfidenceStakeAlreadyExists",
     "type": "error"
   },
@@ -43,6 +53,11 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [],
     "name": "ConfidenceStakeMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExtensionTooLong",
     "type": "error"
   },
   {
@@ -113,6 +128,11 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
+    "name": "MaxExtensionsReached",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MaxRetriesExceeded",
     "type": "error"
   },
@@ -135,6 +155,16 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [],
     "name": "MustVoteBeforeStaking",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NewEndMustBeBeforeVotingStart",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NewVotingEndMustBeAfterVotingStart",
     "type": "error"
   },
   {
@@ -218,6 +248,105 @@ export const scholarshipCoreAbi = [
     "inputs": [],
     "name": "VotingPowerLocked",
     "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "appStart",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "appEnd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "voteStart",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "voteEnd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "admin",
+        "type": "address"
+      }
+    ],
+    "name": "AdminBypassDatesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ScholarshipTypes.ProgramStatus",
+        "name": "newStatus",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "admin",
+        "type": "address"
+      }
+    ],
+    "name": "AdminBypassStatusForced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldEnd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newEnd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "extensionCount",
+        "type": "uint8"
+      }
+    ],
+    "name": "ApplicationDeadlineExtended",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -641,6 +770,37 @@ export const scholarshipCoreAbi = [
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldEnd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newEnd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "extensionCount",
+        "type": "uint8"
+      }
+    ],
+    "name": "VotingDeadlineExtended",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "BOUNTY_ROLE",
     "outputs": [
@@ -661,6 +821,32 @@ export const scholarshipCoreAbi = [
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_EXTENSIONS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_EXTENSION_DURATION",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -716,6 +902,57 @@ export const scholarshipCoreAbi = [
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ScholarshipTypes.ProgramStatus",
+        "name": "newStatus",
+        "type": "uint8"
+      }
+    ],
+    "name": "adminForceStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "appStart",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "appEnd",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "voteStart",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "voteEnd",
+        "type": "uint256"
+      }
+    ],
+    "name": "adminUpdateDates",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -797,6 +1034,25 @@ export const scholarshipCoreAbi = [
         "internalType": "bool",
         "name": "scoreDisputed",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "applicationExtensionCount",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -1009,6 +1265,42 @@ export const scholarshipCoreAbi = [
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newEnd",
+        "type": "uint256"
+      }
+    ],
+    "name": "extendApplicationDeadline",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newEnd",
+        "type": "uint256"
+      }
+    ],
+    "name": "extendVotingDeadline",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -2194,6 +2486,25 @@ export const scholarshipCoreAbi = [
         "internalType": "bool",
         "name": "hasClaimedYield",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "votingExtensionCount",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",

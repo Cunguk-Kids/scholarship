@@ -173,6 +173,7 @@ export interface DashboardSummary {
   scholarshipsCount: number;
   votesCount: number;
   disputesCount: number;
+  committeeProgramsCount: number;
   totalFundReceived: string;
   totalFundCreated: string;
   repBalance: string;
@@ -189,6 +190,7 @@ export interface DashboardData {
   stakes: ConfidenceStake[];
   disputes: Dispute[];
   reputation: Reputation | null;
+  committeePrograms: Program[];
 }
 
 // ── API Response Wrappers ────────────────────────────────────────────────────

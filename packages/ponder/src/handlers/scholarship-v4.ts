@@ -436,6 +436,96 @@ export const scholarshipCoreHandlers = () => {
       logger.error({ err }, "ProgramCancelled handler error");
     }
   });
+
+  // ── Date Management ──────────────────────────────────────────────────────────
+  // Events emitted from ScholarshipCoreBase (now moved there to save bytecode),
+  // but still indexed via the ScholarshipCore proxy address.
+
+  ponder.on("ScholarshipCore:ApplicationDeadlineExtended", async ({ event }) => {
+    try {
+      const { programId, newEnd } = event.args;
+      await db.update(v4Programs)
+        .set({
+          applicationEnd: new Date(Number(newEnd) * 1000),
+          updatedAt: new Date(),
+        })
+        .where(eq(v4Programs.blockchainId, Number(programId)));
+
+      await sendSseToAll("main", {
+        step: "ApplicationDeadlineExtended",
+        data: { programId: Number(programId), newEnd: Number(newEnd) },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "ApplicationDeadlineExtended handler error");
+    }
+  });
+
+  ponder.on("ScholarshipCore:VotingDeadlineExtended", async ({ event }) => {
+    try {
+      const { programId, newEnd } = event.args;
+      await db.update(v4Programs)
+        .set({
+          votingEnd: new Date(Number(newEnd) * 1000),
+          updatedAt: new Date(),
+        })
+        .where(eq(v4Programs.blockchainId, Number(programId)));
+
+      await sendSseToAll("main", {
+        step: "VotingDeadlineExtended",
+        data: { programId: Number(programId), newEnd: Number(newEnd) },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "VotingDeadlineExtended handler error");
+    }
+  });
+
+  ponder.on("ScholarshipCore:AdminBypassStatusForced", async ({ event }) => {
+    try {
+      const { programId, newStatus } = event.args;
+      const statusMap: Record<number, NonNullable<typeof v4Programs.$inferInsert["status"]>> = {
+        0: "CREATED", 1: "APPLICATION_OPEN", 2: "SCREENING",
+        3: "VOTING", 4: "ACTIVE", 5: "COMPLETED", 6: "CANCELLED",
+      };
+      const status = statusMap[Number(newStatus)] ?? "CREATED";
+
+      await db.update(v4Programs)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(v4Programs.blockchainId, Number(programId)));
+
+      await sendSseToAll("main", {
+        step: "AdminBypassStatusForced",
+        data: { programId: Number(programId), status },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "AdminBypassStatusForced handler error");
+    }
+  });
+
+  ponder.on("ScholarshipCore:AdminBypassDatesUpdated", async ({ event }) => {
+    try {
+      const { programId, appStart, appEnd, voteStart, voteEnd } = event.args;
+      await db.update(v4Programs)
+        .set({
+          applicationStart: new Date(Number(appStart) * 1000),
+          applicationEnd:   new Date(Number(appEnd) * 1000),
+          votingStart:      new Date(Number(voteStart) * 1000),
+          votingEnd:        new Date(Number(voteEnd) * 1000),
+          updatedAt: new Date(),
+        })
+        .where(eq(v4Programs.blockchainId, Number(programId)));
+
+      await sendSseToAll("main", {
+        step: "AdminBypassDatesUpdated",
+        data: { programId: Number(programId) },
+        status: true, blockHash: event.block.hash,
+      });
+    } catch (err) {
+      logger.error({ err }, "AdminBypassDatesUpdated handler error");
+    }
+  });
 };
 
 // ══════════════════════════════════════════════════════════════════════════════

@@ -1,10 +1,9 @@
-import { useAccount, useReadContracts } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useDashboard } from '@/lib/api/hooks';
 import { NeoCard, NeoCardBody } from '@/components/ui/NeoCard';
 import { NeoSkeleton } from '@/components/ui/NeoSkeleton';
 import { StatCard } from '@/components/ui/StatCard';
 import { formatUnits } from 'viem';
-import { committeeGovernanceAbi, v4Addresses } from '@/constants/contractsV4';
 
 import {
   InitiatorPanel,
@@ -23,23 +22,13 @@ export function DashboardPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // ── Committee membership detection ───────────────────────────────────────────
-  // Check if current user is a committee member of any created program
-  const programIds = dashboard?.programsCreated.map((p) => p.blockchainId) ?? [];
-
-  const committeeChecks = useReadContracts({
-    contracts: programIds.map((pid) => ({
-      address: v4Addresses.CommitteeGovernance as `0x${string}`,
-      abi: committeeGovernanceAbi,
-      functionName: 'isCommitteeMember' as const,
-      args: [BigInt(pid), address ?? '0x0000000000000000000000000000000000000000'],
-    })),
-    query: { enabled: !!address && programIds.length > 0 },
-  });
-
-  const committeeProgramIds = useMemo(() => {
-    if (!committeeChecks.data) return [];
-    return programIds.filter((_, i) => committeeChecks.data?.[i]?.result === true);
-  }, [committeeChecks.data, programIds]);
+  // Use DB-backed data from Ponder (committeePrograms) — this covers ALL programs
+  // where the wallet is an active member, not just programs the user created.
+  const committeePrograms = dashboard?.committeePrograms ?? [];
+  const committeeProgramIds = useMemo(
+    () => committeePrograms.map((p) => p.blockchainId),
+    [committeePrograms],
+  );
 
   // ── Role detection ────────────────────────────────────────────────────────────
   if (!address) {

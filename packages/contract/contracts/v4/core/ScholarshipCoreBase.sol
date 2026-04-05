@@ -75,7 +75,9 @@ abstract contract ScholarshipCoreBase is Initializable {
     function revokeRole(bytes32 role, address account) external { if (msg.sender != admin) revert NotAdmin(); _roles[role][account] = false; emit RoleRevoked(role, account); }
     function hasRole(bytes32 role, address account) public view returns (bool) { return _roles[role][account]; }
     function hasBountyRole(address account) external view returns (bool) { return _roles[BOUNTY_ROLE][account]; }
-    modifier onlyRole(bytes32 role) { if (!_roles[role][msg.sender]) revert MissingRole(role, msg.sender); _; }
+
+    function _requireRole(bytes32 role) internal view { if (!_roles[role][msg.sender]) revert MissingRole(role, msg.sender); }
+    modifier onlyRole(bytes32 role) { _requireRole(role); _; }
 
     // ── External contracts ───────────────────────────────────────────────────
     IERC20                 public usdc;
@@ -100,6 +102,14 @@ abstract contract ScholarshipCoreBase is Initializable {
     mapping(uint256 => mapping(address => uint8))                             public retryCount;
     mapping(uint256 => address)                                               public programCommittee;
 
+    // ── Date management ──────────────────────────────────────────────────────
+    /// Extension counters per program (not on Program struct — avoids layout change)
+    mapping(uint256 => uint8) public applicationExtensionCount;
+    mapping(uint256 => uint8) public votingExtensionCount;
+
+    uint8   public constant MAX_EXTENSIONS        = 2;
+    uint256 public constant MAX_EXTENSION_DURATION = 30 days;
+
     // ── Events ───────────────────────────────────────────────────────────────
     event VoteCast(uint256 indexed programId, address indexed voter, address indexed candidate, uint256 weight);
     event ConfidenceStaked(uint256 indexed programId, address indexed voter, address indexed scholar, uint256 amount);
@@ -108,7 +118,12 @@ abstract contract ScholarshipCoreBase is Initializable {
     event ScholarCompleted(uint256 indexed programId, address indexed scholar);
     event ProgramCompleted(uint256 indexed programId);
     event ProgramStatusChanged(uint256 indexed programId, ScholarshipTypes.ProgramStatus newStatus);
+    event ScoreSubmitted(uint256 indexed programId, address indexed student, uint256 totalScore, address scoredBy);
     // Milestone events emitted from MilestoneManager now — no duplication here.
+    event ApplicationDeadlineExtended(uint256 indexed programId, uint256 oldEnd, uint256 newEnd, uint8 extensionCount);
+    event VotingDeadlineExtended(uint256 indexed programId, uint256 oldEnd, uint256 newEnd, uint8 extensionCount);
+    event AdminBypassStatusForced(uint256 indexed programId, ScholarshipTypes.ProgramStatus newStatus, address admin);
+    event AdminBypassDatesUpdated(uint256 indexed programId, uint256 appStart, uint256 appEnd, uint256 voteStart, uint256 voteEnd, address admin);
 
     // ── Errors ───────────────────────────────────────────────────────────────
     error ProgramNotFound();
@@ -127,14 +142,25 @@ abstract contract ScholarshipCoreBase is Initializable {
     error InvalidSortOrder();
     error OnlyInitiator();
     error ScholarNotActive();
+    error InvalidTimeline();
+    error AdminCannotForceTerminalStatus();
+    error CannotShortenDeadline();
+    error NewEndMustBeBeforeVotingStart();
+    error NewVotingEndMustBeAfterVotingStart();
+    error MaxExtensionsReached();
+    error ExtensionTooLong();
 
     // ── Modifiers ────────────────────────────────────────────────────────────
-    modifier programExists(uint256 programId) { if (programId == 0 || programId > _nextProgramId) revert ProgramNotFound(); _; }
-    modifier inStatus(uint256 programId, ScholarshipTypes.ProgramStatus expected) {
+    function _requireProgramExists(uint256 programId) internal view { if (programId == 0 || programId > _nextProgramId) revert ProgramNotFound(); }
+    modifier programExists(uint256 programId) { _requireProgramExists(programId); _; }
+
+    function _requireStatus(uint256 programId, ScholarshipTypes.ProgramStatus expected) internal view {
         if (programs[programId].status != expected) revert InvalidProgramStatus(expected, programs[programId].status);
-        _;
     }
-    modifier onlyInitiator(uint256 programId) { if (msg.sender != programs[programId].initiator) revert OnlyInitiator(); _; }
+    modifier inStatus(uint256 programId, ScholarshipTypes.ProgramStatus expected) { _requireStatus(programId, expected); _; }
+
+    function _requireInitiator(uint256 programId) internal view { if (msg.sender != programs[programId].initiator) revert OnlyInitiator(); }
+    modifier onlyInitiator(uint256 programId) { _requireInitiator(programId); _; }
 
     // ═══════════════════════════════════════════════════════════════════
     // PHASE 3 — VOTING (unchanged from v4)
@@ -371,9 +397,7 @@ abstract contract ScholarshipCoreBase is Initializable {
         if (status == ScholarshipTypes.StudentStatus.FROZEN && block.timestamp < globalFreezeUntil[wallet]) revert StudentFrozen(globalFreezeUntil[wallet]);
     }
 
-    function _requireStatus(uint256 programId, ScholarshipTypes.ProgramStatus expected) internal view {
-        if (programs[programId].status != expected) revert InvalidProgramStatus(expected, programs[programId].status);
-    }
+    // _requireStatus is defined above for the modifier, so we'll just remove the duplicate here.
 
     function _sumArray(uint256[] memory arr) internal pure returns (uint256 s) {
         for (uint256 i; i < arr.length; ) { s += arr[i]; unchecked { ++i; } }
@@ -393,5 +417,110 @@ abstract contract ScholarshipCoreBase is Initializable {
         if (s == ScholarshipTypes.StudentStatus.BLACKLISTED) return (false, "blacklisted");
         if (s == ScholarshipTypes.StudentStatus.FROZEN && block.timestamp < globalFreezeUntil[wallet]) return (false, "frozen");
         return (true, "");
+    }
+
+    function _setScore(uint256 programId, address applicant, uint256 academic, uint256 income, uint256 recommend, address scoredBy) internal {
+        ScholarshipTypes.ScoreWeights memory w = programs[programId].scoreWeights;
+        academic = academic > 100 ? 100 : academic; income = income > 100 ? 100 : income; recommend = recommend > 100 ? 100 : recommend;
+        uint256 sw = uint256(w.academicWeight) + w.incomeWeight + w.recommendWeight;
+        uint256 norm = sw > 0 ? ((academic * w.academicWeight + income * w.incomeWeight + recommend * w.recommendWeight) * ScholarshipTypes.SCORE_MAX) / (sw * 100) : 0;
+        scoreComponents[programId][applicant] = ScholarshipTypes.ScoreComponents({ academicScore: academic, incomeScore: income, recommendScore: recommend, isSubmitted: true, scoredBy: scoredBy });
+        applicants[programId][applicant].screeningScore = norm;
+        applicants[programId][applicant].totalScore = norm;
+        applicants[programId][applicant].scoreTimestamp = block.timestamp;
+        emit ScoreSubmitted(programId, applicant, norm, scoredBy);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DATE MANAGEMENT  (lives in base so ScholarshipCore stays under 24 KB)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * @notice Extend the application deadline. Initiator only.
+     *         - Only during APPLICATION_OPEN status
+     *         - Can only extend (not shorten)
+     *         - newEnd must be < votingStart
+     *         - Max 30 days per extension, max 2 extensions total
+     */
+    function extendApplicationDeadline(
+        uint256 programId,
+        uint256 newEnd
+    ) external programExists(programId) onlyInitiator(programId)
+      inStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN)
+    {
+        if (applicationExtensionCount[programId] >= MAX_EXTENSIONS) revert MaxExtensionsReached();
+        ScholarshipTypes.Program storage prog = programs[programId];
+        uint256 oldEnd = prog.applicationEnd;
+        if (newEnd <= oldEnd)              revert CannotShortenDeadline();
+        if (newEnd >= prog.votingStart)    revert NewEndMustBeBeforeVotingStart();
+        if (newEnd - oldEnd > MAX_EXTENSION_DURATION) revert ExtensionTooLong();
+        prog.applicationEnd = newEnd;
+        uint8 count = ++applicationExtensionCount[programId];
+        emit ApplicationDeadlineExtended(programId, oldEnd, newEnd, count);
+    }
+
+    /**
+     * @notice Extend the voting deadline. Initiator only.
+     *         - Only during VOTING status
+     *         - Can only extend (not shorten)
+     *         - Max 30 days per extension, max 2 extensions total
+     */
+    function extendVotingDeadline(
+        uint256 programId,
+        uint256 newEnd
+    ) external programExists(programId) onlyInitiator(programId)
+      inStatus(programId, ScholarshipTypes.ProgramStatus.VOTING)
+    {
+        if (votingExtensionCount[programId] >= MAX_EXTENSIONS) revert MaxExtensionsReached();
+        ScholarshipTypes.Program storage prog = programs[programId];
+        uint256 oldEnd = prog.votingEnd;
+        if (newEnd <= oldEnd)              revert CannotShortenDeadline();
+        if (newEnd <= prog.votingStart)    revert NewVotingEndMustBeAfterVotingStart();
+        if (newEnd - oldEnd > MAX_EXTENSION_DURATION) revert ExtensionTooLong();
+        prog.votingEnd = newEnd;
+        uint8 count = ++votingExtensionCount[programId];
+        emit VotingDeadlineExtended(programId, oldEnd, newEnd, count);
+    }
+
+    /**
+     * @notice ADMIN ONLY — force program to any status, skipping all checks.
+     *         Cannot force CANCELLED (use cancelProgram) or COMPLETED
+     *         (side-effects must run normally).
+     */
+    function adminForceStatus(
+        uint256 programId,
+        ScholarshipTypes.ProgramStatus newStatus
+    ) external programExists(programId) {
+        if (msg.sender != admin) revert NotAdmin();
+        if (newStatus == ScholarshipTypes.ProgramStatus.CANCELLED ||
+            newStatus == ScholarshipTypes.ProgramStatus.COMPLETED)
+            revert AdminCannotForceTerminalStatus();
+        programs[programId].status = newStatus;
+        emit AdminBypassStatusForced(programId, newStatus, msg.sender);
+        emit ProgramStatusChanged(programId, newStatus);
+    }
+
+    /**
+     * @notice ADMIN ONLY — overwrite all four timeline dates at once.
+     *         Resets extension counters so normal flow works cleanly after.
+     */
+    function adminUpdateDates(
+        uint256 programId,
+        uint256 appStart,
+        uint256 appEnd,
+        uint256 voteStart,
+        uint256 voteEnd
+    ) external programExists(programId) {
+        if (msg.sender != admin) revert NotAdmin();
+        if (appStart >= appEnd || appEnd >= voteStart || voteStart >= voteEnd)
+            revert InvalidTimeline();
+        ScholarshipTypes.Program storage prog = programs[programId];
+        prog.applicationStart = appStart;
+        prog.applicationEnd   = appEnd;
+        prog.votingStart      = voteStart;
+        prog.votingEnd        = voteEnd;
+        applicationExtensionCount[programId] = 0;
+        votingExtensionCount[programId]      = 0;
+        emit AdminBypassDatesUpdated(programId, appStart, appEnd, voteStart, voteEnd, msg.sender);
     }
 }

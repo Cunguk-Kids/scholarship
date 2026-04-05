@@ -4,8 +4,9 @@ import {
   v4Programs, v4Applicants, v4Scholars,
   v4Milestones, v4Votes, v4Disputes,
   v4Reputation, v4ConfidenceStakes,
+  v4CommitteeMembers,
 } from "@/db/schema";
-import { eq, or, desc, sql } from "drizzle-orm";
+import { eq, or, desc, and } from "drizzle-orm";
 
 export const dashboardRoute = new Hono();
 
@@ -20,6 +21,7 @@ export const dashboardRoute = new Hono();
  *   - Disputes (as BH or scholar)
  *   - Reputation balance
  *   - Confidence stakes
+ *   - Committee memberships (programs where wallet is an active committee member)
  */
 dashboardRoute.get("/:wallet", async (c) => {
   try {
@@ -82,6 +84,23 @@ dashboardRoute.get("/:wallet", async (c) => {
       .where(eq(v4Reputation.address, wallet))
       .limit(1);
 
+    // ── Committee memberships ──────────────────────────────────────────────────
+    // Find all programs where this wallet is an active committee member.
+    // This is the REAL source of truth — on-chain events via Ponder indexer.
+    const committeeMemberships = await db.select({
+      membership: v4CommitteeMembers,
+      program: v4Programs,
+    })
+      .from(v4CommitteeMembers)
+      .innerJoin(v4Programs, eq(v4CommitteeMembers.programId, v4Programs.id))
+      .where(and(
+        eq(v4CommitteeMembers.memberAddress, wallet),
+        eq(v4CommitteeMembers.isActive, true),
+      ))
+      .orderBy(desc(v4CommitteeMembers.addedAt));
+
+    const committeePrograms = committeeMemberships.map((m) => m.program);
+
     const totalReceived = scholarships.reduce(
       (sum, s) => sum + BigInt(s.scholar.totalReceived ?? "0"), 0n
     );
@@ -99,6 +118,7 @@ dashboardRoute.get("/:wallet", async (c) => {
           scholarshipsCount: scholarships.length,
           votesCount: votes.length,
           disputesCount: disputes.length,
+          committeeProgramsCount: committeePrograms.length,
           totalFundReceived: String(totalReceived),
           totalFundCreated: String(totalCreatedFund),
           repBalance: reputation?.repBalance ?? "0",
@@ -111,6 +131,7 @@ dashboardRoute.get("/:wallet", async (c) => {
         stakes,
         disputes,
         reputation: reputation ?? null,
+        committeePrograms,
       },
     });
   } catch (err) {

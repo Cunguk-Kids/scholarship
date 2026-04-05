@@ -54,7 +54,6 @@ const config = {
       type: "http",
       url: hardhat.rpcUrls.default.http[0],
       chainId: hardhat.id,
-      allowUnlimitedContractSize: true,
     },
     ganache: {
       type: "http",
