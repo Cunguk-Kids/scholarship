@@ -16,10 +16,17 @@ export function ExtendDeadlineModal({ isOpen, onClose, program }: Props) {
   
   const currentEnd = isAppOpen ? (program.applicationEnd ? Number(program.applicationEnd) : 0) : (program.votingEnd ? Number(program.votingEnd) : 0);
   
+  // Helper to ensure timestamp is in milliseconds (API vs Contract mix)
+  const ensureMs = (ts: number) => {
+    if (!ts) return 0;
+    // If > 10^11, it's already in ms (e.g. 1712400000000)
+    return ts > 100000000000 ? ts : ts * 1000;
+  };
+
   // Start with default next day
   const [newEndStr, setNewEndStr] = useState(() => {
     if (!currentEnd) return '';
-    const d = new Date((currentEnd + 86400) * 1000);
+    const d = new Date(ensureMs(currentEnd) + 86400000);
     // Format YYYY-MM-DDThh:mm
     return d.toISOString().slice(0, 16);
   });
@@ -48,7 +55,7 @@ export function ExtendDeadlineModal({ isOpen, onClose, program }: Props) {
   };
 
   const isPending = appPending || votePending;
-  const oldDate = new Date(currentEnd * 1000).toLocaleString();
+  const oldDate = new Date(ensureMs(currentEnd)).toLocaleString();
 
   if (!isAppOpen && !isVoting) {
     return (
@@ -85,7 +92,7 @@ export function ExtendDeadlineModal({ isOpen, onClose, program }: Props) {
           <input
             type="datetime-local"
             required
-            min={new Date((currentEnd + 1) * 1000).toISOString().slice(0, 16)}
+            min={new Date(ensureMs(currentEnd) + 60000).toISOString().slice(0, 16)}
             value={newEndStr}
             onChange={(e) => setNewEndStr(e.target.value)}
             className="w-full border-2 border-black p-2 rounded focus:outline-none focus:border-skpurple"
