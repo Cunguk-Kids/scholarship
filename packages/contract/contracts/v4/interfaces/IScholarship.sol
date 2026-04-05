@@ -136,7 +136,9 @@ interface IMilestoneManager {
         uint256 programId,
         address scholar,
         uint256[] calldata amounts,
-        string[] calldata descs
+        string[] calldata descs,
+        string[] calldata providers,
+        string[] calldata externalIds
     ) external;
 
     /**

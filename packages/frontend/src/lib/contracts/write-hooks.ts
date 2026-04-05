@@ -179,17 +179,34 @@ export function useSelectWinners() {
     programId: bigint,
     ranked: `0x${string}`[],
     amounts: bigint[][],
-    descs: string[][]
+    descs: string[][],
+    providers: string[][],
+    externalIds: string[][]
   ) => {
     writeContract({
       address: CORE_ADDRESS as `0x${string}`,
       abi: scholarshipCoreAbi,
       functionName: "selectWinners",
-      args: [programId, ranked, amounts, descs],
+      args: [programId, ranked, amounts, descs, providers, externalIds],
     });
   };
 
   return { selectWinners, isPending, isSuccess, error, hash };
+}
+
+export function useToggleOpenDonation() {
+  const { writeContract, isPending, isSuccess, error, hash } = useTxHook();
+
+  const toggle = (programId: bigint, open: boolean) => {
+    writeContract({
+      address: CORE_ADDRESS as `0x${string}`,
+      abi: scholarshipCoreAbi,
+      functionName: "toggleOpenDonation",
+      args: [programId, open],
+    });
+  };
+
+  return { toggle, isPending, isSuccess, error, hash };
 }
 
 // ── Donations ─────────────────────────────────────────────────────────────────
@@ -350,13 +367,15 @@ export function useProposeMilestone() {
     programId: bigint,
     kind: number,
     amount: bigint,
-    descriptionCID: string
+    descriptionCID: string,
+    provider: string,
+    externalId: string
   ) => {
     writeContract({
       address: MILESTONE_ADDRESS as `0x${string}`,
       abi: milestoneManagerAbi,
       functionName: "proposeMilestone",
-      args: [programId, kind, amount, descriptionCID],
+      args: [programId, kind, amount, descriptionCID, provider, externalId],
     });
   };
 

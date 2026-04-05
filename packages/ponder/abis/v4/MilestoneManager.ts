@@ -179,6 +179,18 @@ export const milestoneManagerAbi = [
         "internalType": "enum ScholarshipTypes.MilestoneKind",
         "name": "kind",
         "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "externalId",
+        "type": "string"
       }
     ],
     "name": "MilestoneCreated",
@@ -223,6 +235,18 @@ export const milestoneManagerAbi = [
         "internalType": "enum ScholarshipTypes.MilestoneKind",
         "name": "kind",
         "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "externalId",
+        "type": "string"
       }
     ],
     "name": "MilestoneProposed",
@@ -344,6 +368,16 @@ export const milestoneManagerAbi = [
       {
         "internalType": "string[]",
         "name": "descs",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "providers",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "externalIds",
         "type": "string[]"
       }
     ],
@@ -470,6 +504,16 @@ export const milestoneManagerAbi = [
           {
             "internalType": "string",
             "name": "proofCID",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "provider",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "externalId",
             "type": "string"
           },
           {
@@ -652,6 +696,16 @@ export const milestoneManagerAbi = [
         "type": "string"
       },
       {
+        "internalType": "string",
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "externalId",
+        "type": "string"
+      },
+      {
         "internalType": "enum ScholarshipTypes.MilestoneStatus",
         "name": "status",
         "type": "uint8"
@@ -743,6 +797,16 @@ export const milestoneManagerAbi = [
       {
         "internalType": "string",
         "name": "descriptionCID",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "externalId",
         "type": "string"
       }
     ],

@@ -102,6 +102,7 @@ export const scholarshipCoreHandlers = () => {
         applicationEnd: toDate(prog.applicationEnd),
         votingStart: toDate(prog.votingStart),
         votingEnd: toDate(prog.votingEnd),
+        openDonation: Boolean(prog.openDonation),
       }).onConflictDoUpdate({
         target: [v4Programs.blockchainId],
         set: {
@@ -115,6 +116,7 @@ export const scholarshipCoreHandlers = () => {
           applicationEnd: toDate(prog.applicationEnd),
           votingStart: toDate(prog.votingStart),
           votingEnd: toDate(prog.votingEnd),
+          openDonation: Boolean(prog.openDonation),
           updatedAt: new Date(),
         },
       });
@@ -145,6 +147,19 @@ export const scholarshipCoreHandlers = () => {
       await sendSseToAll("main", { step: "ProgramStatusChanged", data: { programId, status }, status: true, blockHash: event.block.hash });
     } catch (err) {
       logger.error({ err }, "ProgramStatusChanged handler error");
+    }
+  });
+
+  ponder.on("ScholarshipCore:OpenDonationToggled", async ({ event }) => {
+    try {
+      const { programId, open } = event.args;
+      await db.update(v4Programs)
+        .set({ openDonation: open, updatedAt: new Date() })
+        .where(eq(v4Programs.blockchainId, Number(programId)));
+
+      await sendSseToAll("main", { step: "OpenDonationToggled", data: { programId, open }, status: true, blockHash: event.block.hash });
+    } catch (err) {
+      logger.error({ err }, "OpenDonationToggled handler error");
     }
   });
 
@@ -1155,10 +1170,19 @@ export const milestoneManagerHandlers = () => {
         scholarWallet: String(scholar),
         kind: kindStr,
         requiresProof: kindStr !== "MANDATORY",
+        provider: String(event.args.provider),
+        externalId: String(event.args.externalId),
         status: "PENDING",
       }).onConflictDoUpdate({
         target: [v4Milestones.blockchainId],
-        set: { kind: kindStr, requiresProof: kindStr !== "MANDATORY", status: "PENDING", updatedAt: new Date() },
+        set: { 
+          kind: kindStr, 
+          requiresProof: kindStr !== "MANDATORY", 
+          provider: String(event.args.provider),
+          externalId: String(event.args.externalId),
+          status: "PENDING", 
+          updatedAt: new Date() 
+        },
       });
 
       await insertBlock({ event, eventName: "MilestoneManager:MilestoneCreated" });
@@ -1202,10 +1226,19 @@ export const milestoneManagerHandlers = () => {
         kind: kindStr,
         requiresProof: kindStr !== "MANDATORY",
         proposedBy: String(scholar),
+        provider: String(event.args.provider),
+        externalId: String(event.args.externalId),
         status: "PROPOSED",
       }).onConflictDoUpdate({
         target: [v4Milestones.blockchainId],
-        set: { status: "PROPOSED", requiresProof: kindStr !== "MANDATORY", proposedBy: String(scholar), updatedAt: new Date() },
+        set: { 
+          status: "PROPOSED", 
+          requiresProof: kindStr !== "MANDATORY", 
+          proposedBy: String(scholar), 
+          provider: String(event.args.provider),
+          externalId: String(event.args.externalId),
+          updatedAt: new Date() 
+        },
       });
 
       await insertBlock({ event, eventName: "MilestoneManager:MilestoneProposed" });

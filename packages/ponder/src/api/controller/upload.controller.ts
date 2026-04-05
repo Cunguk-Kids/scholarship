@@ -8,9 +8,9 @@ export const uploadController = async (c: Context) => {
   let body: Record<string, any>;
   if (ct.includes("application/json")) {
     const raw = await c.req.json();
-    // Flatten: { meta: { name, description, ... } } → { name, description, ... }
+    // Flatten: { meta: { name, description, ... }, type } → { name, description, ..., type }
     body = typeof raw?.meta === "object" && raw.meta !== null
-      ? { ...raw.meta }
+      ? { ...raw.meta, type: raw.type }
       : raw ?? {};
   } else {
     body = await c.req.parseBody();
@@ -32,8 +32,16 @@ export const uploadController = async (c: Context) => {
     parsedAttributes = [rawAttributes as Record<string, any>];
   }
 
+  const type = typeof body.type === "string" ? body.type : "metadata";
+  const rawName = typeof body.name === "string" ? body.name : "untitled";
+  
+  // Enforce Skoolchein naming convention
+  const finalName = rawName.startsWith("skoolchein-") 
+    ? rawName 
+    : `skoolchein-${type}-${rawName}`;
+
   const metadata = {
-    name:        typeof body.name        === "string" ? body.name        : "Untitled",
+    name:        finalName,
     description: typeof body.description === "string" ? body.description : "",
     attributes:  parsedAttributes,
   };
@@ -51,7 +59,13 @@ export const uploadERC721Controller = async (c: Context) => {
     return c.json({ error: "File is required and must be a valid image." }, 400);
   }
 
-  const name = typeof body.name === "string" ? body.name : "Untitled";
+  const rawName = typeof body.name === "string" ? body.name : "untitled";
+  
+  // Enforce Skoolchein naming convention for NFTs
+  const nftName = rawName.startsWith("skoolchein-nft-") 
+    ? rawName 
+    : `skoolchein-nft-${rawName}`;
+
   const description = typeof body.description === "string" ? body.description : "";
   const external_url = typeof body.external_url === "string" ? body.external_url : "";
   const imageURL = typeof body.image === "string" ? body.image : "";

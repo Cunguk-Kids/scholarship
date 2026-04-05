@@ -29,6 +29,7 @@ export function ApplyPage() {
     academicScore: 85,
     incomeScore: 90,
     recommendScore: 80,
+    hackquestId: '',
   });
 
   useEffect(() => {
@@ -43,10 +44,16 @@ export function ApplyPage() {
 
     try {
       // Mock uploading parts to IPFS
-      const pRes = await uploadToIPFS({ meta: { content: formData.profileText } });
-      const eRes = await uploadToIPFS({ meta: { content: formData.essayText } });
-      const dRes = await uploadToIPFS({ meta: { content: formData.documentText } });
-      const rRes = await uploadToIPFS({ meta: { content: formData.recommendText } });
+      const pRes = await uploadToIPFS({ 
+        meta: { 
+          content: formData.profileText,
+          hackquestId: formData.hackquestId, // Link student identity
+        }, 
+        type: 'application-profile' 
+      });
+      const eRes = await uploadToIPFS({ meta: { content: formData.essayText }, type: 'application-essay' });
+      const dRes = await uploadToIPFS({ meta: { content: formData.documentText }, type: 'application-doc' });
+      const rRes = await uploadToIPFS({ meta: { content: formData.recommendText }, type: 'application-recommend' });
 
       const profileCID = pRes?.metaCID || 'QmProfileFallback123';
       const essayCID = eRes?.metaCID || 'QmEssayFallback123';
@@ -137,6 +144,18 @@ export function ApplyPage() {
                       rows={2}
                       value={formData.profileText}
                       onChange={(e) => setFormData((p) => ({ ...p, profileText: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-1">
+                      HackQuest ID (Email or Username) <span className="text-skpurple text-xs font-normal">(Optional for auto-verify)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="user@example.com"
+                      className="w-full border-2 border-black p-2 rounded focus:outline-skpurple"
+                      value={formData.hackquestId}
+                      onChange={(e) => setFormData((p) => ({ ...p, hackquestId: e.target.value }))}
                     />
                   </div>
                   <div>

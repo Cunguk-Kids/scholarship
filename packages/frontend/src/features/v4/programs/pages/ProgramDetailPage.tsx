@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
+import { useAccount } from 'wagmi';
+import { useToggleOpenDonation } from '@/lib/contracts/write-hooks';
 import { DonateModal } from '../components/DonateModal';
 import { useParams, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -42,6 +44,8 @@ export function ProgramDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   const [isDonateOpen, setIsDonateOpen] = useState(false);
+  const { address: userAddress } = useAccount();
+  const { toggle, isPending: isToggling } = useToggleOpenDonation();
   const { data: program, isLoading } = useProgram(id);
   const { data: meta } = useQuery({
     queryKey: ['ipfs-meta', program?.metadataCID],
@@ -114,22 +118,36 @@ export function ProgramDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
+          {userAddress === program.initiator && (
+            <div className="flex items-center gap-2 bg-gray-100 border-2 border-black rounded-xl px-3 py-1">
+              <span className="text-[10px] font-bold uppercase">Public:</span>
+              <button
+                disabled={isToggling}
+                onClick={() => toggle(BigInt(program.blockchainId), !program.openDonation)}
+                className={`w-10 h-5 rounded-full border-2 border-black relative transition-colors ${program.openDonation ? 'bg-skgreen' : 'bg-gray-400'}`}
+              >
+                <div className={`absolute top-0.5 w-3 h-3 bg-white border border-black rounded-full transition-all ${program.openDonation ? 'left-[22px]' : 'left-0.5'}`} />
+              </button>
+            </div>
+          )}
           {program.status === 'APPLICATION_OPEN' && (
             <Link to="/apply/$id" params={{ id: program.id }}>
               <NeoButton label="Apply Now" variant="primary" size="md" />
             </Link>
           )}
-          {program.status === 'VOTING' && (
+          {program.status === 'VOTING' && program.openDonation && (
             <Link to="/vote">
               <NeoButton label="Cast Vote" variant="primary" size="md" />
             </Link>
           )}
-          <NeoButton
-            label="Donate"
-            variant="success"
-            size="md"
-            onClick={() => setIsDonateOpen(true)}
-          />
+          {program.openDonation && (
+            <NeoButton
+              label="Donate"
+              variant="success"
+              size="md"
+              onClick={() => setIsDonateOpen(true)}
+            />
+          )}
         </div>
       </div>
 

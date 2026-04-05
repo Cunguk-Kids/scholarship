@@ -3,7 +3,7 @@ import { api } from "../client";
 import type {
   Program, ProgramDetail, Applicant, Scholar, Milestone,
   Vote, ConfidenceStake, Dispute, Reputation, DashboardData,
-  PaginatedResponse, SingleResponse, AdminOverview,
+  PaginatedResponse, SingleResponse, AdminOverview, ExternalLearning,
 } from "../types";
 
 // ── Query key factory ─────────────────────────────────────────────────────────
@@ -22,6 +22,7 @@ export const queryKeys = {
   reputation: (addr: string)   => ["reputation", addr] as const,
   dashboard:  (wallet: string) => ["dashboard", wallet] as const,
   adminOverview: () => ["adminOverview"] as const,
+  externalProgress: (wallet: string, provider?: string, externalId?: string) => ["externalProgress", wallet, provider, externalId] as const,
 
   // Nested under program
   programApplicants: (id: string) => ["program", id, "applicants"] as const,
@@ -231,5 +232,20 @@ export function useAdminOverview() {
       const { data } = await api.get<SingleResponse<AdminOverview>>("/admin");
       return data.data;
     },
+  });
+}
+
+// ── External Learning ─────────────────────────────────────────────────────────
+
+export function useExternalProgress(wallet: string, provider?: string, externalId?: string) {
+  return useQuery({
+    queryKey: queryKeys.externalProgress(wallet, provider, externalId),
+    queryFn: async () => {
+      const { data } = await api.get<ExternalLearning | ExternalLearning[]>("/learning/progress", {
+        params: { address: wallet, provider, externalId },
+      });
+      return data;
+    },
+    enabled: !!wallet && !!provider,
   });
 }

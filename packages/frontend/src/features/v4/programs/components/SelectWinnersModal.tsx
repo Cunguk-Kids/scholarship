@@ -9,6 +9,8 @@ import type { Applicant } from '@/lib/api/types';
 interface MilestoneConfig {
   amount: string;
   description: string;
+  provider: string;   // e.g. 'hackquest', 'udemy'
+  externalId: string; // e.g. 'course_123'
 }
 
 interface WinnerConfig {
@@ -24,7 +26,12 @@ interface Props {
   targetWinners: number;
 }
 
-const DEFAULT_MILESTONE: MilestoneConfig = { amount: '10', description: '' };
+const DEFAULT_MILESTONE: MilestoneConfig = { 
+  amount: '10', 
+  description: '',
+  provider: '',
+  externalId: ''
+};
 
 export function SelectWinnersModal({ isOpen, onClose, programId, shortlisted, targetWinners }: Props) {
   const { selectWinners, isPending, isSuccess } = useSelectWinners();
@@ -85,7 +92,10 @@ export function SelectWinnersModal({ isOpen, onClose, programId, shortlisted, ta
       w.milestones.map((m) => parseUnits(m.amount || '0', 6))
     );
     const descs = winners.map((w) => w.milestones.map((m) => m.description));
-    selectWinners(BigInt(programId), ranked, amounts, descs);
+    const providers = winners.map((w) => w.milestones.map((m) => m.provider));
+    const externalIds = winners.map((w) => w.milestones.map((m) => m.externalId));
+    
+    selectWinners(BigInt(programId), ranked, amounts, descs, providers, externalIds);
   };
 
   const totalFundNeeded = winners.reduce(
@@ -124,14 +134,12 @@ export function SelectWinnersModal({ isOpen, onClose, programId, shortlisted, ta
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 border border-black flex items-center justify-center text-xs mt-2">
                       {mi + 1}
                     </div>
-                    <div className="grid grid-cols-2 gap-2 flex-1">
+                    <div className="grid grid-cols-4 gap-2 flex-1">
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Amount (USDC)</label>
+                        <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Amount</label>
                         <input
                           type="number"
-                          min="0"
-                          step="1"
-                          className="w-full border-2 border-black rounded p-1.5 text-sm focus:outline-none focus:border-skblue"
+                          className="w-full border-2 border-black rounded p-1.5 text-xs focus:outline-none focus:border-skblue"
                           value={m.amount}
                           onChange={(e) => updateMilestone(wi, mi, 'amount', e.target.value)}
                         />
@@ -140,10 +148,33 @@ export function SelectWinnersModal({ isOpen, onClose, programId, shortlisted, ta
                         <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Description</label>
                         <input
                           type="text"
-                          className="w-full border-2 border-black rounded p-1.5 text-sm focus:outline-none focus:border-skblue"
+                          className="w-full border-2 border-black rounded p-1.5 text-xs focus:outline-none focus:border-skblue"
                           value={m.description}
                           onChange={(e) => updateMilestone(wi, mi, 'description', e.target.value)}
-                          placeholder="e.g. Semester 1 report"
+                          placeholder="e.g. Intro Course"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Platform</label>
+                        <select
+                          className="w-full border-2 border-black rounded p-1.5 text-xs focus:outline-none focus:border-skblue h-[34px]"
+                          value={m.provider}
+                          onChange={(e) => updateMilestone(wi, mi, 'provider', e.target.value)}
+                        >
+                          <option value="">Manual</option>
+                          <option value="hackquest">HackQuest</option>
+                          <option value="udemy">Udemy</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">External ID</label>
+                        <input
+                          type="text"
+                          className="w-full border-2 border-black rounded p-1.5 text-xs focus:outline-none focus:border-skblue"
+                          value={m.externalId}
+                          onChange={(e) => updateMilestone(wi, mi, 'externalId', e.target.value)}
+                          placeholder="e.g. HQ-101"
+                          disabled={!m.provider}
                         />
                       </div>
                     </div>

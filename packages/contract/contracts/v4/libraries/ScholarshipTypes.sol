@@ -147,10 +147,11 @@ library ScholarshipTypes {
         uint256 activeScholarCount;
         uint256 totalVotes;
 
-        // Milestone config — set once at createProgram()
         // Max optional milestones a scholar may propose for this program.
         // 0 means optional milestones are disabled.
         uint8   maxOptionalMilestones;
+        // If false, public donations and voting are disabled.
+        bool    openDonation;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -236,6 +237,8 @@ library ScholarshipTypes {
         address         approvedBy;     // committee member who approved; address(0) if n/a
         string          descriptionCID; // IPFS: what must be delivered
         string          proofCID;       // IPFS: scholar-submitted proof
+        string          provider;       // External learning provider (e.g. 'hackquest')
+        string          externalId;     // External course/mission ID
         MilestoneStatus status;
         uint48          submittedAt;
         uint48          disputeDeadline;

@@ -17,8 +17,13 @@ type UploadResponse = {
 export async function uploadToIPFS({
   file,
   meta,
-}: UploadPayload): Promise<UploadResponse> {
+  type = "metadata",
+}: UploadPayload & { type?: string }): Promise<UploadResponse> {
   const formData = new FormData();
+
+  // Enforce Skoolchein naming convention for Pinata/IPFS metadata
+  const fileName = `skoolchein-${type}-${Date.now()}`;
+  formData.append("name", fileName);
 
   if (file) {
     formData.append("file", file);
@@ -50,7 +55,13 @@ export async function uploadToIPFSNFT(props: {
 }): Promise<UploadResponse> {
   const form = new FormData();
   form.set("file", props.file);
-  form.set("name", props.name);
+  
+  // Enforce Skoolchein naming convention for NFT naming
+  const nftName = props.name.startsWith("skoolchein-") 
+    ? props.name 
+    : `skoolchein-nft-${props.name}`;
+    
+  form.set("name", nftName);
   form.set("description", props.description);
   form.set("external_url", "https://skoolchain.edu/");
   form.set(

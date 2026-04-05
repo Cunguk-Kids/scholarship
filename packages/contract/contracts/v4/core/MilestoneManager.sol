@@ -77,8 +77,8 @@ contract MilestoneManager is Initializable {
     ITreasuryMin private _treasuryContract;
 
     // ── Events ───────────────────────────────────────────────────────────────
-    event MilestoneCreated(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind);
-    event MilestoneProposed(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind);
+    event MilestoneCreated(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind, string provider, string externalId);
+    event MilestoneProposed(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind, string provider, string externalId);
     event MilestoneApproved(uint256 indexed id, address approvedBy);
     event MilestoneRejected(uint256 indexed id, address rejectedBy);
     event MilestoneSubmitted(uint256 indexed id, address indexed scholar, string proofCID);
@@ -148,13 +148,17 @@ contract MilestoneManager is Initializable {
         uint256 programId,
         address scholar,
         uint256[] calldata amounts,
-        string[] calldata descs
+        string[] calldata descs,
+        string[] calldata providers,
+        string[] calldata externalIds
     ) external onlyCore {
         uint256 n = amounts.length;
         uint8 maxMandatory = _coreContract.getProtocolConfig().maxMandatoryMilestones;
         if (n == 0 || n > maxMandatory) revert TooManyMandatory();
-        // descs length must match or be 0 (all empty)
+        // arrays length must match or be 0
         bool hasDescs = descs.length == n;
+        bool hasProviders = providers.length == n;
+        bool hasExternalIds = externalIds.length == n;
 
         for (uint256 i; i < n; ) {
             uint256 mId = ++_nextId;
@@ -168,6 +172,8 @@ contract MilestoneManager is Initializable {
                 approvedBy:     address(0),   // n/a for mandatory
                 descriptionCID: hasDescs ? descs[i] : "",
                 proofCID:       "",
+                provider:       hasProviders ? providers[i] : "",
+                externalId:     hasExternalIds ? externalIds[i] : "",
                 status:         ScholarshipTypes.MilestoneStatus.PENDING,
                 submittedAt:    0,
                 disputeDeadline:0,
@@ -175,7 +181,7 @@ contract MilestoneManager is Initializable {
             });
             milestoneOwner[mId] = scholar;
             mandatoryIds[programId][scholar].push(mId);
-            emit MilestoneCreated(mId, programId, scholar, ScholarshipTypes.MilestoneKind.MANDATORY);
+            emit MilestoneCreated(mId, programId, scholar, ScholarshipTypes.MilestoneKind.MANDATORY, hasProviders ? providers[i] : "", hasExternalIds ? externalIds[i] : "");
             unchecked { ++i; }
         }
     }
@@ -201,7 +207,9 @@ contract MilestoneManager is Initializable {
         uint256 programId,
         ScholarshipTypes.MilestoneKind kind,
         uint256 amount,
-        string calldata descriptionCID
+        string calldata descriptionCID,
+        string calldata provider,
+        string calldata externalId
     ) external nonReentrant {
         if (kind == ScholarshipTypes.MilestoneKind.MANDATORY) revert WrongStatus(ScholarshipTypes.MilestoneStatus.PROPOSED);
 
@@ -232,6 +240,8 @@ contract MilestoneManager is Initializable {
             approvedBy:      address(0),
             descriptionCID:  descriptionCID,
             proofCID:        "",
+            provider:        provider,
+            externalId:      externalId,
             status:          ScholarshipTypes.MilestoneStatus.PROPOSED,
             submittedAt:     0,
             disputeDeadline: 0,
@@ -239,7 +249,7 @@ contract MilestoneManager is Initializable {
         });
         milestoneOwner[mId] = msg.sender;
         optionalIds[programId][msg.sender].push(mId);
-        emit MilestoneProposed(mId, programId, msg.sender, kind);
+        emit MilestoneProposed(mId, programId, msg.sender, kind, provider, externalId);
     }
 
     // ═══════════════════════════════════════════════════════════════════

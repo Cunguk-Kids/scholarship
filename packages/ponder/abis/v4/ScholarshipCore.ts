@@ -194,6 +194,11 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
+    "name": "PublicParticipationDisabled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "QuorumNotMet",
     "type": "error"
   },
@@ -445,6 +450,25 @@ export const scholarshipCoreAbi = [
       }
     ],
     "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "open",
+        "type": "bool"
+      }
+    ],
+    "name": "OpenDonationToggled",
     "type": "event"
   },
   {
@@ -1547,6 +1571,11 @@ export const scholarshipCoreAbi = [
             "internalType": "uint8",
             "name": "maxOptionalMilestones",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "openDonation",
+            "type": "bool"
           }
         ],
         "internalType": "struct ScholarshipTypes.Program",
@@ -2222,6 +2251,11 @@ export const scholarshipCoreAbi = [
         "internalType": "uint8",
         "name": "maxOptionalMilestones",
         "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "openDonation",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -2442,6 +2476,44 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "pid",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "ranked",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[][]",
+        "name": "amounts",
+        "type": "uint256[][]"
+      },
+      {
+        "internalType": "string[][]",
+        "name": "descs",
+        "type": "string[][]"
+      },
+      {
+        "internalType": "string[][]",
+        "name": "providers",
+        "type": "string[][]"
+      },
+      {
+        "internalType": "string[][]",
+        "name": "externalIds",
+        "type": "string[][]"
+      }
+    ],
+    "name": "selectWinners",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_bounty",
         "type": "address"
@@ -2624,6 +2696,24 @@ export const scholarshipCoreAbi = [
       }
     ],
     "name": "submitCommitteeScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "pid",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "open",
+        "type": "bool"
+      }
+    ],
+    "name": "toggleOpenDonation",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

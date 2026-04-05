@@ -49,6 +49,7 @@ export interface Program {
   applicationEnd: string | null;
   votingStart: string | null;
   votingEnd: string | null;
+  openDonation: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -108,6 +109,8 @@ export interface Milestone {
   submittedAt: string | null;
   disputeDeadline: string | null;
   completedAt: string | null;
+  provider: string | null;
+  externalId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -170,6 +173,17 @@ export interface Reputation {
   updatedAt: string;
 }
 
+export interface ExternalLearning {
+  id: string;
+  address: string;
+  provider: string;
+  externalId: string;
+  progress: number;
+  status: string;
+  lastUpdated: string;
+}
+
+
 export interface DashboardSummary {
   programsCreatedCount: number;
   applicationsCount: number;
@@ -230,9 +244,11 @@ export interface ProgramMetadata {
 }
 
 export interface ApplicantProfile {
-  fullName: string;
-  email: string;
-  studentId: string;
+  fullName?: string;
+  email?: string;
+  studentId?: string;
   bio?: string;
   photoUrl?: string;
+  content?: string; // profileText
+  hackquestId?: string;
 }

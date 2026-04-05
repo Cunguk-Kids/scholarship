@@ -23,7 +23,7 @@ import type {
   Applicant,
 } from '@/lib/api/types';
 import { formatCurrency, formatUSDC } from '@/util/currency';
-import { useProgramApplicants, useProgramMilestones } from '@/lib/api/hooks';
+import { useProgramApplicants, useProgramMilestones, useExternalProgress } from '@/lib/api/hooks';
 
 import { CommitteeManagementModal } from '../../programs/components/CommitteeManagementModal';
 import { ResolveShortlistModal } from '../../programs/components/ResolveShortlistModal';
@@ -377,6 +377,16 @@ function ScholarCard({
       new Date(m.disputeDeadline).getTime() < Date.now(),
   );
 
+  // External Progress Hook - Now dynamic from on-chain data
+  const { data: externalProg, refetch: syncProgress, isFetching: syncing } = useExternalProgress(
+    scholar.wallet,
+    nextPending?.provider ?? undefined,
+    nextPending?.externalId ?? undefined
+  );
+
+  const isVerified = (externalProg as any)?.progress >= 100 || (externalProg as any)?.status === 'COMPLETED';
+  const providerLabel = nextPending?.provider === 'hackquest' ? 'HackQuest' : nextPending?.provider === 'udemy' ? 'Udemy' : nextPending?.provider;
+
   return (
     <NeoCard>
       <NeoCardBody className="flex flex-col gap-4">
@@ -411,25 +421,49 @@ function ScholarCard({
                 {scholar.freezeUntil ? new Date(scholar.freezeUntil).toLocaleDateString() : '—'}
               </div>
             ) : nextPending ? (
-              nextPending.kind === 'MANDATORY' && !nextPending.requiresProof ? (
-                <NeoButton
-                  label={
-                    isSubmitting ? 'Triggering…' : `Trigger Delivery #${nextPending.blockchainId}`
-                  }
-                  variant="primary"
-                  fullWidth
-                  loading={isSubmitting}
-                  disabled={isSubmitting}
-                  onClick={() => submitMilestone(BigInt(nextPending.blockchainId), 'NO_PROOF_REQUIRED')}
-                />
-              ) : (
-                <NeoButton
-                  label={`Submit Proof #${nextPending.blockchainId}`}
-                  variant="primary"
-                  fullWidth
-                  onClick={() => setSubmitMilestoneFor(nextPending)}
-                />
-              )
+              <div className="flex flex-col gap-2">
+                {nextPending.provider && (
+                  <NeoButton
+                    label={syncing ? 'Syncing...' : `Sync with ${providerLabel}`}
+                    variant="ghost"
+                    size="sm"
+                    fullWidth
+                    onClick={() => syncProgress()}
+                    loading={syncing}
+                  />
+                )}
+                
+                {isVerified ? (
+                  <NeoButton
+                    label={isSubmitting ? 'Verifying...' : `Claim Milestone #${nextPending.blockchainId} ✓`}
+                    variant="success"
+                    fullWidth
+                    loading={isSubmitting}
+                    disabled={isSubmitting}
+                    onClick={() => submitMilestone(BigInt(nextPending.blockchainId), `AUTO_VERIFIED_VIA_${nextPending.provider?.toUpperCase()}`)}
+                  />
+                ) : (
+                  nextPending.kind === 'MANDATORY' && !nextPending.requiresProof ? (
+                    <NeoButton
+                      label={
+                        isSubmitting ? 'Triggering…' : `Trigger Delivery #${nextPending.blockchainId}`
+                      }
+                      variant="primary"
+                      fullWidth
+                      loading={isSubmitting}
+                      disabled={isSubmitting}
+                      onClick={() => submitMilestone(BigInt(nextPending.blockchainId), 'NO_PROOF_REQUIRED')}
+                    />
+                  ) : (
+                    <NeoButton
+                      label={`Submit Proof #${nextPending.blockchainId}`}
+                      variant="primary"
+                      fullWidth
+                      onClick={() => setSubmitMilestoneFor(nextPending)}
+                    />
+                  )
+                )}
+              </div>
             ) : (
               <NeoButton label="All Milestones Done ✓" variant="ghost" disabled fullWidth />
             )}

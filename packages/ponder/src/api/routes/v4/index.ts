@@ -8,6 +8,7 @@ import { disputesRoute } from "./disputes.route";
 import { reputationRoute } from "./reputation.route";
 import { dashboardRoute } from "./dashboard.route";
 import { adminRoute } from "./admin.route";
+import { learningRoute } from "./learning.route";
 
 /**
  * v4 REST API — all routes mounted under /v4/ prefix.
@@ -39,3 +40,4 @@ v4Routes.route("/disputes", disputesRoute);
 v4Routes.route("/reputation", reputationRoute);
 v4Routes.route("/dashboard", dashboardRoute);
 v4Routes.route("/admin", adminRoute);
+v4Routes.route("/learning", learningRoute);

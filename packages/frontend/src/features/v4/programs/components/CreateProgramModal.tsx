@@ -59,7 +59,7 @@ export function CreateProgramModal({ isOpen, onClose }: Props) {
         description: formData.description,
         organization: formData.organization,
       };
-      const res = await uploadToIPFS({ meta });
+      const res = await uploadToIPFS({ meta, type: 'program' });
       const cid = res?.metaCID || 'QmFallbackTestingCID1234567890abcdefg';
       setMetaCID(cid);
       setStep('approve');

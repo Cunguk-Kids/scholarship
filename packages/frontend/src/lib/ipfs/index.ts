@@ -33,7 +33,10 @@ export async function fetchApplicantProfile(cid: string): Promise<ApplicantProfi
 }
 
 /** Upload data to IPFS via the Ponder backend proxy */
-export async function uploadToIPFS(payload: { meta: unknown }): Promise<{ metaCID: string } | null> {
+export async function uploadToIPFS(payload: {
+  meta: unknown;
+  type?: string;
+}): Promise<{ metaCID: string } | null> {
   try {
     const { data } = await rawApi.post("/ipfs/upload", payload);
     return data;

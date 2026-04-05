@@ -163,6 +163,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     error MaxExtensionsReached();
     error ExtensionTooLong();
     error TooEarly();
+    error PublicParticipationDisabled();
 
     // ── Shared Helpers ───────────────────────────────────────────────────────
     function _requireProgramExists(uint256 programId) internal view { if (programId == 0 || programId > _nextProgramId) revert ProgramNotFound(); }
@@ -251,6 +252,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     function _voteForCandidate(uint256 pid, address candidate) internal {
         _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
         ScholarshipTypes.Program storage p = programs[pid];
+        if (!p.openDonation) revert PublicParticipationDisabled();
         if (block.timestamp < p.votingStart || block.timestamp > p.votingEnd) revert TooEarly();
         if (applicants[pid][candidate].status != ScholarshipTypes.ApplicationStatus.SHORTLISTED) revert CandidateNotShortlisted();
         if (reputation.isVotingPowerLocked(msg.sender)) revert VotingPowerLocked();
@@ -341,7 +343,14 @@ abstract contract ScholarshipCoreBase is Initializable {
         emit ScholarSlashed(wallet, pid, dtype);
     }
 
-    function _selectWinners(uint256 pid, address[] calldata ranked, uint256[][] calldata amounts, string[][] calldata descs) internal {
+    function _selectWinners(
+        uint256 pid,
+        address[] calldata ranked,
+        uint256[][] calldata amounts,
+        string[][] calldata descs,
+        string[][] calldata providers,
+        string[][] calldata externalIds
+    ) internal {
         _requireInitiator(pid);
         _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
         if (block.timestamp < programs[pid].votingEnd) revert VotingNotEnded();
@@ -367,7 +376,7 @@ abstract contract ScholarshipCoreBase is Initializable {
                 totalReceived: 0
             });
 
-            milestoneManager.createMandatoryBatch(pid, s, amounts[i], descs[i]);
+            milestoneManager.createMandatoryBatch(pid, s, amounts[i], descs[i], providers[i], externalIds[i]);
             emit ScholarSelected(pid, s);
         }
     }

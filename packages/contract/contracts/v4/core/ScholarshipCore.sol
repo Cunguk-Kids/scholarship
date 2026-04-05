@@ -32,6 +32,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
     event StudentShortlisted(uint256 indexed programId, address indexed student, uint256 score);
     event StudentScreenedOut(uint256 indexed programId, address indexed student, uint256 score, bool locked);
     event ProgramCancelled(uint256 indexed programId);
+    event OpenDonationToggled(uint256 indexed programId, bool open);
 
     // ── Errors ───────────────────────────────────────────────────────────────
     error InvalidScoreWeights();
@@ -142,7 +143,8 @@ contract ScholarshipCore is ScholarshipCoreBase {
             shortlistedCount:      0,
             activeScholarCount:    0,
             maxOptionalMilestones: maxOptionalMilestones,
-            totalVotes:            0
+            totalVotes:            0,
+            openDonation:          true // Default to true
         });
 
         if (committeeContract != address(0)) {
@@ -209,6 +211,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
     function donate(uint256 programId, uint256 grossAmount, string calldata nftMetadataURI)
         external nonReentrant programExists(programId) inStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN)
     {
+        if (!programs[programId].openDonation) revert PublicParticipationDisabled();
         if (grossAmount < _config.minDonation) revert InsufficientDonation();
         ScholarshipTypes.VoterInfo storage voter = voterInfo[programId][msg.sender];
         if (voter.donatedAmount > 0) revert AlreadyDonated();
@@ -289,6 +292,22 @@ contract ScholarshipCore is ScholarshipCoreBase {
         bool locked = app.retryCount >= _config.maxRetry;
         app.status = locked ? ScholarshipTypes.ApplicationStatus.LOCKED : ScholarshipTypes.ApplicationStatus.SCREENED_OUT;
         emit StudentScreenedOut(programId, student, app.screeningScore, locked);
+    }
+
+    function toggleOpenDonation(uint256 pid, bool open) external programExists(pid) onlyInitiator(pid) {
+        programs[pid].openDonation = open;
+        emit OpenDonationToggled(pid, open);
+    }
+
+    function selectWinners(
+        uint256 pid,
+        address[] calldata ranked,
+        uint256[][] calldata amounts,
+        string[][] calldata descs,
+        string[][] calldata providers,
+        string[][] calldata externalIds
+    ) external nonReentrant programExists(pid) {
+        _selectWinners(pid, ranked, amounts, descs, providers, externalIds);
     }
 
     function cancelProgram(uint256 pid) external nonReentrant programExists(pid) onlyInitiator(pid) {

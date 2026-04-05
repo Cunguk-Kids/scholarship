@@ -52,6 +52,7 @@ export const v4Programs = pgTable("v4_programs", {
   applicationEnd: timestamp("application_end", { withTimezone: true }),
   votingStart: timestamp("voting_start", { withTimezone: true }),
   votingEnd: timestamp("voting_end", { withTimezone: true }),
+  openDonation: boolean("open_donation").default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
@@ -118,6 +119,8 @@ export const v4Milestones = pgTable("v4_milestones", {
   submittedAt: timestamp("submitted_at", { withTimezone: true }),
   disputeDeadline: timestamp("dispute_deadline", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
+  provider: varchar("provider", { length: 50 }),
+  externalId: varchar("external_id", { length: 255 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
@@ -270,6 +273,23 @@ export const v4BountyHunters = pgTable("v4_bounty_hunters", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
+
+// ══════════════════════════════════════════════════════════════════════════════
+// V4 TABLES — External Learning Progress
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Tracks progress from 3rd party platforms (HackQuest/Udemy) via Webhooks */
+export const v4ExternalLearning = pgTable("v4_external_learning", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  address: varchar("address", { length: 42 }).notNull(),
+  provider: varchar("provider", { length: 50 }).notNull(), // "hackquest", "udemy", etc.
+  externalId: varchar("external_id", { length: 255 }).notNull(), // course_id
+  progress: integer("progress").default(0),
+  status: varchar("status", { length: 20 }).default("IN_PROGRESS"), // "COMPLETED", "FAILED"
+  lastUpdated: timestamp("last_updated", { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  uniqProg: unique().on(t.address, t.provider, t.externalId),
+}));
 
 // ══════════════════════════════════════════════════════════════════════════════
 // RELATIONS

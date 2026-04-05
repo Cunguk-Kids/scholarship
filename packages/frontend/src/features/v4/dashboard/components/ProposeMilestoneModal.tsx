@@ -17,6 +17,8 @@ export function ProposeMilestoneModal({ isOpen, onClose, programId }: Props) {
   const [kind, setKind] = useState<MilestoneKind>(1);
   const [amount, setAmount] = useState('5');
   const [description, setDescription] = useState('');
+  const [provider, setProvider] = useState('');
+  const [externalId, setExternalId] = useState('');
   const [step, setStep] = useState<'form' | 'uploading' | 'tx'>('form');
 
   const { proposeMilestone, isPending, isSuccess } = useProposeMilestone();
@@ -44,7 +46,9 @@ export function ProposeMilestoneModal({ isOpen, onClose, programId }: Props) {
         BigInt(programId),
         kind,
         parseUnits(amount, 6),
-        descCID
+        descCID,
+        provider,
+        externalId
       );
     } catch (err) {
       console.error(err);
@@ -131,6 +135,33 @@ export function ProposeMilestoneModal({ isOpen, onClose, programId }: Props) {
               <p className="text-xs text-gray-500 mt-1">Must not exceed the program's remaining unallocated fund.</p>
             </div>
 
+            {/* Platform Selection */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-bold mb-1">Platform</label>
+                <select
+                  className="w-full border-2 border-black p-3 rounded-lg focus:outline-none focus:border-skpurple bg-white h-[50px]"
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value)}
+                >
+                  <option value="">Manual / Other</option>
+                  <option value="hackquest">HackQuest</option>
+                  <option value="udemy">Udemy</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">External ID</label>
+                <input
+                  type="text"
+                  className="w-full border-2 border-black p-3 rounded-lg focus:outline-none focus:border-skpurple"
+                  value={externalId}
+                  onChange={(e) => setExternalId(e.target.value)}
+                  placeholder="e.g. HQ-ADV-01"
+                  disabled={!provider}
+                />
+              </div>
+            </div>
+
             {/* Description */}
             <div>
               <label className="block text-sm font-bold mb-1">
@@ -138,7 +169,7 @@ export function ProposeMilestoneModal({ isOpen, onClose, programId }: Props) {
               </label>
               <textarea
                 required
-                rows={4}
+                rows={3}
                 className="w-full border-2 border-black p-3 rounded-lg focus:outline-none focus:border-skpurple resize-none"
                 placeholder="Describe what you will deliver and how it benefits your scholarship goals…"
                 value={description}
