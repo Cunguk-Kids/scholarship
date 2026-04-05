@@ -128,38 +128,22 @@ export function DashboardPage() {
 
       {/* Role Panels */}
       <div className="space-y-12">
-        {roles.includes('INITIATOR') && <InitiatorPanel programs={programsCreated} />}
+        <InitiatorPanel 
+          programs={programsCreated} 
+          onOpenCreateModal={() => setIsCreateModalOpen(true)}
+        />
 
-        {roles.includes('SCHOLAR') && (
-          <StudentPanel scholarships={scholarships} dashboardData={dashboard} />
-        )}
+        <StudentPanel scholarships={scholarships} dashboardData={dashboard} />
 
-        {roles.includes('VOTER') && (
-          <VoterPanel votes={votes} stakes={stakes} dashboardData={dashboard} />
-        )}
+        <VoterPanel votes={votes} stakes={stakes} dashboardData={dashboard} />
 
-        {roles.includes('BOUNTY_HUNTER') && (
-          <BountyHunterPanel disputes={disputes} dashboardData={dashboard} />
-        )}
+        <BountyHunterPanel disputes={disputes} dashboardData={dashboard} />
 
-        {roles.includes('COMMITTEE') && (
-          <CommitteePanel
-            programIds={committeeProgramIds}
-            dashboardData={dashboard}
-            address={address}
-          />
-        )}
-
-        {roles.length === 0 && (
-          <NeoCard className="bg-skyellow-light text-center">
-            <NeoCardBody>
-              <h2 className="font-paytone text-2xl mb-2">Welcome to Scholarship V4</h2>
-              <p className="text-gray-700">
-                Explore programs to apply as a student, donate to earn voting power, or create your own program.
-              </p>
-            </NeoCardBody>
-          </NeoCard>
-        )}
+        <CommitteePanel
+          programIds={committeeProgramIds}
+          dashboardData={dashboard}
+          address={address}
+        />
       </div>
 
       <CreateProgramModal

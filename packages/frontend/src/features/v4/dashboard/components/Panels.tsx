@@ -38,7 +38,13 @@ import { BountyHunterRaiseDisputeModal } from './BountyHunterRaiseDisputeModal';
 // Initiator Panel
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function InitiatorPanel({ programs }: { programs: Program[] }) {
+export function InitiatorPanel({ 
+  programs, 
+  onOpenCreateModal 
+}: { 
+  programs: Program[]; 
+  onOpenCreateModal: () => void;
+}) {
   const [manageCommitteeFor, setManageCommitteeFor] = useState<number | null>(null);
   const [resolveShortlistFor, setResolveShortlistFor] = useState<Program | null>(null);
   const [selectWinnersFor, setSelectWinnersFor] = useState<Program | null>(null);
@@ -49,15 +55,28 @@ export function InitiatorPanel({ programs }: { programs: Program[] }) {
         Initiated Programs
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {programs.map((p) => (
-          <InitiatorProgramCard
-            key={p.id}
-            program={p}
-            onManageCommittee={() => setManageCommitteeFor(p.blockchainId)}
-            onResolveShortlist={() => setResolveShortlistFor(p)}
-            onSelectWinners={() => setSelectWinnersFor(p)}
-          />
-        ))}
+        {programs.length === 0 ? (
+          <NeoCard hoverable={false} className="bg-skpink-light/30 border-dashed col-span-2">
+            <NeoCardBody className="py-12 text-center">
+              <p className="text-5xl mb-4">🚀</p>
+              <h3 className="font-paytone text-2xl mb-2 text-skpink-dark">Launch Your Program</h3>
+              <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                Ready to fund some talent? Create your first scholarship program and set up your own committee.
+              </p>
+              <NeoButton label="Create Program" variant="primary" size="lg" onClick={onOpenCreateModal} />
+            </NeoCardBody>
+          </NeoCard>
+        ) : (
+          programs.map((p) => (
+            <InitiatorProgramCard
+              key={p.id}
+              program={p}
+              onManageCommittee={() => setManageCommitteeFor(p.blockchainId)}
+              onResolveShortlist={() => setResolveShortlistFor(p)}
+              onSelectWinners={() => setSelectWinnersFor(p)}
+            />
+          ))
+        )}
       </div>
 
       {manageCommitteeFor !== null && (
@@ -299,17 +318,30 @@ export function StudentPanel({
         My Scholarships
       </h2>
       <div className="space-y-4">
-        {scholarships.map(({ scholar }) => {
-          const myMilestones = dashboardData.milestones.filter((m) => m.scholarId === scholar.id);
-          return (
-            <ScholarCard
-              key={scholar.id}
-              scholar={scholar}
-              milestones={myMilestones}
-              onProposeMilestone={() => setProposeMilestoneFor(scholar.blockchainProgramId)}
-            />
-          );
-        })}
+        {scholarships.length === 0 ? (
+          <NeoCard hoverable={false} className="bg-skblue-light/30 border-dashed">
+            <NeoCardBody className="py-10 text-center">
+              <p className="text-4xl mb-2">🎓</p>
+              <p className="font-bold text-lg mb-1">No Active Scholarships</p>
+              <p className="text-sm text-gray-500 mb-4">Find and apply to programs that match your educational path.</p>
+              <Link to="/programs">
+                <NeoButton label="Browse Programs" variant="primary" size="sm" />
+              </Link>
+            </NeoCardBody>
+          </NeoCard>
+        ) : (
+          scholarships.map(({ scholar }) => {
+            const myMilestones = dashboardData.milestones.filter((m) => m.scholarId === scholar.id);
+            return (
+              <ScholarCard
+                key={scholar.id}
+                scholar={scholar}
+                milestones={myMilestones}
+                onProposeMilestone={() => setProposeMilestoneFor(scholar.blockchainProgramId)}
+              />
+            );
+          })
+        )}
       </div>
 
       {proposeMilestoneFor !== null && (
@@ -500,8 +532,23 @@ export function VoterPanel({
       <h2 className="font-paytone text-3xl mb-4 border-l-8 border-skpurple pl-4 leading-none">
         Voter Activity
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NeoCard>
+      
+      {votes.length === 0 && stakes.length === 0 ? (
+        <NeoCard hoverable={false} className="bg-skpurple-light/30 border-dashed">
+          <NeoCardBody className="py-12 text-center">
+            <p className="text-5xl mb-4">🗳️</p>
+            <h3 className="font-paytone text-2xl mb-2 text-skpurple-dark">Shape the Future</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              You haven't cast any votes yet. Participating in selection and staking on scholars helps maintain the protocol's integrity.
+            </p>
+            <Link to="/vote">
+              <NeoButton label="Discovery Active Program" variant="primary" size="lg" />
+            </Link>
+          </NeoCardBody>
+        </NeoCard>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <NeoCard>
           <NeoCardBody>
             <h3 className="font-bold mb-4">Cast Votes ({votes.length})</h3>
             {votes.length === 0 ? (
@@ -545,7 +592,8 @@ export function VoterPanel({
             )}
           </NeoCardBody>
         </NeoCard>
-      </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -577,41 +625,52 @@ export function BountyHunterPanel({
         <NeoButton label="+ Raise Dispute" variant="danger" size="sm" onClick={() => setRaiseDisputeOpen(true)} />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <NeoCard hoverable={false} className="bg-skgreen-light">
-          <NeoCardBody className="p-3 text-center">
-            <p className="text-xs text-gray-500 font-bold uppercase">Disputes Won</p>
-            <p className="font-paytone text-2xl text-skgreen">{wonCount}</p>
-          </NeoCardBody>
-        </NeoCard>
-        <NeoCard hoverable={false} className="bg-skred-light">
-          <NeoCardBody className="p-3 text-center">
-            <p className="text-xs text-gray-500 font-bold uppercase">Disputes Lost</p>
-            <p className="font-paytone text-2xl text-skred">{lostCount}</p>
-          </NeoCardBody>
-        </NeoCard>
-        <NeoCard hoverable={false} className="bg-skyellow-light">
-          <NeoCardBody className="p-3 text-center">
-            <p className="text-xs text-gray-500 font-bold uppercase">Active</p>
-            <p className="font-paytone text-2xl text-skyellow-dark">{activeCount}</p>
-          </NeoCardBody>
-        </NeoCard>
-        <NeoCard hoverable={false}>
-          <NeoCardBody className="p-3 text-center">
-            <p className="text-xs text-gray-500 font-bold uppercase">Total Rewards</p>
-            <p className="font-paytone text-2xl">${totalReward.toFixed(2)}</p>
-          </NeoCardBody>
-        </NeoCard>
-      </div>
-
       {disputes.length === 0 ? (
-        <p className="text-gray-500">No disputes raised yet.</p>
+        <NeoCard hoverable={false} className="bg-skgreen-light/30 border-dashed mb-6">
+          <NeoCardBody className="py-12 text-center">
+            <p className="text-5xl mb-4">⚖️</p>
+            <h3 className="font-paytone text-2xl mb-2 text-skgreen-dark">Guard the Protocol</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Bounty Hunters keep the protocol safe by flagging fraud. Stake your USDC to challenge suspicious milestones and earn rewards.
+            </p>
+            <NeoButton label="Start Bounty Hunting" variant="primary" size="lg" onClick={() => setRaiseDisputeOpen(true)} />
+          </NeoCardBody>
+        </NeoCard>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {disputes.map((d) => (
-            <BountyDisputeCard key={d.id} dispute={d} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <NeoCard hoverable={false} className="bg-skgreen-light">
+              <NeoCardBody className="p-3 text-center">
+                <p className="text-xs text-gray-500 font-bold uppercase">Disputes Won</p>
+                <p className="font-paytone text-2xl text-skgreen">{wonCount}</p>
+              </NeoCardBody>
+            </NeoCard>
+            <NeoCard hoverable={false} className="bg-skred-light">
+              <NeoCardBody className="p-3 text-center">
+                <p className="text-xs text-gray-500 font-bold uppercase">Disputes Lost</p>
+                <p className="font-paytone text-2xl text-skred">{lostCount}</p>
+              </NeoCardBody>
+            </NeoCard>
+            <NeoCard hoverable={false} className="bg-skyellow-light">
+              <NeoCardBody className="p-3 text-center">
+                <p className="text-xs text-gray-500 font-bold uppercase">Active</p>
+                <p className="font-paytone text-2xl text-skyellow-dark">{activeCount}</p>
+              </NeoCardBody>
+            </NeoCard>
+            <NeoCard hoverable={false}>
+              <NeoCardBody className="p-3 text-center">
+                <p className="text-xs text-gray-500 font-bold uppercase">Total Rewards</p>
+                <p className="font-paytone text-2xl">${totalReward.toFixed(2)}</p>
+              </NeoCardBody>
+            </NeoCard>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {disputes.map((d) => (
+              <BountyDisputeCard key={d.id} dispute={d} />
+            ))}
+          </div>
+        </>
       )}
 
       {raiseDisputeOpen && (
@@ -704,11 +763,24 @@ export function CommitteePanel({
       <h2 className="font-paytone text-3xl mb-4 border-l-8 border-skblue pl-4 leading-none">
         Committee Duties
       </h2>
-      <div className="space-y-4">
-        {programIds.map((pid) => (
-          <CommitteeProgramSection key={pid} programId={pid} dashboardData={dashboardData} />
-        ))}
-      </div>
+      {programIds.length === 0 ? (
+        <NeoCard hoverable={false} className="bg-skyellow-light/30 border-dashed">
+          <NeoCardBody className="py-12 text-center">
+            <p className="text-5xl mb-4">🏛️</p>
+            <h3 className="font-paytone text-2xl mb-2 text-skyellow-dark">Committee Seat</h3>
+            <p className="text-gray-600 mb-4 max-w-md mx-auto">
+              You are not a member of any scholarship committee yet. Committee members manage applications and approve milestones.
+            </p>
+            <p className="text-xs text-gray-500 uppercase font-black">Waiting for Invitation...</p>
+          </NeoCardBody>
+        </NeoCard>
+      ) : (
+        <div className="space-y-4">
+          {programIds.map((pid) => (
+            <CommitteeProgramSection key={pid} programId={pid} dashboardData={dashboardData} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

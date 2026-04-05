@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { Navigate } from "@tanstack/react-router";
-import { useAdminOverview, usePrograms, useApplicants, useScholars, Program } from "@/lib/api";
+import { useAdminOverview, usePrograms, useApplicants, useScholars, type Program } from "@/lib/api";
 import { v4Addresses, scholarshipCoreAbi } from "@/constants/contractsV4";
 import { parseAbi } from "viem";
 import { NeoButton } from "@/components/ui/NeoButton";
@@ -122,8 +122,8 @@ export function AdminDashboardPage() {
                     </td>
                     <td className="p-4 font-bold border-r-2 border-black">${formatUnits(BigInt(p.totalFund || "0"), 6)}</td>
                     <td className="p-4 text-xs font-bold border-r-2 border-black text-gray-600">
-                      {new Date(p.applicationStart).toLocaleDateString()} -<br/>
-                      {new Date(p.votingEnd).toLocaleDateString()}
+                      {p.applicationStart ? new Date(p.applicationStart).toLocaleDateString() : "N/A"} -<br/>
+                      {p.votingEnd ? new Date(p.votingEnd).toLocaleDateString() : "N/A"}
                     </td>
                     <td className="p-4 font-bold text-xs border-r-2 border-black text-blue-600 underline">
                       {p.initiator.slice(0,6)}...{p.initiator.slice(-4)}
@@ -224,6 +224,41 @@ export function AdminDashboardPage() {
               <ContractItem label="TreasuryVault" address={v4Addresses.ScholarshipTreasury} />
               <ContractItem label="Bounty/Dispute" address={v4Addresses.ScholarshipBounty} />
               <ContractItem label="Reputation (NFT)" address={v4Addresses.ScholarshipReputation} />
+            </div>
+          </div>
+
+          <div className="md:col-span-2 bg-white border-4 border-black rounded-2xl neo-shadow-sm overflow-hidden">
+            <h2 className="text-xl font-black p-4 border-b-4 border-black bg-blue-100">Revenue Breakdown by Program</h2>
+            <div className="max-h-[400px] overflow-y-auto">
+              <table className="w-full text-left">
+                <thead className="sticky top-0 bg-gray-50 border-b-2 border-black">
+                  <tr className="text-xs uppercase font-black text-gray-500">
+                    <th className="p-3">Prog ID</th>
+                    <th className="p-3 text-right">Revenue Collected (USDC)</th>
+                    <th className="p-3 text-right">Total Fund (USDC)</th>
+                    <th className="p-3 text-right">Fee Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {programsData?.data.filter(p => Number(p.protocolFeeCollected) > 0).sort((a, b) => Number(b.protocolFeeCollected) - Number(a.protocolFeeCollected)).map(p => (
+                    <tr key={p.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="p-3 font-bold">#{p.blockchainId}</td>
+                      <td className="p-3 text-right font-paytone text-blue-600">${formatUnits(BigInt(p.protocolFeeCollected), 6)}</td>
+                      <td className="p-3 text-right text-sm text-gray-600">${formatUnits(BigInt(p.totalFund), 6)}</td>
+                      <td className="p-3 text-right">
+                        <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
+                          {((Number(p.protocolFeeCollected) / Number(p.totalFund)) * 100).toFixed(2)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {programsData?.data.filter(p => Number(p.protocolFeeCollected) > 0).length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-gray-400 italic">No revenue collected yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
