@@ -1,15 +1,4 @@
-import {
-  scholarshipCoreHandlers,
-  scholarshipTreasuryHandlers,
-  scholarshipBountyHandlers,
-  scholarshipReputationHandlers,
-  committeeGovernanceHandlers,
-  milestoneManagerHandlers,
-} from "./handlers/scholarship-v4";
+import { registerV4Handlers } from "./handlers/v4";
 
-scholarshipCoreHandlers();
-scholarshipTreasuryHandlers();
-scholarshipBountyHandlers();
-scholarshipReputationHandlers();
-committeeGovernanceHandlers();
-milestoneManagerHandlers();
+// Register all v4 protocol handlers
+registerV4Handlers();

@@ -66,21 +66,18 @@ export const uploadERC721Controller = async (c: Context) => {
     ? rawName 
     : `skoolchein-nft-${rawName}`;
 
+  const name = typeof body.name === "string" ? body.name : "Untitled NFT";
   const description = typeof body.description === "string" ? body.description : "";
   const external_url = typeof body.external_url === "string" ? body.external_url : "";
   const imageURL = typeof body.image === "string" ? body.image : "";
+
+  // Parse attributes from body
+  let parsedAttributes: any[] = [];
   const attributesRaw = body.attributes;
-
-  let parsedAttributes: Record<string, any>[] = [];
-
   try {
     if (typeof attributesRaw === "string") {
       const parsed = JSON.parse(attributesRaw);
-      if (isArray(parsed)) {
-        parsedAttributes = parsed;
-      } else if (isObject(parsed)) {
-        parsedAttributes = [parsed];
-      }
+      parsedAttributes = isArray(parsed) ? parsed : isObject(parsed) ? [parsed] : [];
     } else if (isArray(attributesRaw)) {
       parsedAttributes = attributesRaw;
     } else if (isObject(attributesRaw)) {
