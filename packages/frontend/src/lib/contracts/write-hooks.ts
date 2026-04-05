@@ -1,5 +1,5 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseUnits } from "viem";
+import { parseUnits, stringToHex } from "viem";
 import {
   scholarshipCoreAbi,
   scholarshipAdminAbi,
@@ -183,11 +183,14 @@ export function useSelectWinners() {
     providers: string[][],
     externalIds: string[][]
   ) => {
+    const hexProviders = providers.map(row => row.map(s => stringToHex(s || "", { size: 32 })));
+    const hexExternalIds = externalIds.map(row => row.map(s => stringToHex(s || "", { size: 32 })));
+
     writeContract({
       address: CORE_ADDRESS as `0x${string}`,
       abi: scholarshipCoreAbi,
       functionName: "selectWinners",
-      args: [programId, ranked, amounts, descs, providers, externalIds],
+      args: [programId, ranked, amounts, descs, hexProviders, hexExternalIds],
     });
   };
 
@@ -375,7 +378,14 @@ export function useProposeMilestone() {
       address: MILESTONE_ADDRESS as `0x${string}`,
       abi: milestoneManagerAbi,
       functionName: "proposeMilestone",
-      args: [programId, kind, amount, descriptionCID, provider, externalId],
+      args: [
+        programId,
+        kind,
+        amount,
+        descriptionCID,
+        stringToHex(provider || "", { size: 32 }),
+        stringToHex(externalId || "", { size: 32 })
+      ],
     });
   };
 

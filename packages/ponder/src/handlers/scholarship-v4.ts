@@ -1,6 +1,7 @@
 import { ponder } from "ponder:registry";
 import { db } from "@/db";
 import { and, eq, sql } from "drizzle-orm";
+import { hexToString } from "viem";
 import {
   v4Programs, v4Applicants, v4Scholars,
   v4Milestones, v4Votes, v4ConfidenceStakes,
@@ -1170,16 +1171,16 @@ export const milestoneManagerHandlers = () => {
         scholarWallet: String(scholar),
         kind: kindStr,
         requiresProof: kindStr !== "MANDATORY",
-        provider: String(event.args.provider),
-        externalId: String(event.args.externalId),
+        provider: event.args.provider === "0x0000000000000000000000000000000000000000000000000000000000000000" ? "" : hexToString(event.args.provider, { size: 32 }).replace(/\0/g, ""),
+        externalId: event.args.externalId === "0x0000000000000000000000000000000000000000000000000000000000000000" ? "" : hexToString(event.args.externalId, { size: 32 }).replace(/\0/g, ""),
         status: "PENDING",
       }).onConflictDoUpdate({
         target: [v4Milestones.blockchainId],
         set: { 
           kind: kindStr, 
           requiresProof: kindStr !== "MANDATORY", 
-          provider: String(event.args.provider),
-          externalId: String(event.args.externalId),
+          provider: event.args.provider === "0x0000000000000000000000000000000000000000000000000000000000000000" ? "" : hexToString(event.args.provider, { size: 32 }).replace(/\0/g, ""),
+          externalId: event.args.externalId === "0x0000000000000000000000000000000000000000000000000000000000000000" ? "" : hexToString(event.args.externalId, { size: 32 }).replace(/\0/g, ""),
           status: "PENDING", 
           updatedAt: new Date() 
         },
@@ -1226,8 +1227,8 @@ export const milestoneManagerHandlers = () => {
         kind: kindStr,
         requiresProof: kindStr !== "MANDATORY",
         proposedBy: String(scholar),
-        provider: String(event.args.provider),
-        externalId: String(event.args.externalId),
+        provider: event.args.provider === "0x0000000000000000000000000000000000000000000000000000000000000000" ? "" : hexToString(event.args.provider, { size: 32 }).replace(/\0/g, ""),
+        externalId: event.args.externalId === "0x0000000000000000000000000000000000000000000000000000000000000000" ? "" : hexToString(event.args.externalId, { size: 32 }).replace(/\0/g, ""),
         status: "PROPOSED",
       }).onConflictDoUpdate({
         target: [v4Milestones.blockchainId],
@@ -1235,8 +1236,8 @@ export const milestoneManagerHandlers = () => {
           status: "PROPOSED", 
           requiresProof: kindStr !== "MANDATORY", 
           proposedBy: String(scholar), 
-          provider: String(event.args.provider),
-          externalId: String(event.args.externalId),
+          provider: event.args.provider === "0x0000000000000000000000000000000000000000000000000000000000000000" ? "" : hexToString(event.args.provider, { size: 32 }).replace(/\0/g, ""),
+          externalId: event.args.externalId === "0x0000000000000000000000000000000000000000000000000000000000000000" ? "" : hexToString(event.args.externalId, { size: 32 }).replace(/\0/g, ""),
           updatedAt: new Date() 
         },
       });

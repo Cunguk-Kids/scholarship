@@ -117,6 +117,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     mapping(uint256 => mapping(address => ScholarshipTypes.VoterInfo))        public voterInfo;
     mapping(uint256 => mapping(address => uint8))                             public retryCount;
     mapping(uint256 => address)                                               public programCommittee;
+    mapping(uint256 => uint256)                                               public programCompletedScholars;
 
     mapping(uint256 => uint8) public applicationExtensionCount;
     mapping(uint256 => uint8) public votingExtensionCount;
@@ -193,9 +194,9 @@ abstract contract ScholarshipCoreBase is Initializable {
         uint256 sw = uint256(w.academicWeight) + w.incomeWeight + w.recommendWeight;
         uint256 norm = sw > 0 ? ((a * w.academicWeight + i * w.incomeWeight + r * w.recommendWeight) * ScholarshipTypes.SCORE_MAX) / (sw * 100) : 0;
         scoreComponents[programId][applicant] = ScholarshipTypes.ScoreComponents({ academicScore: a, incomeScore: i, recommendScore: r, isSubmitted: true, scoredBy: scoredBy });
-        applicants[programId][applicant].screeningScore = norm;
-        applicants[programId][applicant].totalScore = norm;
-        applicants[programId][applicant].scoreTimestamp = block.timestamp;
+        applicants[programId][applicant].screeningScore = uint32(norm);
+        applicants[programId][applicant].totalScore = uint32(norm);
+        applicants[programId][applicant].scoreTimestamp = uint48(block.timestamp);
         emit ScoreSubmitted(programId, applicant, norm, scoredBy);
     }
 
@@ -218,7 +219,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     function _adminUpdateDates(uint256 pid, uint256 aS, uint256 aE, uint256 vS, uint256 vE) internal {
         if (aS >= aE || aE >= vS || vS >= vE) revert InvalidTimeline();
         ScholarshipTypes.Program storage prog = programs[pid];
-        prog.applicationStart = aS; prog.applicationEnd = aE; prog.votingStart = vS; prog.votingEnd = vE;
+        prog.applicationStart = uint48(aS); prog.applicationEnd = uint48(aE); prog.votingStart = uint48(vS); prog.votingEnd = uint48(vE);
         applicationExtensionCount[pid] = 0; votingExtensionCount[pid] = 0;
         emit AdminBypassDatesUpdated(pid, aS, aE, vS, vE, msg.sender);
     }
@@ -230,7 +231,7 @@ abstract contract ScholarshipCoreBase is Initializable {
         if (nE <= oE) revert CannotShortenDeadline();
         if (nE >= prog.votingStart) revert NewEndMustBeBeforeVotingStart();
         if (nE - oE > MAX_EXTENSION_DURATION) revert ExtensionTooLong();
-        prog.applicationEnd = nE;
+        prog.applicationEnd = uint48(nE);
         uint8 count = ++applicationExtensionCount[pid];
         emit ApplicationDeadlineExtended(pid, oE, nE, count);
     }
@@ -242,7 +243,7 @@ abstract contract ScholarshipCoreBase is Initializable {
         if (nE <= oE) revert CannotShortenDeadline();
         if (nE <= prog.votingStart) revert NewVotingEndMustBeAfterVotingStart();
         if (nE - oE > MAX_EXTENSION_DURATION) revert ExtensionTooLong();
-        prog.votingEnd = nE;
+        prog.votingEnd = uint48(nE);
         uint8 count = ++votingExtensionCount[pid];
         emit VotingDeadlineExtended(pid, oE, nE, count);
     }
@@ -253,7 +254,7 @@ abstract contract ScholarshipCoreBase is Initializable {
         _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
         ScholarshipTypes.Program storage p = programs[pid];
         if (!p.openDonation) revert PublicParticipationDisabled();
-        if (block.timestamp < p.votingStart || block.timestamp > p.votingEnd) revert TooEarly();
+        if (block.timestamp < uint256(p.votingStart) || block.timestamp > uint256(p.votingEnd)) revert TooEarly();
         if (applicants[pid][candidate].status != ScholarshipTypes.ApplicationStatus.SHORTLISTED) revert CandidateNotShortlisted();
         if (reputation.isVotingPowerLocked(msg.sender)) revert VotingPowerLocked();
         
@@ -269,8 +270,8 @@ abstract contract ScholarshipCoreBase is Initializable {
             hasClaimedYield: false
         });
 
-        applicants[pid][candidate].voteScore += power;
-        programs[pid].totalVotes += power;
+        applicants[pid][candidate].voteScore += uint128(power);
+        programs[pid].totalVotes += uint128(power);
 
         emit VoteCast(pid, msg.sender, candidate, power);
     }
@@ -281,6 +282,7 @@ abstract contract ScholarshipCoreBase is Initializable {
         if (v.votedFor != scholar) revert MustVoteBeforeStaking();
         if (v.confidenceStake > 0) revert ConfidenceStakeAlreadyExists();
         
+        if (!programs[pid].openDonation) revert PublicParticipationDisabled();
         uint256 netDonation = programs[pid].totalFund; 
         if (amount > netDonation) revert ConfidenceStakeExceedsDonation();
         
@@ -290,7 +292,7 @@ abstract contract ScholarshipCoreBase is Initializable {
         emit ConfidenceStaked(pid, msg.sender, scholar, amount);
     }
 
-    function _onMilestoneCompleted(uint256 pid, address scholarAddr, uint256 mid, uint256 amount, ScholarshipTypes.MilestoneKind kind) internal {
+    function _onMilestoneCompleted(uint256 pid, address scholarAddr, uint256 /* mid */, uint256 amount, ScholarshipTypes.MilestoneKind kind) internal {
         ScholarshipTypes.Scholar storage s = scholars[scholarAddr][pid];
         if (s.status != ScholarshipTypes.StudentStatus.ACTIVE) revert ScholarNotActive();
 
@@ -305,6 +307,7 @@ abstract contract ScholarshipCoreBase is Initializable {
 
         if (s.mandatoryCompleted == s.mandatoryTotal) {
             s.status = ScholarshipTypes.StudentStatus.COMPLETED;
+            programCompletedScholars[pid]++;
             reputation.mint(scholarAddr, 100, "Scholarship Completion");
             emit ScholarCompleted(pid, scholarAddr);
             _checkProgramCompletion(pid);
@@ -318,14 +321,7 @@ abstract contract ScholarshipCoreBase is Initializable {
 
     function _checkProgramCompletion(uint256 pid) internal {
         ScholarshipTypes.Program storage p = programs[pid];
-        uint256 count;
-        address[] memory winners = _shortlist[pid]; 
-        for (uint256 i; i < winners.length; i++) {
-            if (scholars[winners[i]][pid].status == ScholarshipTypes.StudentStatus.COMPLETED) {
-                count++;
-            }
-        }
-        if (count == p.targetWinners) {
+        if (programCompletedScholars[pid] >= p.targetWinners) {
             p.status = ScholarshipTypes.ProgramStatus.COMPLETED;
             emit ProgramStatusChanged(pid, ScholarshipTypes.ProgramStatus.COMPLETED);
             emit ProgramCompleted(pid);
@@ -348,8 +344,8 @@ abstract contract ScholarshipCoreBase is Initializable {
         address[] calldata ranked,
         uint256[][] calldata amounts,
         string[][] calldata descs,
-        string[][] calldata providers,
-        string[][] calldata externalIds
+        bytes32[][] calldata providers,
+        bytes32[][] calldata externalIds
     ) internal {
         _requireInitiator(pid);
         _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
@@ -367,12 +363,12 @@ abstract contract ScholarshipCoreBase is Initializable {
                 programId: pid,
                 wallet: s,
                 status: ScholarshipTypes.StudentStatus.ACTIVE,
-                freezeUntil: 0,
                 isBlacklisted: false,
-                mandatoryTotal: uint128(amounts[i].length),
+                mandatoryTotal: uint32(amounts[i].length),
                 mandatoryCompleted: 0,
                 optionalApproved: 0,
                 optionalCompleted: 0,
+                freezeUntil: 0,
                 totalReceived: 0
             });
 

@@ -119,8 +119,8 @@ export const v4Milestones = pgTable("v4_milestones", {
   submittedAt: timestamp("submitted_at", { withTimezone: true }),
   disputeDeadline: timestamp("dispute_deadline", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
-  provider: varchar("provider", { length: 50 }),
-  externalId: varchar("external_id", { length: 255 }),
+  provider: varchar("provider", { length: 66 }),
+  externalId: varchar("external_id", { length: 66 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
@@ -282,8 +282,8 @@ export const v4BountyHunters = pgTable("v4_bounty_hunters", {
 export const v4ExternalLearning = pgTable("v4_external_learning", {
   id: uuid("id").defaultRandom().primaryKey(),
   address: varchar("address", { length: 42 }).notNull(),
-  provider: varchar("provider", { length: 50 }).notNull(), // "hackquest", "udemy", etc.
-  externalId: varchar("external_id", { length: 255 }).notNull(), // course_id
+  provider: varchar("provider", { length: 66 }).notNull(), // hex bytes32
+  externalId: varchar("external_id", { length: 66 }).notNull(), // hex bytes32
   progress: integer("progress").default(0),
   status: varchar("status", { length: 20 }).default("IN_PROGRESS"), // "COMPLETED", "FAILED"
   lastUpdated: timestamp("last_updated", { withTimezone: true }).defaultNow(),

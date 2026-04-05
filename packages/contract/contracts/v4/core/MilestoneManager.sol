@@ -77,8 +77,8 @@ contract MilestoneManager is Initializable {
     ITreasuryMin private _treasuryContract;
 
     // ── Events ───────────────────────────────────────────────────────────────
-    event MilestoneCreated(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind, string provider, string externalId);
-    event MilestoneProposed(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind, string provider, string externalId);
+    event MilestoneCreated(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind, bytes32 provider, bytes32 externalId);
+    event MilestoneProposed(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind, bytes32 provider, bytes32 externalId);
     event MilestoneApproved(uint256 indexed id, address approvedBy);
     event MilestoneRejected(uint256 indexed id, address rejectedBy);
     event MilestoneSubmitted(uint256 indexed id, address indexed scholar, string proofCID);
@@ -149,8 +149,8 @@ contract MilestoneManager is Initializable {
         address scholar,
         uint256[] calldata amounts,
         string[] calldata descs,
-        string[] calldata providers,
-        string[] calldata externalIds
+        bytes32[] calldata providers,
+        bytes32[] calldata externalIds
     ) external onlyCore {
         uint256 n = amounts.length;
         uint8 maxMandatory = _coreContract.getProtocolConfig().maxMandatoryMilestones;
@@ -172,8 +172,8 @@ contract MilestoneManager is Initializable {
                 approvedBy:     address(0),   // n/a for mandatory
                 descriptionCID: hasDescs ? descs[i] : "",
                 proofCID:       "",
-                provider:       hasProviders ? providers[i] : "",
-                externalId:     hasExternalIds ? externalIds[i] : "",
+                provider:       hasProviders ? providers[i] : bytes32(0),
+                externalId:     hasExternalIds ? externalIds[i] : bytes32(0),
                 status:         ScholarshipTypes.MilestoneStatus.PENDING,
                 submittedAt:    0,
                 disputeDeadline:0,
@@ -181,7 +181,7 @@ contract MilestoneManager is Initializable {
             });
             milestoneOwner[mId] = scholar;
             mandatoryIds[programId][scholar].push(mId);
-            emit MilestoneCreated(mId, programId, scholar, ScholarshipTypes.MilestoneKind.MANDATORY, hasProviders ? providers[i] : "", hasExternalIds ? externalIds[i] : "");
+            emit MilestoneCreated(mId, programId, scholar, ScholarshipTypes.MilestoneKind.MANDATORY, hasProviders ? providers[i] : bytes32(0), hasExternalIds ? externalIds[i] : bytes32(0));
             unchecked { ++i; }
         }
     }
@@ -208,8 +208,8 @@ contract MilestoneManager is Initializable {
         ScholarshipTypes.MilestoneKind kind,
         uint256 amount,
         string calldata descriptionCID,
-        string calldata provider,
-        string calldata externalId
+        bytes32 provider,
+        bytes32 externalId
     ) external nonReentrant {
         if (kind == ScholarshipTypes.MilestoneKind.MANDATORY) revert WrongStatus(ScholarshipTypes.MilestoneStatus.PROPOSED);
 

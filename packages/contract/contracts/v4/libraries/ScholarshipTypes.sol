@@ -115,9 +115,9 @@ library ScholarshipTypes {
     }
 
     struct Program {
-        uint256 id;
-        address initiator;
-        string  metadataCID;
+        uint256           id;
+        address           initiator;
+        string            metadataCID;
 
         EducationLevel    educationLevel;
         ScreeningMode     screeningMode;
@@ -125,33 +125,29 @@ library ScholarshipTypes {
         ScoreWeights      scoreWeights;
         SlashDistribution slashDist;
 
-        uint8   maxCandidates;
-        uint8   targetWinners;
+        uint8             maxCandidates;
+        uint8             targetWinners;
+        uint8             maxOptionalMilestones;
+        bool              openDonation;
 
-        // Timeline
-        uint256 applicationStart;
-        uint256 applicationEnd;
-        uint256 votingStart;
-        uint256 votingEnd;
-        uint256 milestoneDisputeWindow;
+        // Timeline (packed)
+        uint48            applicationStart;
+        uint48            applicationEnd;
+        uint48            votingStart;
+        uint48            votingEnd;
+        uint48            milestoneDisputeWindow;
 
-        // Financial
-        uint256 totalFund;
-        uint256 allocatedFund;
-        uint256 spentFund;
-        uint256 yieldAccrued;
+        // Counters (packed)
+        uint32            applicantCount;
+        uint32            shortlistedCount;
+        uint32            activeScholarCount;
+        uint128           totalVotes;
 
-        // Counters
-        uint256 applicantCount;
-        uint256 shortlistedCount;
-        uint256 activeScholarCount;
-        uint256 totalVotes;
-
-        // Max optional milestones a scholar may propose for this program.
-        // 0 means optional milestones are disabled.
-        uint8   maxOptionalMilestones;
-        // If false, public donations and voting are disabled.
-        bool    openDonation;
+        // Financials
+        uint256           totalFund;
+        uint256           allocatedFund;
+        uint256           spentFund;
+        uint256           yieldAccrued;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -162,16 +158,16 @@ library ScholarshipTypes {
         uint256           programId;
         address           wallet;
         ApplicationStatus status;
-        string  profileCID;
-        string  documentCID;
-        string  essayCID;
-        string  recommendCID;
-        uint256 screeningScore;
-        uint256 totalScore;
-        uint256 voteScore;
-        uint256 scoreTimestamp;
-        uint8   retryCount;
-        bool    scoreDisputed;
+        string            profileCID;
+        string            documentCID;
+        string            essayCID;
+        string            recommendCID;
+        uint32            screeningScore; // normalized to 1000
+        uint32            totalScore;     // normalized to 1000
+        uint128           voteScore;
+        uint48            scoreTimestamp;
+        uint8             retryCount;
+        bool              scoreDisputed;
     }
 
     struct ScoreComponents {
@@ -194,14 +190,12 @@ library ScholarshipTypes {
         uint256       programId;
         address       wallet;
         StudentStatus status;
-        uint256       freezeUntil;
         bool          isBlacklisted;
-        // Mandatory milestone progress
-        uint128       mandatoryTotal;       // Set at activation
-        uint128       mandatoryCompleted;
-        // Optional milestone progress
-        uint128       optionalApproved;     // Incremented on committee approval
-        uint128       optionalCompleted;
+        uint32        mandatoryTotal;
+        uint32        mandatoryCompleted;
+        uint32        optionalApproved;
+        uint32        optionalCompleted;
+        uint256       freezeUntil;
         uint256       totalReceived;
     }
 
@@ -237,8 +231,8 @@ library ScholarshipTypes {
         address         approvedBy;     // committee member who approved; address(0) if n/a
         string          descriptionCID; // IPFS: what must be delivered
         string          proofCID;       // IPFS: scholar-submitted proof
-        string          provider;       // External learning provider (e.g. 'hackquest')
-        string          externalId;     // External course/mission ID
+        bytes32         provider;       // External learning provider (e.g. 'hackquest')
+        bytes32         externalId;     // External course/mission ID
         MilestoneStatus status;
         uint48          submittedAt;
         uint48          disputeDeadline;

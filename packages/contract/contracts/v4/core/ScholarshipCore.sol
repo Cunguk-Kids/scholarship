@@ -304,8 +304,8 @@ contract ScholarshipCore is ScholarshipCoreBase {
         address[] calldata ranked,
         uint256[][] calldata amounts,
         string[][] calldata descs,
-        string[][] calldata providers,
-        string[][] calldata externalIds
+        bytes32[][] calldata providers,
+        bytes32[][] calldata externalIds
     ) external nonReentrant programExists(pid) {
         _selectWinners(pid, ranked, amounts, descs, providers, externalIds);
     }

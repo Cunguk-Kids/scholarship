@@ -137,8 +137,8 @@ interface IMilestoneManager {
         address scholar,
         uint256[] calldata amounts,
         string[] calldata descs,
-        string[] calldata providers,
-        string[] calldata externalIds
+        bytes32[] calldata providers,
+        bytes32[] calldata externalIds
     ) external;
 
     /**
@@ -165,7 +165,9 @@ interface IMilestoneManager {
         uint256 programId,
         ScholarshipTypes.MilestoneKind kind,
         uint256 amount,
-        string calldata descriptionCID
+        string calldata descriptionCID,
+        bytes32 provider,
+        bytes32 externalId
     ) external;
 
     /**
