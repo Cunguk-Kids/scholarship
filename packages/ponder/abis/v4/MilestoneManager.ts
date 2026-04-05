@@ -182,15 +182,15 @@ export const milestoneManagerAbi = [
       },
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "provider",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "externalId",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "MilestoneCreated",
@@ -238,15 +238,15 @@ export const milestoneManagerAbi = [
       },
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "provider",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "externalId",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "MilestoneProposed",
@@ -371,14 +371,14 @@ export const milestoneManagerAbi = [
         "type": "string[]"
       },
       {
-        "internalType": "string[]",
+        "internalType": "bytes32[]",
         "name": "providers",
-        "type": "string[]"
+        "type": "bytes32[]"
       },
       {
-        "internalType": "string[]",
+        "internalType": "bytes32[]",
         "name": "externalIds",
-        "type": "string[]"
+        "type": "bytes32[]"
       }
     ],
     "name": "createMandatoryBatch",
@@ -507,14 +507,14 @@ export const milestoneManagerAbi = [
             "type": "string"
           },
           {
-            "internalType": "string",
+            "internalType": "bytes32",
             "name": "provider",
-            "type": "string"
+            "type": "bytes32"
           },
           {
-            "internalType": "string",
+            "internalType": "bytes32",
             "name": "externalId",
-            "type": "string"
+            "type": "bytes32"
           },
           {
             "internalType": "enum ScholarshipTypes.MilestoneStatus",
@@ -696,14 +696,14 @@ export const milestoneManagerAbi = [
         "type": "string"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "provider",
-        "type": "string"
+        "type": "bytes32"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "externalId",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "internalType": "enum ScholarshipTypes.MilestoneStatus",
@@ -800,14 +800,14 @@ export const milestoneManagerAbi = [
         "type": "string"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "provider",
-        "type": "string"
+        "type": "bytes32"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "externalId",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "proposeMilestone",
