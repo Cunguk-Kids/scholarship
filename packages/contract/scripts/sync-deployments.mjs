@@ -46,6 +46,7 @@ const CONTRACT_MAP = {
   "ScholarshipV4#ScholarshipReputation": "ScholarshipReputation",
   "ScholarshipV4#CommitteeGovernance": "CommitteeGovernance",
   "ScholarshipV4#MilestoneManager": "MilestoneManager",
+  "ScholarshipV4#ScholarshipAdmin": "ScholarshipAdmin",
   "ScholarshipV4#MockUSDC": "MockUSDC",
 };
 
@@ -57,6 +58,7 @@ const ENV_KEY_MAP = {
   ScholarshipReputation: "CONTRACT_REPUTATION",
   CommitteeGovernance: "CONTRACT_COMMITTEE",
   MilestoneManager: "CONTRACT_MILESTONE_MANAGER",
+  ScholarshipAdmin: "CONTRACT_ADMIN",
   MockUSDC: "CONTRACT_USDC",
 };
 

@@ -13,16 +13,12 @@ import {ScholarshipCoreBase}    from "./ScholarshipCoreBase.sol";
 
 /**
  * @title  ScholarshipCore v5
- * @notice Entry-point contract.  Inherits voting, scholar activation,
- *         milestone callbacks, and date management from ScholarshipCoreBase.
+ * @notice Entry-point contract. Inherits voting, scholar activation,
+ *         and milestone callbacks from ScholarshipCoreBase.
  *
- * @dev    KEY CHANGE vs v4:
- *         createProgram() accepts `maxOptionalMilestones` (uint8, 0-5).
- *         0 = program creator disables optional milestone proposals entirely.
- *
- *         DATE MANAGEMENT (extendApplicationDeadline, extendVotingDeadline,
- *         adminForceStatus, adminUpdateDates) lives in ScholarshipCoreBase to
- *         keep this deployed contract under the 24,576-byte EIP-170 limit.
+ * @dev    EIP-170 compliance: administrative and date management functions
+ *         are restricted to the GOVERNANCE_ROLE and typically called via
+ *         the ScholarshipAdmin contract to save bytecode space here.
  */
 contract ScholarshipCore is ScholarshipCoreBase {
     using SafeERC20 for IERC20;
@@ -69,7 +65,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
         address _milestoneManager
     ) external initializer {
         _initReentrancy();
-        _initConfig();   // ← load protocol defaults
+        _initConfig();
         admin            = _admin;
         _roles[UPGRADER_ROLE][_admin] = true;
         usdc             = IERC20(_usdc);
@@ -78,7 +74,6 @@ contract ScholarshipCore is ScholarshipCoreBase {
         donorNFT         = ICredentialNFT(_donorNFT);
         studentNFT       = ICredentialNFT(_studentNFT);
         milestoneManager = IMilestoneManager(_milestoneManager);
-        // Grant MilestoneManager the MILESTONE_ROLE
         _roles[MILESTONE_ROLE][_milestoneManager] = true;
     }
 
@@ -144,7 +139,6 @@ contract ScholarshipCore is ScholarshipCoreBase {
             milestoneManager.setProgramCommittee(pid, committeeContract);
             emit CommitteeAssigned(pid, committeeContract);
         }
-
         emit ProgramCreated(pid, msg.sender, metadataCID);
     }
 
@@ -190,11 +184,11 @@ contract ScholarshipCore is ScholarshipCoreBase {
 
     function applyToProgram(
         uint256 programId,
-        string calldata profileCID, string calldata documentCID, string calldata essayCID, string calldata recommendCID,
+        string calldata pCID, string calldata dCID, string calldata eCID, string calldata rCID,
         uint256 academicScore, uint256 incomeScore, uint256 recommendScore
     ) external nonReentrant programExists(programId) inStatus(programId, ScholarshipTypes.ProgramStatus.APPLICATION_OPEN) {
-        ScholarshipTypes.Program storage prog = programs[programId];
         _requireStudentEligible(msg.sender);
+        ScholarshipTypes.Program storage prog = programs[programId];
         if (msg.sender == prog.initiator) revert CannotApplyToOwnProgram();
         if (retryCount[programId][msg.sender] >= _config.maxRetry) revert MaxRetriesExceeded();
         ScholarshipTypes.ApplicationStatus es = applicants[programId][msg.sender].status;
@@ -204,7 +198,7 @@ contract ScholarshipCore is ScholarshipCoreBase {
         uint8 retry = ++retryCount[programId][msg.sender];
         applicants[programId][msg.sender] = ScholarshipTypes.Applicant({
             programId: programId, wallet: msg.sender, status: ScholarshipTypes.ApplicationStatus.PENDING_REVIEW,
-            profileCID: profileCID, documentCID: documentCID, essayCID: essayCID, recommendCID: recommendCID,
+            profileCID: pCID, documentCID: dCID, essayCID: eCID, recommendCID: rCID,
             screeningScore: 0, totalScore: 0, voteScore: 0, scoreTimestamp: 0, retryCount: retry, scoreDisputed: false
         });
 
@@ -214,12 +208,12 @@ contract ScholarshipCore is ScholarshipCoreBase {
         emit StudentApplied(programId, msg.sender, retry);
     }
 
-    function submitCommitteeScore(uint256 programId, address applicant, uint256 academicScore, uint256 incomeScore, uint256 recommendScore, address committeeAddress)
+    function submitCommitteeScore(uint256 programId, address applicant, uint256 a, uint256 i, uint256 r, address comm)
         external onlyRole(COMMITTEE_ROLE) programExists(programId)
     {
         if (programs[programId].screeningMode != ScholarshipTypes.ScreeningMode.BY_COMMITTEE)
             revert InvalidProgramStatus(ScholarshipTypes.ProgramStatus.SCREENING, programs[programId].status);
-        _setScore(programId, applicant, academicScore, incomeScore, recommendScore, committeeAddress);
+        _setScore(programId, applicant, a, i, r, comm);
     }
 
     function resolveShortlist(uint256 programId, address[] calldata ranked) external programExists(programId) onlyInitiator(programId) {
@@ -253,14 +247,34 @@ contract ScholarshipCore is ScholarshipCoreBase {
         emit StudentScreenedOut(programId, student, app.screeningScore, locked);
     }
 
-    function cancelProgram(uint256 programId) external nonReentrant programExists(programId) onlyInitiator(programId) {
-        ScholarshipTypes.Program storage prog = programs[programId];
-        if (prog.status == ScholarshipTypes.ProgramStatus.ACTIVE
-         || prog.status == ScholarshipTypes.ProgramStatus.COMPLETED
-         || prog.status == ScholarshipTypes.ProgramStatus.CANCELLED)
+    function cancelProgram(uint256 pid) external nonReentrant programExists(pid) onlyInitiator(pid) {
+        ScholarshipTypes.Program storage prog = programs[pid];
+        if (prog.status == ScholarshipTypes.ProgramStatus.ACTIVE || prog.status == ScholarshipTypes.ProgramStatus.COMPLETED || prog.status == ScholarshipTypes.ProgramStatus.CANCELLED)
             revert InvalidProgramStatus(ScholarshipTypes.ProgramStatus.CREATED, prog.status);
         prog.status = ScholarshipTypes.ProgramStatus.CANCELLED;
-        treasury.refundDonors(programId);
-        emit ProgramCancelled(programId);
+        treasury.refundDonors(pid);
+        emit ProgramCancelled(pid);
+    }
+
+    // ── Governance entry points ──────────────────────────────────────────────
+
+    function setProtocolConfig(ScholarshipTypes.ProtocolConfig calldata c) external onlyRole(GOVERNANCE_ROLE) {
+        _setProtocolConfig(c);
+    }
+
+    function adminForceStatus(uint256 pid, ScholarshipTypes.ProgramStatus s) external onlyRole(GOVERNANCE_ROLE) {
+        _adminForceStatus(pid, s);
+    }
+
+    function adminUpdateDates(uint256 pid, uint256 aS, uint256 aE, uint256 vS, uint256 vE) external onlyRole(GOVERNANCE_ROLE) {
+        _adminUpdateDates(pid, aS, aE, vS, vE);
+    }
+
+    function extendApplicationDeadline(uint256 pid, uint256 nE) external onlyRole(GOVERNANCE_ROLE) {
+        _extendApplicationDeadline(pid, nE);
+    }
+
+    function extendVotingDeadline(uint256 pid, uint256 nE) external onlyRole(GOVERNANCE_ROLE) {
+        _extendVotingDeadline(pid, nE);
     }
 }

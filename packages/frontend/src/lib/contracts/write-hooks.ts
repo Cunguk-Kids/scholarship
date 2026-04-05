@@ -2,6 +2,7 @@ import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseUnits } from "viem";
 import {
   scholarshipCoreAbi,
+  scholarshipAdminAbi,
   scholarshipBountyAbi,
   scholarshipTreasuryAbi,
   milestoneManagerAbi,
@@ -12,6 +13,7 @@ import {
 
 // Contract address constants
 const CORE_ADDRESS = v4Addresses.ScholarshipCore;
+const ADMIN_ADDRESS = v4Addresses.ScholarshipAdmin;
 const BOUNTY_ADDRESS = v4Addresses.ScholarshipBounty;
 const TREASURY_ADDRESS = v4Addresses.ScholarshipTreasury;
 const MILESTONE_ADDRESS = v4Addresses.MilestoneManager;
@@ -552,8 +554,8 @@ export function useExtendApplicationDeadline() {
 
   const extendApplicationDeadline = (programId: bigint, newEnd: bigint) => {
     writeContract({
-      address: CORE_ADDRESS as `0x${string}`,
-      abi: scholarshipCoreAbi,
+      address: ADMIN_ADDRESS as `0x${string}`,
+      abi: scholarshipAdminAbi,
       functionName: "extendApplicationDeadline",
       args: [programId, newEnd],
     });
@@ -567,8 +569,8 @@ export function useExtendVotingDeadline() {
 
   const extendVotingDeadline = (programId: bigint, newEnd: bigint) => {
     writeContract({
-      address: CORE_ADDRESS as `0x${string}`,
-      abi: scholarshipCoreAbi,
+      address: ADMIN_ADDRESS as `0x${string}`,
+      abi: scholarshipAdminAbi,
       functionName: "extendVotingDeadline",
       args: [programId, newEnd],
     });
@@ -582,8 +584,8 @@ export function useAdminForceStatus() {
 
   const adminForceStatus = (programId: bigint, newStatus: number) => {
     writeContract({
-      address: CORE_ADDRESS as `0x${string}`,
-      abi: scholarshipCoreAbi,
+      address: ADMIN_ADDRESS as `0x${string}`,
+      abi: scholarshipAdminAbi,
       functionName: "adminForceStatus",
       args: [programId, newStatus],
     });
@@ -603,8 +605,8 @@ export function useAdminUpdateDates() {
     voteEnd: bigint
   ) => {
     writeContract({
-      address: CORE_ADDRESS as `0x${string}`,
-      abi: scholarshipCoreAbi,
+      address: ADMIN_ADDRESS as `0x${string}`,
+      abi: scholarshipAdminAbi,
       functionName: "adminUpdateDates",
       args: [programId, appStart, appEnd, voteStart, voteEnd],
     });
@@ -618,8 +620,8 @@ export function useUpdateProtocolConfig() {
 
   const updateProtocolConfig = (newConfig: any) => {
     writeContract({
-      address: CORE_ADDRESS as `0x${string}`,
-      abi: scholarshipCoreAbi,
+      address: ADMIN_ADDRESS as `0x${string}`,
+      abi: scholarshipAdminAbi,
       functionName: "setProtocolConfig",
       args: [newConfig],
     });

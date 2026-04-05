@@ -949,6 +949,19 @@ export const scholarshipTreasuryAbi = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "maxPushRefundDonors",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -1135,6 +1148,19 @@ export const scholarshipTreasuryAbi = [
       }
     ],
     "name": "revokeRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "newMax",
+        "type": "uint8"
+      }
+    ],
+    "name": "setMaxPushRefundDonors",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

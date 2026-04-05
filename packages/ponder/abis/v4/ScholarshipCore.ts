@@ -82,6 +82,11 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
+    "name": "InvalidConfig",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidInitialization",
     "type": "error"
   },
@@ -517,6 +522,44 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "updatedBy",
+        "type": "address"
+      }
+    ],
+    "name": "ProtocolConfigUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "programId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "donor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "feeAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ProtocolFeeCollected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -828,6 +871,19 @@ export const scholarshipCoreAbi = [
   },
   {
     "inputs": [],
+    "name": "GOVERNANCE_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MAX_EXTENSIONS",
     "outputs": [
       {
@@ -908,12 +964,12 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
         "internalType": "enum ScholarshipTypes.ProgramStatus",
-        "name": "newStatus",
+        "name": "s",
         "type": "uint8"
       }
     ],
@@ -926,27 +982,27 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "appStart",
+        "name": "aS",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "appEnd",
+        "name": "aE",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "voteStart",
+        "name": "vS",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "voteEnd",
+        "name": "vE",
         "type": "uint256"
       }
     ],
@@ -1067,22 +1123,22 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "string",
-        "name": "profileCID",
+        "name": "pCID",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "documentCID",
+        "name": "dCID",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "essayCID",
+        "name": "eCID",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "recommendCID",
+        "name": "rCID",
         "type": "string"
       },
       {
@@ -1110,7 +1166,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -1271,12 +1327,12 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "newEnd",
+        "name": "nE",
         "type": "uint256"
       }
     ],
@@ -1289,12 +1345,12 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "newEnd",
+        "name": "nE",
         "type": "uint256"
       }
     ],
@@ -1304,100 +1360,25 @@ export const scholarshipCoreAbi = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getProgram",
+    "inputs": [],
+    "name": "getProtocolConfig",
     "outputs": [
       {
         "components": [
           {
             "internalType": "uint256",
-            "name": "id",
+            "name": "minDonation",
             "type": "uint256"
           },
           {
-            "internalType": "address",
-            "name": "initiator",
-            "type": "address"
+            "internalType": "uint256",
+            "name": "transactionFee",
+            "type": "uint256"
           },
           {
-            "internalType": "string",
-            "name": "metadataCID",
-            "type": "string"
-          },
-          {
-            "internalType": "enum ScholarshipTypes.EducationLevel",
-            "name": "educationLevel",
+            "internalType": "uint8",
+            "name": "minCandidates",
             "type": "uint8"
-          },
-          {
-            "internalType": "enum ScholarshipTypes.ScreeningMode",
-            "name": "screeningMode",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum ScholarshipTypes.ProgramStatus",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint8",
-                "name": "academicWeight",
-                "type": "uint8"
-              },
-              {
-                "internalType": "uint8",
-                "name": "incomeWeight",
-                "type": "uint8"
-              },
-              {
-                "internalType": "uint8",
-                "name": "essayWeight",
-                "type": "uint8"
-              },
-              {
-                "internalType": "uint8",
-                "name": "recommendWeight",
-                "type": "uint8"
-              },
-              {
-                "internalType": "uint8",
-                "name": "extracurricWeight",
-                "type": "uint8"
-              }
-            ],
-            "internalType": "struct ScholarshipTypes.ScoreWeights",
-            "name": "scoreWeights",
-            "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint8",
-                "name": "bountyHunterPercent",
-                "type": "uint8"
-              },
-              {
-                "internalType": "uint8",
-                "name": "treasuryPercent",
-                "type": "uint8"
-              },
-              {
-                "internalType": "uint8",
-                "name": "protocolPercent",
-                "type": "uint8"
-              }
-            ],
-            "internalType": "struct ScholarshipTypes.SlashDistribution",
-            "name": "slashDist",
-            "type": "tuple"
           },
           {
             "internalType": "uint8",
@@ -1406,216 +1387,98 @@ export const scholarshipCoreAbi = [
           },
           {
             "internalType": "uint8",
-            "name": "targetWinners",
+            "name": "maxRetry",
             "type": "uint8"
           },
           {
             "internalType": "uint256",
-            "name": "applicationStart",
+            "name": "defenseWindow",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "applicationEnd",
+            "name": "bhCooldownNormal",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "votingStart",
+            "name": "bhCooldownFlagged",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bhStakePercent",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "freezeLight",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "votingEnd",
+            "name": "freezeMilestone",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "milestoneDisputeWindow",
+            "name": "freezeHeavy",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "totalFund",
+            "name": "scoreMax",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "allocatedFund",
+            "name": "screeningThreshold",
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
-            "name": "spentFund",
-            "type": "uint256"
+            "internalType": "uint8",
+            "name": "quorumPercent",
+            "type": "uint8"
           },
           {
-            "internalType": "uint256",
-            "name": "yieldAccrued",
-            "type": "uint256"
+            "internalType": "uint8",
+            "name": "confidenceSlashPct",
+            "type": "uint8"
           },
           {
-            "internalType": "uint256",
-            "name": "applicantCount",
-            "type": "uint256"
+            "internalType": "uint8",
+            "name": "confidenceBonusPct",
+            "type": "uint8"
           },
           {
-            "internalType": "uint256",
-            "name": "shortlistedCount",
-            "type": "uint256"
+            "internalType": "uint8",
+            "name": "maxCommitteeMembers",
+            "type": "uint8"
           },
           {
-            "internalType": "uint256",
-            "name": "activeScholarCount",
-            "type": "uint256"
+            "internalType": "uint8",
+            "name": "maxPushRefundDonors",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "maxMandatoryMilestones",
+            "type": "uint8"
           },
           {
             "internalType": "uint8",
             "name": "maxOptionalMilestones",
             "type": "uint8"
-          }
-        ],
-        "internalType": "struct ScholarshipTypes.Program",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getProgramApplicants",
-    "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
-        "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "programId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getRemainingFund",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "w",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getScholar",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "programId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "wallet",
-            "type": "address"
-          },
-          {
-            "internalType": "enum ScholarshipTypes.StudentStatus",
-            "name": "status",
-            "type": "uint8"
           },
           {
             "internalType": "uint256",
-            "name": "freezeUntil",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isBlacklisted",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint128",
-            "name": "mandatoryTotal",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "mandatoryCompleted",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "optionalApproved",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "optionalCompleted",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalReceived",
+            "name": "optionalApprovalWindow",
             "type": "uint256"
           }
         ],
-        "internalType": "struct ScholarshipTypes.Scholar",
+        "internalType": "struct ScholarshipTypes.ProtocolConfig",
         "name": "",
         "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getShortlist",
-    "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
-        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -1764,30 +1627,6 @@ export const scholarshipCoreAbi = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "wallet",
-        "type": "address"
-      }
-    ],
-    "name": "isStudentEligible",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      },
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "milestoneManager",
     "outputs": [
@@ -1798,62 +1637,6 @@ export const scholarshipCoreAbi = [
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "programId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "scholar",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum ScholarshipTypes.MilestoneKind",
-        "name": "kind",
-        "type": "uint8"
-      }
-    ],
-    "name": "onMilestoneCompleted",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "programId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "scholar",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "onOptionalApproved",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1878,29 +1661,6 @@ export const scholarshipCoreAbi = [
       }
     ],
     "name": "openScreening",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "programId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "scholar",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "placeConfidenceStake",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2286,50 +2046,124 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "programId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address[]",
-        "name": "ranked",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint256[][]",
-        "name": "amounts",
-        "type": "uint256[][]"
-      },
-      {
-        "internalType": "string[][]",
-        "name": "descs",
-        "type": "string[][]"
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "minDonation",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "transactionFee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "minCandidates",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "maxCandidates",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "maxRetry",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "defenseWindow",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bhCooldownNormal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bhCooldownFlagged",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bhStakePercent",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "freezeLight",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "freezeMilestone",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "freezeHeavy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "scoreMax",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "screeningThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "quorumPercent",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "confidenceSlashPct",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "confidenceBonusPct",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "maxCommitteeMembers",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "maxPushRefundDonors",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "maxMandatoryMilestones",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "maxOptionalMilestones",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "optionalApprovalWindow",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ScholarshipTypes.ProtocolConfig",
+        "name": "c",
+        "type": "tuple"
       }
     ],
-    "name": "selectWinners",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "wallet",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "programId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum ScholarshipTypes.DisputeType",
-        "name": "disputeType",
-        "type": "uint8"
-      }
-    ],
-    "name": "slashScholar",
+    "name": "setProtocolConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2361,22 +2195,22 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "academicScore",
+        "name": "a",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "incomeScore",
+        "name": "i",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "recommendScore",
+        "name": "r",
         "type": "uint256"
       },
       {
         "internalType": "address",
-        "name": "committeeAddress",
+        "name": "comm",
         "type": "address"
       }
     ],
@@ -2422,24 +2256,6 @@ export const scholarshipCoreAbi = [
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "programId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "candidate",
-        "type": "address"
-      }
-    ],
-    "name": "voteForCandidate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
