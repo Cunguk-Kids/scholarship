@@ -3,6 +3,8 @@ import { NeoButton } from "./ui/NeoButton";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
+import { useAccount, useReadContract } from "wagmi";
+import { v4Addresses, scholarshipCoreAbi } from "@/constants/contractsV4";
 
 const navItems = [
   { href: "/programs",  label: "Programs",  icon: "📚" },
@@ -17,6 +19,15 @@ export function Header() {
   const location = useLocation();
   const currentPath = location.pathname;
   const ref = useRef<HTMLDivElement>(null);
+  
+  const { address } = useAccount();
+  const { data: adminAddress } = useReadContract({
+    address: v4Addresses.ScholarshipCore,
+    abi: scholarshipCoreAbi,
+    functionName: "admin",
+  });
+
+  const isAdmin = address && adminAddress && address.toLowerCase() === (adminAddress as string).toLowerCase();
 
   useEffect(() => {
     if (!ref.current) return;
@@ -80,6 +91,25 @@ export function Header() {
               </li>
             );
           })}
+          
+          {isAdmin && (
+            <li>
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className={`
+                  flex items-center gap-1.5 py-2 px-3 rounded-xl font-bold text-sm transition-all duration-200
+                  ${currentPath.startsWith("/admin")
+                    ? "bg-red-500 text-white neo-shadow-sm"
+                    : "hover:bg-red-100 hover:text-red-600 text-red-500"
+                  }
+                `}
+              >
+                <span>🛠️</span>
+                Admin
+              </Link>
+            </li>
+          )}
         </ul>
         {breakpoint.isLessThan("lg") && (
           <div className="mt-4 mb-2">

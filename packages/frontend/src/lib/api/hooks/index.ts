@@ -3,7 +3,7 @@ import { api } from "../client";
 import type {
   Program, ProgramDetail, Applicant, Scholar, Milestone,
   Vote, ConfidenceStake, Dispute, Reputation, DashboardData,
-  PaginatedResponse, SingleResponse,
+  PaginatedResponse, SingleResponse, AdminOverview,
 } from "../types";
 
 // ── Query key factory ─────────────────────────────────────────────────────────
@@ -21,6 +21,7 @@ export const queryKeys = {
   dispute:    (id: string)     => ["dispute", id] as const,
   reputation: (addr: string)   => ["reputation", addr] as const,
   dashboard:  (wallet: string) => ["dashboard", wallet] as const,
+  adminOverview: () => ["adminOverview"] as const,
 
   // Nested under program
   programApplicants: (id: string) => ["program", id, "applicants"] as const,
@@ -218,5 +219,17 @@ export function useDashboard(wallet: string) {
       return data.data;
     },
     enabled: !!wallet,
+  });
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+export function useAdminOverview() {
+  return useQuery({
+    queryKey: queryKeys.adminOverview(),
+    queryFn: async () => {
+      const { data } = await api.get<SingleResponse<AdminOverview>>("/admin");
+      return data.data;
+    },
   });
 }

@@ -193,6 +193,15 @@ export interface DashboardData {
   committeePrograms: Program[];
 }
 
+export interface AdminOverview {
+  totalPrograms: number;
+  totalApplicants: number;
+  totalScholars: number;
+  totalMilestones: number;
+  totalDisputes: number;
+  totalCreators: number;
+}
+
 // ── API Response Wrappers ────────────────────────────────────────────────────
 
 export interface PaginatedResponse<T> {
