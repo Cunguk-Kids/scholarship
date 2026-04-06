@@ -265,7 +265,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -308,7 +308,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -333,7 +333,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -364,7 +364,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -383,7 +383,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -414,7 +414,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -458,7 +458,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -477,7 +477,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -490,7 +490,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -503,7 +503,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -528,7 +528,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -560,7 +560,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -623,7 +623,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -642,7 +642,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -667,7 +667,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -686,7 +686,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -717,7 +717,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -742,7 +742,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -773,7 +773,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -811,7 +811,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -848,7 +848,7 @@ export const scholarshipCoreAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -889,6 +889,19 @@ export const scholarshipCoreAbi = [
   {
     "inputs": [],
     "name": "COMMITTEE_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CONFIG_ADMIN_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -1058,7 +1071,7 @@ export const scholarshipCoreAbi = [
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -1148,7 +1161,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -1334,7 +1347,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -1416,7 +1429,7 @@ export const scholarshipCoreAbi = [
         "components": [
           {
             "internalType": "uint256",
-            "name": "id",
+            "name": "pid",
             "type": "uint256"
           },
           {
@@ -1745,7 +1758,7 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -1769,7 +1782,7 @@ export const scholarshipCoreAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -1779,7 +1792,7 @@ export const scholarshipCoreAbi = [
         "components": [
           {
             "internalType": "uint256",
-            "name": "programId",
+            "name": "pid",
             "type": "uint256"
           },
           {
@@ -2043,7 +2056,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -2056,7 +2069,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -2138,7 +2151,7 @@ export const scholarshipCoreAbi = [
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -2371,7 +2384,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -2449,7 +2462,7 @@ export const scholarshipCoreAbi = [
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -2738,7 +2751,7 @@ export const scholarshipCoreAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {

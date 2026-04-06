@@ -30,7 +30,7 @@ applicantsRoute.get("/", async (c) => {
       applicant: v4Applicants,
       program: {
         id: v4Programs.id,
-        blockchainId: v4Programs.blockchainId,
+        pid: v4Programs.pid,
         metadataCID: v4Programs.metadataCID,
         status: v4Programs.status,
         initiator: v4Programs.initiator,
@@ -61,7 +61,7 @@ applicantsRoute.get("/:id", async (c) => {
       applicant: v4Applicants,
       program: {
         id: v4Programs.id,
-        blockchainId: v4Programs.blockchainId,
+        pid: v4Programs.pid,
         metadataCID: v4Programs.metadataCID,
         status: v4Programs.status,
       },

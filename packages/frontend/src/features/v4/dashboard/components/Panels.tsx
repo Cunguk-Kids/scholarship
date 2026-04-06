@@ -116,7 +116,7 @@ function ResolveShortlistForProgram({
     <ResolveShortlistModal
       isOpen
       onClose={onClose}
-      programId={program.blockchainId}
+      programId={program.pid}
       applicants={applicants}
     />
   );
@@ -129,7 +129,7 @@ function SelectWinnersForProgram({ program, onClose }: { program: Program; onClo
     <SelectWinnersModal
       isOpen
       onClose={onClose}
-      programId={program.blockchainId}
+      programId={program.pid}
       shortlisted={shortlisted}
       targetWinners={program.targetWinners}
     />
@@ -161,9 +161,12 @@ function InitiatorProgramCard({
       <NeoCardBody>
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="font-bold text-lg">Program #{program.blockchainId}</h3>
+            <h3 className="font-bold text-lg">Program #{program.pid}</h3>
             <p className="text-xs text-gray-500 uppercase font-bold">
               {program.status.replace('_', ' ')}
+              {!program.openDonation && (
+                <span className="ml-2 bg-black text-white px-1.5 py-0.5 rounded text-[10px]">PRIVATE</span>
+              )}
             </p>
             <p className="text-sm mt-1">
               {formatCurrency(formatUSDC(Number(program.totalFund)), 'USD')}
@@ -190,7 +193,7 @@ function InitiatorProgramCard({
                 fullWidth
                 loading={openingApps}
                 disabled={openingApps}
-                onClick={() => openApplications(BigInt(program.blockchainId))}
+                onClick={() => openApplications(BigInt(program.pid))}
               />
             </div>
           )}
@@ -204,7 +207,7 @@ function InitiatorProgramCard({
                   fullWidth
                   loading={openingScreen}
                   disabled={openingScreen}
-                  onClick={() => openScreening(BigInt(program.blockchainId))}
+                  onClick={() => openScreening(BigInt(program.pid))}
                 />
               </div>
               <div className="col-span-1">
@@ -268,7 +271,7 @@ function InitiatorProgramCard({
               disabled={claiming}
               onClick={() =>
                 claimYield(
-                  BigInt(program.blockchainId),
+                  BigInt(program.pid),
                   '0x0000000000000000000000000000000000000000',
                 )
               }
@@ -282,7 +285,7 @@ function InitiatorProgramCard({
               fullWidth
               loading={cancelling}
               disabled={cancelling}
-              onClick={() => cancelProgram(BigInt(program.blockchainId))}
+              onClick={() => cancelProgram(BigInt(program.pid))}
             />
           )}
         </div>
@@ -337,7 +340,7 @@ export function StudentPanel({
                 key={scholar.id}
                 scholar={scholar}
                 milestones={myMilestones}
-                onProposeMilestone={() => setProposeMilestoneFor(scholar.blockchainProgramId)}
+                onProposeMilestone={() => setProposeMilestoneFor(scholar.pid)}
               />
             );
           })
@@ -392,7 +395,7 @@ function ScholarCard({
       <NeoCardBody className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex-1">
-            <h3 className="font-bold text-lg">Program #{scholar.blockchainProgramId}</h3>
+            <h3 className="font-bold text-lg">Program #{scholar.pid}</h3>
             <p className="text-xs text-gray-500 mb-2">
               Status: <span className="font-bold text-black">{scholar.status}</span>
             </p>
@@ -609,7 +612,7 @@ export function VoterPanel({
               <ul className="space-y-2 text-sm">
                 {stakes.map((s) => (
                   <li key={s.id} className="flex justify-between border-b border-gray-200 pb-1">
-                    <span>Prog #{s.blockchainProgramId}</span>
+                    <span>Prog #{s.pid}</span>
                     <span
                       className={
                         s.isResolved
@@ -826,7 +829,7 @@ function CommitteeProgramSection({
   programId: number;
   dashboardData: DashboardData;
 }) {
-  const programRecord = dashboardData.committeePrograms.find((p) => p.blockchainId === programId);
+  const programRecord = dashboardData.committeePrograms.find((p) => p.pid === programId);
   const { data: allApplicants = [] } = useProgramApplicants(programRecord?.id ?? '');
   const { data: allMilestones = [] } = useProgramMilestones(programRecord?.id ?? '');
 

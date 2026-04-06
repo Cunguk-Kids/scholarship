@@ -43,6 +43,7 @@ abstract contract ScholarshipCoreBase is Initializable {
     bytes32 public constant COMMITTEE_ROLE  = keccak256("COMMITTEE_ROLE");
     bytes32 public constant MILESTONE_ROLE  = keccak256("MILESTONE_ROLE"); 
     bytes32 public constant GOVERNANCE_ROLE = keccak256("GOVERNANCE_ROLE"); 
+    bytes32 public constant CONFIG_ADMIN_ROLE = keccak256("CONFIG_ADMIN_ROLE"); 
     string  public constant VERSION         = "5.0.0";
 
     address public admin;
@@ -127,18 +128,18 @@ abstract contract ScholarshipCoreBase is Initializable {
     uint256 public constant MAX_EXTENSION_DURATION = 30 days;
 
     // ── Events ───────────────────────────────────────────────────────────────
-    event VoteCast(uint256 indexed programId, address indexed voter, address indexed candidate, uint256 weight, bool useReputation);
-    event ConfidenceStaked(uint256 indexed programId, address indexed voter, address indexed scholar, uint256 amount);
-    event ScholarSelected(uint256 indexed programId, address indexed scholar);
-    event ScholarSlashed(address indexed scholar, uint256 indexed programId, ScholarshipTypes.DisputeType dtype);
-    event ScholarCompleted(uint256 indexed programId, address indexed scholar);
-    event ProgramCompleted(uint256 indexed programId);
-    event ProgramStatusChanged(uint256 indexed programId, ScholarshipTypes.ProgramStatus newStatus);
-    event ScoreSubmitted(uint256 indexed programId, address indexed student, uint256 totalScore, address scoredBy);
-    event ApplicationDeadlineExtended(uint256 indexed programId, uint256 oldEnd, uint256 newEnd, uint8 extensionCount);
-    event VotingDeadlineExtended(uint256 indexed programId, uint256 oldEnd, uint256 newEnd, uint8 extensionCount);
-    event AdminBypassStatusForced(uint256 indexed programId, ScholarshipTypes.ProgramStatus newStatus, address admin);
-    event AdminBypassDatesUpdated(uint256 indexed programId, uint256 appStart, uint256 appEnd, uint256 voteStart, uint256 voteEnd, address admin);
+    event VoteCast(uint256 indexed pid, address indexed voter, address indexed candidate, uint256 weight, bool useReputation);
+    event ConfidenceStaked(uint256 indexed pid, address indexed voter, address indexed scholar, uint256 amount);
+    event ScholarSelected(uint256 indexed pid, address indexed scholar);
+    event ScholarSlashed(address indexed scholar, uint256 indexed pid, ScholarshipTypes.DisputeType dtype);
+    event ScholarCompleted(uint256 indexed pid, address indexed scholar);
+    event ProgramCompleted(uint256 indexed pid);
+    event ProgramStatusChanged(uint256 indexed pid, ScholarshipTypes.ProgramStatus newStatus);
+    event ScoreSubmitted(uint256 indexed pid, address indexed student, uint256 totalScore, address scoredBy);
+    event ApplicationDeadlineExtended(uint256 indexed pid, uint256 oldEnd, uint256 newEnd, uint8 extensionCount);
+    event VotingDeadlineExtended(uint256 indexed pid, uint256 oldEnd, uint256 newEnd, uint8 extensionCount);
+    event AdminBypassStatusForced(uint256 indexed pid, ScholarshipTypes.ProgramStatus newStatus, address admin);
+    event AdminBypassDatesUpdated(uint256 indexed pid, uint256 appStart, uint256 appEnd, uint256 voteStart, uint256 voteEnd, address admin);
 
     // ── Errors ───────────────────────────────────────────────────────────────
     error ProgramNotFound();
@@ -168,16 +169,16 @@ abstract contract ScholarshipCoreBase is Initializable {
     error PublicParticipationDisabled();
 
     // ── Shared Helpers ───────────────────────────────────────────────────────
-    function _requireProgramExists(uint256 programId) internal view { if (programId == 0 || programId > _nextProgramId) revert ProgramNotFound(); }
-    modifier programExists(uint256 programId) { _requireProgramExists(programId); _; }
+    function _requireProgramExists(uint256 pid) internal view { if (pid == 0 || pid > _nextProgramId) revert ProgramNotFound(); }
+    modifier programExists(uint256 pid) { _requireProgramExists(pid); _; }
 
-    function _requireStatus(uint256 programId, ScholarshipTypes.ProgramStatus expected) internal view {
-        if (programs[programId].status != expected) revert InvalidProgramStatus(expected, programs[programId].status);
+    function _requireStatus(uint256 pid, ScholarshipTypes.ProgramStatus expected) internal view {
+        if (programs[pid].status != expected) revert InvalidProgramStatus(expected, programs[pid].status);
     }
-    modifier inStatus(uint256 programId, ScholarshipTypes.ProgramStatus expected) { _requireStatus(programId, expected); _; }
+    modifier inStatus(uint256 pid, ScholarshipTypes.ProgramStatus expected) { _requireStatus(pid, expected); _; }
 
-    function _requireInitiator(uint256 programId) internal view { if (msg.sender != programs[programId].initiator) revert OnlyInitiator(); }
-    modifier onlyInitiator(uint256 programId) { _requireInitiator(programId); _; }
+    function _requireInitiator(uint256 pid) internal view { if (msg.sender != programs[pid].initiator) revert OnlyInitiator(); }
+    modifier onlyInitiator(uint256 pid) { _requireInitiator(pid); _; }
 
     function _requireStudentEligible(address wallet) internal view {
         ScholarshipTypes.StudentStatus s = globalStudentStatus[wallet];
@@ -189,16 +190,16 @@ abstract contract ScholarshipCoreBase is Initializable {
         for (uint256 i; i < arr.length; ) { s += arr[i]; unchecked { ++i; } }
     }
 
-    function _setScore(uint256 programId, address applicant, uint256 a, uint256 i, uint256 r, address scoredBy) internal {
-        ScholarshipTypes.ScoreWeights memory w = programs[programId].scoreWeights;
+    function _setScore(uint256 pid, address applicant, uint256 a, uint256 i, uint256 r, address scoredBy) internal {
+        ScholarshipTypes.ScoreWeights memory w = programs[pid].scoreWeights;
         a = a > 100 ? 100 : a; i = i > 100 ? 100 : i; r = r > 100 ? 100 : r;
         uint256 sw = uint256(w.academicWeight) + w.incomeWeight + w.recommendWeight;
         uint256 norm = sw > 0 ? ((a * w.academicWeight + i * w.incomeWeight + r * w.recommendWeight) * ScholarshipTypes.SCORE_MAX) / (sw * 100) : 0;
-        scoreComponents[programId][applicant] = ScholarshipTypes.ScoreComponents({ academicScore: a, incomeScore: i, recommendScore: r, isSubmitted: true, scoredBy: scoredBy });
-        applicants[programId][applicant].screeningScore = uint32(norm);
-        applicants[programId][applicant].totalScore = uint32(norm);
-        applicants[programId][applicant].scoreTimestamp = uint48(block.timestamp);
-        emit ScoreSubmitted(programId, applicant, norm, scoredBy);
+        scoreComponents[pid][applicant] = ScholarshipTypes.ScoreComponents({ academicScore: a, incomeScore: i, recommendScore: r, isSubmitted: true, scoredBy: scoredBy });
+        applicants[pid][applicant].screeningScore = uint32(norm);
+        applicants[pid][applicant].totalScore = uint32(norm);
+        applicants[pid][applicant].scoreTimestamp = uint48(block.timestamp);
+        emit ScoreSubmitted(pid, applicant, norm, scoredBy);
     }
 
     // ── Internal Governance Setters ──────────────────────────────────────────
@@ -349,8 +350,12 @@ abstract contract ScholarshipCoreBase is Initializable {
     ) internal {
         _requireInitiator(pid);
         _requireStatus(pid, ScholarshipTypes.ProgramStatus.VOTING);
-        if (block.timestamp < programs[pid].votingEnd) revert VotingNotEnded();
-        if (programs[pid].totalVotes == 0) revert QuorumNotMet();
+        
+        // Private programs funded by initiator skip the public voting quorum/time check
+        if (programs[pid].openDonation) {
+            if (block.timestamp < uint256(programs[pid].votingEnd)) revert VotingNotEnded();
+            if (programs[pid].totalVotes == 0) revert QuorumNotMet();
+        }
 
         programs[pid].status = ScholarshipTypes.ProgramStatus.ACTIVE;
         emit ProgramStatusChanged(pid, ScholarshipTypes.ProgramStatus.ACTIVE);
@@ -360,7 +365,7 @@ abstract contract ScholarshipCoreBase is Initializable {
             if (applicants[pid][s].status != ScholarshipTypes.ApplicationStatus.SHORTLISTED) revert CandidateNotShortlisted();
             
             scholars[s][pid] = ScholarshipTypes.Scholar({
-                programId: pid,
+                pid: pid,
                 wallet: s,
                 status: ScholarshipTypes.StudentStatus.ACTIVE,
                 isBlacklisted: false,

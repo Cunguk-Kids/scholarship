@@ -34,9 +34,9 @@ export async function upsertReputation(
 }
 
 /** Find or insert a v4Program row, returning its UUID */
-export async function findProgramUuid(blockchainId: number): Promise<string | null> {
+export async function findProgramUuid(pid: number): Promise<string | null> {
   const rows = await db.select().from(v4Programs)
-    .where(eq(v4Programs.blockchainId, blockchainId)).limit(1);
+    .where(eq(v4Programs.pid, pid)).limit(1);
   return rows[0]?.id ?? null;
 }
 

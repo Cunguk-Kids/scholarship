@@ -59,12 +59,12 @@ export function useCreateProgram() {
 
 export function useOpenApplications() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
-  const openApplications = (programId: bigint) => {
+  const openApplications = (pid: bigint) => {
     writeContract({
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "openApplications",
-      args: [programId],
+      args: [pid],
     });
   };
   return { openApplications, isPending, isSuccess, error, hash, reset };
@@ -72,12 +72,12 @@ export function useOpenApplications() {
 
 export function useOpenScreening() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
-  const openScreening = (programId: bigint) => {
+  const openScreening = (pid: bigint) => {
     writeContract({
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "openScreening",
-      args: [programId],
+      args: [pid],
     });
   };
   return { openScreening, isPending, isSuccess, error, hash, reset };
@@ -85,12 +85,12 @@ export function useOpenScreening() {
 
 export function useCancelProgram() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
-  const cancelProgram = (programId: bigint) => {
+  const cancelProgram = (pid: bigint) => {
     writeContract({
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "cancelProgram",
-      args: [programId],
+      args: [pid],
     });
   };
   return { cancelProgram, isPending, isSuccess, error, hash, reset };
@@ -98,12 +98,12 @@ export function useCancelProgram() {
 
 export function useResolveShortlistBatch() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
-  const resolveShortlistBatch = (programId: bigint, rankedSegment: `0x${string}`[], isLastBatch: boolean) => {
+  const resolveShortlistBatch = (pid: bigint, rankedSegment: `0x${string}`[], isLastBatch: boolean) => {
     writeContract({
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "resolveShortlistBatch",
-      args: [programId, rankedSegment, isLastBatch],
+      args: [pid, rankedSegment, isLastBatch],
     });
   };
   return { resolveShortlistBatch, isPending, isSuccess, error, hash, reset };
@@ -112,7 +112,7 @@ export function useResolveShortlistBatch() {
 export function useSelectWinners() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
   const selectWinners = (
-    programId: bigint,
+    pid: bigint,
     ranked: `0x${string}`[],
     amounts: bigint[][],
     descs: string[][],
@@ -126,7 +126,7 @@ export function useSelectWinners() {
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "selectWinners",
-      args: [programId, ranked, amounts, descs, hexProviders, hexExternalIds],
+      args: [pid, ranked, amounts, descs, hexProviders, hexExternalIds],
     });
   };
   return { selectWinners, isPending, isSuccess, error, hash, reset };
@@ -134,12 +134,12 @@ export function useSelectWinners() {
 
 export function useToggleOpenDonation() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
-  const toggle = (programId: bigint, open: boolean) => {
+  const toggle = (pid: bigint, open: boolean) => {
     writeContract({
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "toggleOpenDonation",
-      args: [programId, open],
+      args: [pid, open],
     });
   };
   return { toggle, isPending, isSuccess, error, hash, reset };
@@ -150,7 +150,7 @@ export function useToggleOpenDonation() {
 export function useApplyProgram() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
   const apply = (args: {
-    programId: bigint;
+    pid: bigint;
     profileCID: string;
     documentCID: string;
     essayCID: string;
@@ -164,7 +164,7 @@ export function useApplyProgram() {
       abi: scholarshipCoreAbi,
       functionName: "applyToProgram",
       args: [
-        args.programId,
+        args.pid,
         args.profileCID,
         args.documentCID,
         args.essayCID,
@@ -181,7 +181,7 @@ export function useApplyProgram() {
 export function useSubmitScore() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
   const submitScore = (args: {
-    programId: bigint;
+    pid: bigint;
     applicant: `0x${string}`;
     academicScore: bigint;
     incomeScore: bigint;
@@ -193,7 +193,7 @@ export function useSubmitScore() {
       abi: scholarshipCoreAbi,
       functionName: "submitCommitteeScore",
       args: [
-        args.programId,
+        args.pid,
         args.applicant,
         args.academicScore,
         args.incomeScore,
@@ -209,12 +209,12 @@ export function useSubmitScore() {
 
 export function useVoteForCandidate() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
-  const vote = (programId: bigint, candidate: `0x${string}`, useReputation: boolean) => {
+  const vote = (pid: bigint, candidate: `0x${string}`, useReputation: boolean) => {
     writeContract({
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "voteForCandidate",
-      args: [programId, candidate, useReputation],
+      args: [pid, candidate, useReputation],
     });
   };
   return { vote, isPending, isSuccess, error, hash, reset };
@@ -222,12 +222,12 @@ export function useVoteForCandidate() {
 
 export function usePlaceConfidenceStake() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
-  const stake = (programId: bigint, scholar: `0x${string}`, amountStr: string) => {
+  const stake = (pid: bigint, scholar: `0x${string}`, amountStr: string) => {
     writeContract({
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "placeConfidenceStake",
-      args: [programId, scholar, parseUnits(amountStr, 6)],
+      args: [pid, scholar, parseUnits(amountStr, 6)],
     });
   };
   return { stake, isPending, isSuccess, error, hash, reset };

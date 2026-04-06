@@ -35,7 +35,7 @@ dashboardRoute.get("/:wallet", async (c) => {
       applicant: v4Applicants,
       program: {
         id: v4Programs.id,
-        blockchainId: v4Programs.blockchainId,
+        pid: v4Programs.pid,
         metadataCID: v4Programs.metadataCID,
         status: v4Programs.status,
         totalFund: v4Programs.totalFund,
@@ -50,7 +50,7 @@ dashboardRoute.get("/:wallet", async (c) => {
       scholar: v4Scholars,
       program: {
         id: v4Programs.id,
-        blockchainId: v4Programs.blockchainId,
+        pid: v4Programs.pid,
         metadataCID: v4Programs.metadataCID,
         status: v4Programs.status,
         totalFund: v4Programs.totalFund,

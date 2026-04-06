@@ -9,7 +9,7 @@ export function useRaiseDispute() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
   const raiseDispute = (
-    programId: bigint,
+    pid: bigint,
     scholar: `0x${string}`,
     milestoneId: bigint,
     disputeType: number,
@@ -19,7 +19,7 @@ export function useRaiseDispute() {
       address: BOUNTY_ADDRESS,
       abi: scholarshipBountyAbi,
       functionName: "raiseDispute",
-      args: [programId, scholar, milestoneId, disputeType, evidenceCID],
+      args: [pid, scholar, milestoneId, disputeType, evidenceCID],
     });
   };
 

@@ -166,7 +166,7 @@ export function AdminDashboardPage() {
                   {applicantsData?.map((a, i) => (
                     <tr key={i} className="border-b-2 border-gray-200 text-sm">
                       <td className="p-3 font-bold">{a.applicant.wallet.slice(0,8)}...</td>
-                      <td className="p-3 font-bold text-gray-500">Prog #{a.program?.blockchainId}</td>
+                      <td className="p-3 font-bold text-gray-500">Prog #{a.program?.pid}</td>
                       <td className="p-3">
                         <span className="bg-black text-white text-xs px-2 py-1 rounded">{a.applicant.status}</span>
                       </td>
@@ -184,7 +184,7 @@ export function AdminDashboardPage() {
                   {scholarsData?.map((s, i) => (
                     <tr key={i} className="border-b-2 border-gray-200 text-sm">
                       <td className="p-3 font-bold">{s.scholar.wallet.slice(0,8)}...</td>
-                      <td className="p-3 font-bold text-gray-500">Prog #{s.program?.blockchainId}</td>
+                      <td className="p-3 font-bold text-gray-500">Prog #{s.program?.pid}</td>
                       <td className="p-3 font-bold text-green-600 border-l-2 pl-3">
                         ${formatUnits(BigInt(s.scholar.totalReceived || "0"), 6)}
                       </td>

@@ -46,13 +46,13 @@ export function ProgramCard({ program, meta }: ProgramCardProps) {
           <div className="flex items-center justify-between">
             <NeoBadge status={program.status} />
             <span className="text-xs font-bold text-gray-400 uppercase">
-              #{program.blockchainId}
+              #{program.pid}
             </span>
           </div>
 
           {/* Title */}
           <h3 className="font-paytone text-lg leading-tight line-clamp-2">
-            {meta?.name ?? `Program #${program.blockchainId}`}
+            {meta?.name ?? `Program #${program.pid}`}
           </h3>
 
           {/* Description */}

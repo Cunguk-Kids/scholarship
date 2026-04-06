@@ -8,12 +8,12 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ScholarshipTypes} from "../libraries/ScholarshipTypes.sol";
 
 interface IScholarshipCoreAdmin {
-    function adminForceStatus(uint256 programId, ScholarshipTypes.ProgramStatus newStatus) external;
-    function adminUpdateDates(uint256 programId, uint256 appStart, uint256 appEnd, uint256 voteStart, uint256 voteEnd) external;
+    function adminForceStatus(uint256 pid, ScholarshipTypes.ProgramStatus newStatus) external;
+    function adminUpdateDates(uint256 pid, uint256 appStart, uint256 appEnd, uint256 voteStart, uint256 voteEnd) external;
     function setProtocolConfig(ScholarshipTypes.ProtocolConfig calldata c) external;
-    function extendApplicationDeadline(uint256 programId, uint256 newEnd) external;
-    function extendVotingDeadline(uint256 programId, uint256 newEnd) external;
-    function getProgram(uint256 programId) external view returns (ScholarshipTypes.Program memory);
+    function extendApplicationDeadline(uint256 pid, uint256 newEnd) external;
+    function extendVotingDeadline(uint256 pid, uint256 newEnd) external;
+    function getProgram(uint256 pid) external view returns (ScholarshipTypes.Program memory);
 }
 
 /**
@@ -47,28 +47,28 @@ contract ScholarshipAdmin is Initializable, AccessControlUpgradeable, UUPSUpgrad
         core.setProtocolConfig(c);
     }
 
-    function adminForceStatus(uint256 programId, ScholarshipTypes.ProgramStatus newStatus) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        core.adminForceStatus(programId, newStatus);
+    function adminForceStatus(uint256 pid, ScholarshipTypes.ProgramStatus newStatus) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        core.adminForceStatus(pid, newStatus);
     }
 
     function adminUpdateDates(
-        uint256 programId,
+        uint256 pid,
         uint256 appStart,
         uint256 appEnd,
         uint256 voteStart,
         uint256 voteEnd
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        core.adminUpdateDates(programId, appStart, appEnd, voteStart, voteEnd);
+        core.adminUpdateDates(pid, appStart, appEnd, voteStart, voteEnd);
     }
 
     // ── Extension Wrappers (Initiator only) ──────────────────────────────────
     // Note: ScholarshipCore will perform the onlyInitiator check.
 
-    function extendApplicationDeadline(uint256 programId, uint256 newEnd) external {
-        core.extendApplicationDeadline(programId, newEnd);
+    function extendApplicationDeadline(uint256 pid, uint256 newEnd) external {
+        core.extendApplicationDeadline(pid, newEnd);
     }
 
-    function extendVotingDeadline(uint256 programId, uint256 newEnd) external {
-        core.extendVotingDeadline(programId, newEnd);
+    function extendVotingDeadline(uint256 pid, uint256 newEnd) external {
+        core.extendVotingDeadline(pid, newEnd);
     }
 }

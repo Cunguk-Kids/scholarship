@@ -13,21 +13,21 @@ export const committeeGovernanceHandlers = () => {
 
   ponder.on("CommitteeGovernance:CommitteeMemberAdded", async ({ event }) => {
     try {
-      const { programId, member } = event.args;
-      const progUuid = await findProgramUuid(Number(programId));
+      const { pid, member } = event.args;
+      const progUuid = await findProgramUuid(Number(pid));
 
       await db.insert(v4CommitteeMembers).values({
         programId: progUuid ?? undefined,
-        blockchainProgramId: Number(programId),
+        pid: Number(pid),
         memberAddress: String(member),
         isActive: true,
       }).onConflictDoUpdate({
-        target: [v4CommitteeMembers.memberAddress, v4CommitteeMembers.blockchainProgramId],
+        target: [v4CommitteeMembers.memberAddress, v4CommitteeMembers.pid],
         set: { isActive: true, removedAt: null, addedAt: new Date() },
       });
 
       await insertBlock({ event, eventName: "CommitteeGovernance:CommitteeMemberAdded" });
-      await sendSseToAll("main", { step: "CommitteeMemberAdded", data: { programId, member }, status: true, blockHash: event.block.hash });
+      await sendSseToAll("main", { step: "CommitteeMemberAdded", data: { pid, member }, status: true, blockHash: event.block.hash });
     } catch (err) {
       logger.error({ err }, "CommitteeMemberAdded handler error");
     }
@@ -37,17 +37,17 @@ export const committeeGovernanceHandlers = () => {
 
   ponder.on("CommitteeGovernance:CommitteeMemberRemoved", async ({ event }) => {
     try {
-      const { programId, member } = event.args;
+      const { pid, member } = event.args;
 
       await db.update(v4CommitteeMembers)
         .set({ isActive: false, removedAt: new Date() })
         .where(and(
-          eq(v4CommitteeMembers.blockchainProgramId, Number(programId)),
+          eq(v4CommitteeMembers.pid, Number(pid)),
           eq(v4CommitteeMembers.memberAddress, String(member)),
         ));
 
       await insertBlock({ event, eventName: "CommitteeGovernance:CommitteeMemberRemoved" });
-      await sendSseToAll("main", { step: "CommitteeMemberRemoved", data: { programId, member }, status: true, blockHash: event.block.hash });
+      await sendSseToAll("main", { step: "CommitteeMemberRemoved", data: { pid, member }, status: true, blockHash: event.block.hash });
     } catch (err) {
       logger.error({ err }, "CommitteeMemberRemoved handler error");
     }
@@ -57,7 +57,7 @@ export const committeeGovernanceHandlers = () => {
 
   ponder.on("CommitteeGovernance:ScoreSubmitted", async ({ event }) => {
     try {
-      const { programId, applicant, score } = event.args;
+      const { pid, applicant, score } = event.args;
 
       await db.update(v4Applicants)
         .set({
@@ -65,12 +65,12 @@ export const committeeGovernanceHandlers = () => {
           updatedAt: new Date(),
         })
         .where(and(
-          eq(v4Applicants.blockchainProgramId, Number(programId)),
+          eq(v4Applicants.pid, Number(pid)),
           eq(v4Applicants.wallet, String(applicant)),
         ));
 
       await insertBlock({ event, eventName: "CommitteeGovernance:ScoreSubmitted" });
-      await sendSseToAll("main", { step: "ScoreSubmitted", data: { programId, applicant, score: String(score) }, status: true, blockHash: event.block.hash });
+      await sendSseToAll("main", { step: "ScoreSubmitted", data: { pid, applicant, score: String(score) }, status: true, blockHash: event.block.hash });
     } catch (err) {
       logger.error({ err }, "ScoreSubmitted handler error");
     }

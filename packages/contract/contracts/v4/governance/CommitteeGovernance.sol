@@ -60,9 +60,9 @@ contract CommitteeGovernance is Initializable, AccessControlUpgradeable, UUPSUpg
     mapping(uint256 => bool) public milestoneResolved;
 
     // ── Events ───────────────────────────────────────────────────────────────
-    event CommitteeMemberAdded(uint256 indexed programId, address member);
-    event CommitteeMemberRemoved(uint256 indexed programId, address member);
-    event ScoreSubmitted(uint256 indexed programId, address indexed applicant, uint256 score);
+    event CommitteeMemberAdded(uint256 indexed pid, address member);
+    event CommitteeMemberRemoved(uint256 indexed pid, address member);
+    event ScoreSubmitted(uint256 indexed pid, address indexed applicant, uint256 score);
     event DisputeVoteCast(uint256 indexed disputeId, address member, bool upholdDispute);
     event MilestoneVoteCast(uint256 indexed milestoneId, address member, bool approve);
     event MilestoneVoteResolved(uint256 indexed milestoneId, bool approved);
@@ -95,30 +95,30 @@ contract CommitteeGovernance is Initializable, AccessControlUpgradeable, UUPSUpg
     // COMMITTEE MANAGEMENT (unchanged)
     // ═══════════════════════════════════════════════════════════════════
 
-    function addCommitteeMember(uint256 programId, address member) external {
-        ScholarshipTypes.Program memory prog = _core.getProgram(programId);
+    function addCommitteeMember(uint256 pid, address member) external {
+        ScholarshipTypes.Program memory prog = _core.getProgram(pid);
         if (msg.sender != prog.initiator) revert OnlyInitiator();
         if (member == prog.initiator) revert InitiatorCannotBeCommittee();
-        if (isCommitteeMember[programId][member]) revert AlreadyCommitteeMember();
-        if (_committeeMembers[programId].length >= ScholarshipTypes.MAX_COMMITTEE_MEMBERS) revert TooManyCommitteeMembers();
+        if (isCommitteeMember[pid][member]) revert AlreadyCommitteeMember();
+        if (_committeeMembers[pid].length >= ScholarshipTypes.MAX_COMMITTEE_MEMBERS) revert TooManyCommitteeMembers();
 
-        uint8 idx = uint8(_committeeMembers[programId].length + 1); // 1-based
-        isCommitteeMember[programId][member] = true;
-        _memberIndex[programId][member] = idx;
-        _committeeMembers[programId].push(member);
-        emit CommitteeMemberAdded(programId, member);
+        uint8 idx = uint8(_committeeMembers[pid].length + 1); // 1-based
+        isCommitteeMember[pid][member] = true;
+        _memberIndex[pid][member] = idx;
+        _committeeMembers[pid].push(member);
+        emit CommitteeMemberAdded(pid, member);
     }
 
-    function removeCommitteeMember(uint256 programId, address member) external {
-        ScholarshipTypes.Program memory prog = _core.getProgram(programId);
+    function removeCommitteeMember(uint256 pid, address member) external {
+        ScholarshipTypes.Program memory prog = _core.getProgram(pid);
         if (msg.sender != prog.initiator) revert OnlyInitiator();
-        isCommitteeMember[programId][member] = false;
+        isCommitteeMember[pid][member] = false;
         // Note: index kept to preserve bitmap integrity for past votes.
-        emit CommitteeMemberRemoved(programId, member);
+        emit CommitteeMemberRemoved(pid, member);
     }
 
-    function getCommitteeMembers(uint256 programId) external view returns (address[] memory) {
-        return _committeeMembers[programId];
+    function getCommitteeMembers(uint256 pid) external view returns (address[] memory) {
+        return _committeeMembers[pid];
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -126,30 +126,30 @@ contract CommitteeGovernance is Initializable, AccessControlUpgradeable, UUPSUpg
     // ═══════════════════════════════════════════════════════════════════
 
     function submitScore(
-        uint256 programId,
+        uint256 pid,
         address applicant,
         uint256 academicScore,
         uint256 incomeScore,
         uint256 recommendScore
     ) external {
-        if (!isCommitteeMember[programId][msg.sender]) revert NotCommitteeMember();
-        hasScored[programId][applicant][msg.sender] = true;
-        _tryFinalizeScore(programId, applicant, academicScore, incomeScore, recommendScore);
-        emit ScoreSubmitted(programId, applicant, academicScore);
+        if (!isCommitteeMember[pid][msg.sender]) revert NotCommitteeMember();
+        hasScored[pid][applicant][msg.sender] = true;
+        _tryFinalizeScore(pid, applicant, academicScore, incomeScore, recommendScore);
+        emit ScoreSubmitted(pid, applicant, academicScore);
     }
 
-    function _tryFinalizeScore(uint256 programId, address applicant, uint256 academic, uint256 income, uint256 recommend) internal {
+    function _tryFinalizeScore(uint256 pid, address applicant, uint256 academic, uint256 income, uint256 recommend) internal {
         // Average scores from all members who have submitted — simplified for size
         // Full implementation would accumulate; this calls core once all members voted
-        address[] memory members = _committeeMembers[programId];
+        address[] memory members = _committeeMembers[pid];
         uint256 n = members.length;
         uint256 voted;
         for (uint256 i; i < n; ) {
-            if (hasScored[programId][applicant][members[i]]) voted++;
+            if (hasScored[pid][applicant][members[i]]) voted++;
             unchecked { ++i; }
         }
         if (voted == n && n > 0) {
-            _core.submitCommitteeScore(programId, applicant, academic, income, recommend, msg.sender);
+            _core.submitCommitteeScore(pid, applicant, academic, income, recommend, msg.sender);
         }
     }
 
@@ -157,15 +157,15 @@ contract CommitteeGovernance is Initializable, AccessControlUpgradeable, UUPSUpg
     // DISPUTE VOTING (unchanged from v4)
     // ═══════════════════════════════════════════════════════════════════
 
-    function voteOnDispute(uint256 disputeId, uint256 programId, bool upholdDispute) external {
-        if (!isCommitteeMember[programId][msg.sender]) revert NotCommitteeMember();
+    function voteOnDispute(uint256 disputeId, uint256 pid, bool upholdDispute) external {
+        if (!isCommitteeMember[pid][msg.sender]) revert NotCommitteeMember();
         if (hasVotedOnDispute[disputeId][msg.sender]) revert AlreadyVotedOnDispute();
         hasVotedOnDispute[disputeId][msg.sender] = true;
         if (upholdDispute) disputeVotesFor[disputeId]++;
         else               disputeVotesAgainst[disputeId]++;
         emit DisputeVoteCast(disputeId, msg.sender, upholdDispute);
 
-        uint256 majority = _committeeMembers[programId].length / 2 + 1;
+        uint256 majority = _committeeMembers[pid].length / 2 + 1;
         if (disputeVotesFor[disputeId] >= majority) {
             _core.resolveDisputeBH(disputeId);
         } else if (disputeVotesAgainst[disputeId] >= majority) {
@@ -188,11 +188,11 @@ contract CommitteeGovernance is Initializable, AccessControlUpgradeable, UUPSUpg
      *         GAS: ~1 SLOAD + 1 SSTORE per vote. Resolution adds 1 external call.
      *         No array iteration needed — popcount via Brian Kernighan is O(set bits).
      */
-    function voteOnMilestone(uint256 milestoneId, uint256 programId, bool approve) external {
-        if (!isCommitteeMember[programId][msg.sender]) revert NotCommitteeMember();
+    function voteOnMilestone(uint256 milestoneId, uint256 pid, bool approve) external {
+        if (!isCommitteeMember[pid][msg.sender]) revert NotCommitteeMember();
         if (milestoneResolved[milestoneId]) revert MilestoneAlreadyResolved();
 
-        uint8 idx = _memberIndex[programId][msg.sender];
+        uint8 idx = _memberIndex[pid][msg.sender];
         uint256 bit = 1 << (idx - 1);
 
         // Prevent double voting (check both bitmaps)
@@ -203,7 +203,7 @@ contract CommitteeGovernance is Initializable, AccessControlUpgradeable, UUPSUpg
 
         emit MilestoneVoteCast(milestoneId, msg.sender, approve);
 
-        uint256 total   = _committeeMembers[programId].length;
+        uint256 total   = _committeeMembers[pid].length;
         uint256 majority = total / 2 + 1;
 
         uint256 approveCount = _popcount(_approveVotes[milestoneId]);
@@ -229,8 +229,8 @@ contract CommitteeGovernance is Initializable, AccessControlUpgradeable, UUPSUpg
 // ── Minimal interfaces ───────────────────────────────────────────────────────
 
 interface IScholarshipCoreGov {
-    function getProgram(uint256 programId) external view returns (ScholarshipTypes.Program memory);
-    function submitCommitteeScore(uint256 programId, address applicant, uint256 academic, uint256 income, uint256 recommend, address committeeAddress) external;
+    function getProgram(uint256 pid) external view returns (ScholarshipTypes.Program memory);
+    function submitCommitteeScore(uint256 pid, address applicant, uint256 academic, uint256 income, uint256 recommend, address committeeAddress) external;
     function resolveDisputeBH(uint256 disputeId) external;
     function resolveDisputeScholar(uint256 disputeId) external;
 }

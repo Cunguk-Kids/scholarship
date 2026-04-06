@@ -68,15 +68,15 @@ contract ScholarshipTreasury is
     mapping(uint256 => uint256) public programYield;
 
     // -- Donor tracking per program (yield distribution + refunds) ----------
-    // programId → donor → net donated amount
+    // pid → donor → net donated amount
     mapping(uint256 => mapping(address => uint256)) public donorBalance;
     mapping(uint256 => uint256)                     public programTotalDonated;
     mapping(uint256 => address[])                  private _programDonors;
 
     // -- Confidence stakes --------------------------------------------------
-    // programId → voter → staked amount
+    // pid → voter → staked amount
     mapping(uint256 => mapping(address => uint256)) public confidenceStakes;
-    // programId → voter → scholar they staked on
+    // pid → voter → scholar they staked on
     mapping(uint256 => mapping(address => address)) public confidenceStakeFor;
     mapping(uint256 => uint256)                     public totalConfidenceStake;
 
@@ -92,29 +92,29 @@ contract ScholarshipTreasury is
 
     // ── Events ───────────────────────────────────────────────────────────────
 
-    event FundDeposited(uint256 indexed programId, address depositor, uint256 amount);
-    event DonationRecorded(uint256 indexed programId, address donor, uint256 netAmount);
-    event MilestoneDisbursed(uint256 indexed programId, address scholar, uint256 milestoneId, uint256 amount);
+    event FundDeposited(uint256 indexed pid, address depositor, uint256 amount);
+    event DonationRecorded(uint256 indexed pid, address donor, uint256 netAmount);
+    event MilestoneDisbursed(uint256 indexed pid, address scholar, uint256 milestoneId, uint256 amount);
     event SlashDistributed(
-        uint256 indexed programId,
+        uint256 indexed pid,
         address indexed scholar,
         address indexed bountyHunter,
         uint256 bhReward,
         uint256 treasuryAmount,
         uint256 protocolAmount
     );
-    event ConfidenceStakeDeposited(uint256 indexed programId, address voter, address scholar, uint256 amount);
+    event ConfidenceStakeDeposited(uint256 indexed pid, address voter, address scholar, uint256 amount);
     event ConfidenceStakeResolved(
-        uint256 indexed programId,
+        uint256 indexed pid,
         address indexed voter,
         uint256 returned,
         uint256 bonus,
         bool    slashed
     );
-    event YieldAdded(uint256 indexed programId, uint256 amount);
-    event YieldDistributed(uint256 indexed programId, uint256 totalYield);
-    event YieldClaimed(uint256 indexed programId, address voter, uint256 amount);
-    event DonorRefunded(uint256 indexed programId, address donor, uint256 amount);
+    event YieldAdded(uint256 indexed pid, uint256 amount);
+    event YieldDistributed(uint256 indexed pid, uint256 totalYield);
+    event YieldClaimed(uint256 indexed pid, address voter, uint256 amount);
+    event DonorRefunded(uint256 indexed pid, address donor, uint256 amount);
 
     // ── Errors ───────────────────────────────────────────────────────────────
 
@@ -163,11 +163,11 @@ contract ScholarshipTreasury is
      *         USDC was already transferred directly to this contract by Core.
      */
     function depositProgramFund(
-        uint256 programId,
+        uint256 pid,
         uint256 amount
     ) external override onlyRole(CORE_ROLE) {
-        programBalance[programId] += amount;
-        emit FundDeposited(programId, msg.sender, amount);
+        programBalance[pid] += amount;
+        emit FundDeposited(pid, msg.sender, amount);
     }
 
     /**
@@ -178,18 +178,18 @@ contract ScholarshipTreasury is
      *         it can be iterated during refunds / yield distribution.
      */
     function recordDonation(
-        uint256 programId,
+        uint256 pid,
         address donor,
         uint256 netAmount
     ) external override onlyRole(CORE_ROLE) {
-        if (donorBalance[programId][donor] == 0) {
-            _programDonors[programId].push(donor);
+        if (donorBalance[pid][donor] == 0) {
+            _programDonors[pid].push(donor);
         }
-        donorBalance[programId][donor] += netAmount;
-        programTotalDonated[programId] += netAmount;
-        programBalance[programId]      += netAmount;
+        donorBalance[pid][donor] += netAmount;
+        programTotalDonated[pid] += netAmount;
+        programBalance[pid]      += netAmount;
 
-        emit DonationRecorded(programId, donor, netAmount);
+        emit DonationRecorded(pid, donor, netAmount);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -205,17 +205,17 @@ contract ScholarshipTreasury is
      */
     function disburseMilestone(
         address scholar,
-        uint256 programId,
+        uint256 pid,
         uint256 milestoneId,
         uint256 amount
     ) external override nonReentrant onlyRole(CORE_ROLE) {
-        if (programBalance[programId] < amount)
+        if (programBalance[pid] < amount)
             revert InsufficientProgramBalance();
 
-        programBalance[programId] -= amount;
+        programBalance[pid] -= amount;
         usdc.safeTransfer(scholar, amount);
 
-        emit MilestoneDisbursed(programId, scholar, milestoneId, amount);
+        emit MilestoneDisbursed(pid, scholar, milestoneId, amount);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -232,18 +232,18 @@ contract ScholarshipTreasury is
      * @return bhReward Amount sent to the bounty hunter.
      */
     function slashAndDistribute(
-        uint256 programId,
+        uint256 pid,
         address scholarAddr,
         address bountyHunter,
         uint256 bhPercent,
         uint256, /* treasuryPercent — treasury share stays in contract, no transfer */
         uint256 protocolPercent
     ) external override nonReentrant onlyRole(BOUNTY_ROLE) returns (uint256 bhReward) {
-        uint256 remaining = programBalance[programId];
+        uint256 remaining = programBalance[pid];
         if (remaining == 0) revert InsufficientProgramBalance();
 
         // CEI: zero balance first
-        programBalance[programId] = 0;
+        programBalance[pid] = 0;
 
         bhReward             = (remaining * bhPercent)      / 100;
         uint256 toProtocol   = (remaining * protocolPercent) / 100;
@@ -256,7 +256,7 @@ contract ScholarshipTreasury is
         }
 
         uint256 toTreasury = remaining - bhReward - toProtocol; // implicitly = treasuryPercent share
-        emit SlashDistributed(programId, scholarAddr, bountyHunter, bhReward, toTreasury, toProtocol);
+        emit SlashDistributed(pid, scholarAddr, bountyHunter, bhReward, toTreasury, toProtocol);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -269,19 +269,19 @@ contract ScholarshipTreasury is
      *         One stake per voter per program.
      */
     function depositConfidenceStake(
-        uint256 programId,
+        uint256 pid,
         address voter,
         address scholar,
         uint256 amount
     ) external override nonReentrant onlyRole(CORE_ROLE) {
-        if (confidenceStakes[programId][voter] > 0)
+        if (confidenceStakes[pid][voter] > 0)
             revert ConfidenceStakeAlreadyExists();
 
-        confidenceStakes[programId][voter]   = amount;
-        confidenceStakeFor[programId][voter] = scholar;
-        totalConfidenceStake[programId]      += amount;
+        confidenceStakes[pid][voter]   = amount;
+        confidenceStakeFor[pid][voter] = scholar;
+        totalConfidenceStake[pid]      += amount;
 
-        emit ConfidenceStakeDeposited(programId, voter, scholar, amount);
+        emit ConfidenceStakeDeposited(pid, voter, scholar, amount);
     }
 
     /**
@@ -293,32 +293,32 @@ contract ScholarshipTreasury is
      * @dev    CEI: zero stake before transfer.
      */
     function resolveConfidenceStake(
-        uint256 programId,
+        uint256 pid,
         address voter,
         bool    scholarSucceeded
     ) external override nonReentrant onlyRole(CORE_ROLE) {
-        uint256 stake = confidenceStakes[programId][voter];
+        uint256 stake = confidenceStakes[pid][voter];
         if (stake == 0) return;
 
         // CEI
-        confidenceStakes[programId][voter] = 0;
+        confidenceStakes[pid][voter] = 0;
 
         if (scholarSucceeded) {
             // 20% bonus from yield pool, capped by available yield
             uint256 bonus         = (stake * 20) / 100;
-            uint256 yieldAvail    = programYield[programId];
+            uint256 yieldAvail    = programYield[pid];
             uint256 actualBonus   = bonus <= yieldAvail ? bonus : yieldAvail;
-            programYield[programId] -= actualBonus;
+            programYield[pid] -= actualBonus;
 
             uint256 total = stake + actualBonus;
             usdc.safeTransfer(voter, total);
-            emit ConfidenceStakeResolved(programId, voter, stake, actualBonus, false);
+            emit ConfidenceStakeResolved(pid, voter, stake, actualBonus, false);
         } else {
             // 50% slashed — stays in treasury, rest returned
             uint256 slashAmt = stake / 2;
             uint256 returned = stake - slashAmt;
             usdc.safeTransfer(voter, returned);
-            emit ConfidenceStakeResolved(programId, voter, returned, 0, true);
+            emit ConfidenceStakeResolved(pid, voter, returned, 0, true);
         }
     }
 
@@ -332,22 +332,22 @@ contract ScholarshipTreasury is
      *         Phase 2: Automated after harvesting Aave aUSDC positions.
      */
     function addYield(
-        uint256 programId,
+        uint256 pid,
         uint256 amount
     ) external override onlyRole(CORE_ROLE) {
-        programYield[programId] += amount;
-        emit YieldAdded(programId, amount);
+        programYield[pid] += amount;
+        emit YieldAdded(pid, amount);
     }
 
     /**
      * @notice Mark yield as ready for individual claims.
      *         Called once when a programme completes.
      */
-    function distributeYield(uint256 programId)
+    function distributeYield(uint256 pid)
         external override onlyRole(CORE_ROLE)
     {
-        yieldDistributed[programId] = true;
-        emit YieldDistributed(programId, programYield[programId]);
+        yieldDistributed[pid] = true;
+        emit YieldDistributed(pid, programYield[pid]);
     }
 
     /**
@@ -357,24 +357,24 @@ contract ScholarshipTreasury is
      * @dev    Permissionless pull so any voter can claim at any time
      *         after the programme completes.  Safe — state updated before transfer.
      */
-    function claimYield(uint256 programId, address voter)
+    function claimYield(uint256 pid, address voter)
         external nonReentrant
     {
-        if (!yieldDistributed[programId])    revert YieldNotYetDistributed();
-        if (yieldClaimed[programId][voter])  revert AlreadyClaimedYield();
+        if (!yieldDistributed[pid])    revert YieldNotYetDistributed();
+        if (yieldClaimed[pid][voter])  revert AlreadyClaimedYield();
 
-        uint256 voterDonation = donorBalance[programId][voter];
+        uint256 voterDonation = donorBalance[pid][voter];
         if (voterDonation == 0) revert NothingToRefund();
 
-        uint256 totalDonated = programTotalDonated[programId];
-        uint256 totalYield   = programYield[programId];
+        uint256 totalDonated = programTotalDonated[pid];
+        uint256 totalYield   = programYield[pid];
         uint256 voterShare   = (totalYield * voterDonation) / totalDonated;
 
-        yieldClaimed[programId][voter] = true;
+        yieldClaimed[pid][voter] = true;
 
         if (voterShare > 0) {
             usdc.safeTransfer(voter, voterShare);
-            emit YieldClaimed(programId, voter, voterShare);
+            emit YieldClaimed(pid, voter, voterShare);
         }
     }
 
@@ -389,27 +389,27 @@ contract ScholarshipTreasury is
      *         For larger programmes the loop will revert — use claimRefund()
      *         (pull pattern) instead.
      */
-    function refundDonors(uint256 programId)
+    function refundDonors(uint256 pid)
         external override nonReentrant onlyRole(CORE_ROLE)
     {
-        address[] memory donors  = _programDonors[programId];
+        address[] memory donors  = _programDonors[pid];
         if (donors.length > maxPushRefundDonors)
             revert TooManyDonorsForPushRefund();
-        uint256          balance = programBalance[programId];
-        uint256          total   = programTotalDonated[programId];
+        uint256          balance = programBalance[pid];
+        uint256          total   = programTotalDonated[pid];
 
         // CEI: zero balance first
-        programBalance[programId] = 0;
+        programBalance[pid] = 0;
 
         for (uint256 i = 0; i < donors.length; ) {
             address donor   = donors[i];
-            uint256 donated = donorBalance[programId][donor];
+            uint256 donated = donorBalance[pid][donor];
             if (donated > 0 && total > 0) {
                 uint256 refund = (balance * donated) / total;
-                donorBalance[programId][donor] = 0;
+                donorBalance[pid][donor] = 0;
                 if (refund > 0) {
                     usdc.safeTransfer(donor, refund);
-                    emit DonorRefunded(programId, donor, refund);
+                    emit DonorRefunded(pid, donor, refund);
                 }
             }
             unchecked { ++i; }
@@ -420,22 +420,22 @@ contract ScholarshipTreasury is
      * @notice Pull-pattern refund for individual donors.
      *         Safer for large donor lists; recommended for programmatic callers.
      */
-    function claimRefund(uint256 programId, address donor)
+    function claimRefund(uint256 pid, address donor)
         external nonReentrant
     {
-        uint256 donated = donorBalance[programId][donor];
+        uint256 donated = donorBalance[pid][donor];
         if (donated == 0) revert NothingToRefund();
 
-        uint256 balance = programBalance[programId];
-        uint256 total   = programTotalDonated[programId];
+        uint256 balance = programBalance[pid];
+        uint256 total   = programTotalDonated[pid];
         uint256 refund  = total > 0 ? (balance * donated) / total : 0;
 
-        donorBalance[programId][donor]  = 0;
-        programBalance[programId]      -= refund;
+        donorBalance[pid][donor]  = 0;
+        programBalance[pid]      -= refund;
 
         if (refund > 0) {
             usdc.safeTransfer(donor, refund);
-            emit DonorRefunded(programId, donor, refund);
+            emit DonorRefunded(pid, donor, refund);
         }
     }
 
@@ -443,22 +443,22 @@ contract ScholarshipTreasury is
     // VIEWS
     // ═══════════════════════════════════════════════════════════════════
 
-    function getProgramBalance(uint256 programId)
+    function getProgramBalance(uint256 pid)
         external view override returns (uint256)
     {
-        return programBalance[programId];
+        return programBalance[pid];
     }
 
-    function getAccruedYield(uint256 programId)
+    function getAccruedYield(uint256 pid)
         external view override returns (uint256)
     {
-        return programYield[programId];
+        return programYield[pid];
     }
 
-    function getProgramDonors(uint256 programId)
+    function getProgramDonors(uint256 pid)
         external view override returns (address[] memory)
     {
-        return _programDonors[programId];
+        return _programDonors[pid];
     }
 
     // ═══════════════════════════════════════════════════════════════════

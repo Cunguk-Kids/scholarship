@@ -21,10 +21,10 @@ interface IScholarshipCore {
 
     // ── Queries ────────────────────────────────────────────────────────
 
-    function getProgram(uint256 programId)
+    function getProgram(uint256 pid)
         external view returns (ScholarshipTypes.Program memory);
 
-    function getScholar(address wallet, uint256 programId)
+    function getScholar(address wallet, uint256 pid)
         external view returns (ScholarshipTypes.Scholar memory);
 
     function isStudentEligible(address wallet)
@@ -32,7 +32,7 @@ interface IScholarshipCore {
 
     /// @notice USDC value of undisbursed milestones for a given scholar.
     ///         Used by ScholarshipBounty to calculate BH stake and potential reward.
-    function getRemainingFund(address wallet, uint256 programId)
+    function getRemainingFund(address wallet, uint256 pid)
         external view returns (uint256);
 
     /// @notice Returns true if `account` holds BOUNTY_ROLE.
@@ -48,7 +48,7 @@ interface IScholarshipCore {
      *         program.allocatedFund by `amount`.
      */
     function onOptionalApproved(
-        uint256 programId,
+        uint256 pid,
         address scholar,
         uint256 amount
     ) external;
@@ -59,7 +59,7 @@ interface IScholarshipCore {
      *         and fires NFT mint + program completion if all mandatory done.
      */
     function onMilestoneCompleted(
-        uint256 programId,
+        uint256 pid,
         address scholar,
         uint256 milestoneId,
         uint256 amount,
@@ -74,7 +74,7 @@ interface IScholarshipCore {
      */
     function slashScholar(
         address wallet,
-        uint256 programId,
+        uint256 pid,
         ScholarshipTypes.DisputeType disputeType
     ) external;
 
@@ -84,7 +84,7 @@ interface IScholarshipCore {
      * @notice Called by CommitteeGovernance to push averaged scores on-chain.
      */
     function submitCommitteeScore(
-        uint256 programId,
+        uint256 pid,
         address applicant,
         uint256 academicScore,
         uint256 incomeScore,
@@ -133,7 +133,7 @@ interface IMilestoneManager {
      * @param descs    IPFS descriptionCIDs; pass empty array to defer.
      */
     function createMandatoryBatch(
-        uint256 programId,
+        uint256 pid,
         address scholar,
         uint256[] calldata amounts,
         string[] calldata descs,
@@ -145,7 +145,7 @@ interface IMilestoneManager {
      * @notice Register committee contract for a program.
      *         Called by ScholarshipCore inside createProgram().
      */
-    function setProgramCommittee(uint256 programId, address committeeContract) external;
+    function setProgramCommittee(uint256 pid, address committeeContract) external;
 
     /**
      * @notice Set ScholarshipCore address post-deploy (resolves circular dependency).
@@ -162,7 +162,7 @@ interface IMilestoneManager {
      * @param descriptionCID IPFS CID describing the deliverable.
      */
     function proposeMilestone(
-        uint256 programId,
+        uint256 pid,
         ScholarshipTypes.MilestoneKind kind,
         uint256 amount,
         string calldata descriptionCID,
@@ -214,16 +214,16 @@ interface IMilestoneManager {
         external view returns (ScholarshipTypes.Milestone memory);
 
     /// @notice All mandatory milestone IDs for a scholar in a program.
-    function getMandatoryIds(uint256 programId, address scholar)
+    function getMandatoryIds(uint256 pid, address scholar)
         external view returns (uint256[] memory);
 
     /// @notice All optional/negotiated milestone IDs for a scholar.
-    function getOptionalIds(uint256 programId, address scholar)
+    function getOptionalIds(uint256 pid, address scholar)
         external view returns (uint256[] memory);
 
     function milestoneOwner(uint256 milestoneId) external view returns (address);
 
-    function programCommittee(uint256 programId) external view returns (address);
+    function programCommittee(uint256 pid) external view returns (address);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -237,20 +237,20 @@ interface IMilestoneManager {
  */
 interface IScholarshipTreasury {
 
-    function depositProgramFund(uint256 programId, uint256 amount) external;
+    function depositProgramFund(uint256 pid, uint256 amount) external;
 
-    function recordDonation(uint256 programId, address donor, uint256 netAmount) external;
+    function recordDonation(uint256 pid, address donor, uint256 netAmount) external;
 
     /// @notice Release milestone payment to scholar after dispute window clears.
     function disburseMilestone(
         address scholar,
-        uint256 programId,
+        uint256 pid,
         uint256 milestoneId,
         uint256 amount
     ) external;
 
     function slashAndDistribute(
-        uint256 programId,
+        uint256 pid,
         address scholar,
         address bountyHunter,
         uint256 bhPercent,
@@ -259,31 +259,31 @@ interface IScholarshipTreasury {
     ) external returns (uint256 bhReward);
 
     function depositConfidenceStake(
-        uint256 programId,
+        uint256 pid,
         address voter,
         address scholar,
         uint256 amount
     ) external;
 
     function resolveConfidenceStake(
-        uint256 programId,
+        uint256 pid,
         address voter,
         bool scholarSucceeded
     ) external;
 
-    function addYield(uint256 programId, uint256 amount) external;
+    function addYield(uint256 pid, uint256 amount) external;
 
-    function distributeYield(uint256 programId) external;
+    function distributeYield(uint256 pid) external;
 
-    function refundDonors(uint256 programId) external;
+    function refundDonors(uint256 pid) external;
 
-    function getProgramBalance(uint256 programId) external view returns (uint256);
+    function getProgramBalance(uint256 pid) external view returns (uint256);
 
-    function getAccruedYield(uint256 programId) external view returns (uint256);
+    function getAccruedYield(uint256 pid) external view returns (uint256);
 
-    function getProgramDonors(uint256 programId) external view returns (address[] memory);
+    function getProgramDonors(uint256 pid) external view returns (address[] memory);
 
-    function programTotalDonated(uint256 programId) external view returns (uint256);
+    function programTotalDonated(uint256 pid) external view returns (uint256);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -293,7 +293,7 @@ interface IScholarshipTreasury {
 interface ICredentialNFT {
     function mint(
         address recipient,
-        uint256 programId,
+        uint256 pid,
         string calldata metadataURI
     ) external returns (uint256 tokenId);
 }
@@ -333,7 +333,7 @@ interface IScholarshipReputation {
  * @notice Minimal surface exposed by CommitteeGovernance to ScholarshipCore.
  */
 interface ICommitteeGovernance {
-    function isCommitteeMember(uint256 programId, address member)
+    function isCommitteeMember(uint256 pid, address member)
         external view returns (bool);
 }
 

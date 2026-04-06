@@ -130,7 +130,7 @@ export const committeeGovernanceAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -149,7 +149,7 @@ export const committeeGovernanceAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -325,7 +325,7 @@ export const committeeGovernanceAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -400,7 +400,7 @@ export const committeeGovernanceAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -456,7 +456,7 @@ export const committeeGovernanceAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -668,7 +668,7 @@ export const committeeGovernanceAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -722,7 +722,7 @@ export const committeeGovernanceAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -797,7 +797,7 @@ export const committeeGovernanceAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -820,7 +820,7 @@ export const committeeGovernanceAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {

@@ -165,7 +165,7 @@ export const milestoneManagerAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -221,7 +221,7 @@ export const milestoneManagerAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -352,7 +352,7 @@ export const milestoneManagerAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -429,7 +429,7 @@ export const milestoneManagerAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -468,7 +468,7 @@ export const milestoneManagerAbi = [
           },
           {
             "internalType": "uint256",
-            "name": "programId",
+            "name": "pid",
             "type": "uint256"
           },
           {
@@ -549,7 +549,7 @@ export const milestoneManagerAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -657,7 +657,7 @@ export const milestoneManagerAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -781,7 +781,7 @@ export const milestoneManagerAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -858,7 +858,7 @@ export const milestoneManagerAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {

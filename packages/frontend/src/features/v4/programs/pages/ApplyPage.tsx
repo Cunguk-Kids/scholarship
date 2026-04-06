@@ -61,7 +61,7 @@ export function ApplyPage() {
       const recommendCID = rRes?.metaCID || 'QmRecommendFallback123';
       console.log(
         {
-          programId: BigInt(program?.blockchainId!),
+          programId: BigInt(program?.pid!),
           profileCID,
           documentCID,
           essayCID,
@@ -76,7 +76,7 @@ export function ApplyPage() {
       setStep('tx');
 
       apply({
-        programId: BigInt(program?.blockchainId!),
+        programId: BigInt(program?.pid!),
         profileCID,
         documentCID,
         essayCID,

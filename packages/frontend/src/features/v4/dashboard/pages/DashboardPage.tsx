@@ -26,7 +26,7 @@ export function DashboardPage() {
   // where the wallet is an active member, not just programs the user created.
   const committeePrograms = dashboard?.committeePrograms ?? [];
   const committeeProgramIds = useMemo(
-    () => committeePrograms.map((p) => p.blockchainId),
+    () => committeePrograms.map((p) => p.pid),
     [committeePrograms],
   );
 

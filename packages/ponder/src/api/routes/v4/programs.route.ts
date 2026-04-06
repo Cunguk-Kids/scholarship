@@ -58,7 +58,7 @@ programsRoute.get("/:id", async (c) => {
       const numId = Number(id);
       if (!isNaN(numId)) {
         program = await db.select().from(v4Programs)
-          .where(eq(v4Programs.blockchainId, numId))
+          .where(eq(v4Programs.pid, numId))
           .limit(1);
       }
     }
@@ -112,7 +112,7 @@ programsRoute.get("/:id/applicants", async (c) => {
     const numId = Number(id);
     if (!isNaN(numId)) {
       const [prog] = await db.select({ id: v4Programs.id })
-        .from(v4Programs).where(eq(v4Programs.blockchainId, numId));
+        .from(v4Programs).where(eq(v4Programs.pid, numId));
       if (prog) programId = prog.id;
     }
 
@@ -141,7 +141,7 @@ programsRoute.get("/:id/scholars", async (c) => {
     const numId = Number(id);
     if (!isNaN(numId)) {
       const [prog] = await db.select({ id: v4Programs.id })
-        .from(v4Programs).where(eq(v4Programs.blockchainId, numId));
+        .from(v4Programs).where(eq(v4Programs.pid, numId));
       if (prog) programId = prog.id;
     }
 
@@ -170,7 +170,7 @@ programsRoute.get("/:id/milestones", async (c) => {
     const numId = Number(id);
     if (!isNaN(numId)) {
       const [prog] = await db.select({ id: v4Programs.id })
-        .from(v4Programs).where(eq(v4Programs.blockchainId, numId));
+        .from(v4Programs).where(eq(v4Programs.pid, numId));
       if (prog) programId = prog.id;
     }
 
@@ -199,7 +199,7 @@ programsRoute.get("/:id/votes", async (c) => {
     const numId = Number(id);
     if (!isNaN(numId)) {
       const [prog] = await db.select({ id: v4Programs.id })
-        .from(v4Programs).where(eq(v4Programs.blockchainId, numId));
+        .from(v4Programs).where(eq(v4Programs.pid, numId));
       if (prog) programId = prog.id;
     }
 
@@ -226,7 +226,7 @@ programsRoute.get("/:id/disputes", async (c) => {
     const numId = Number(id);
     if (!isNaN(numId)) {
       const [prog] = await db.select({ id: v4Programs.id })
-        .from(v4Programs).where(eq(v4Programs.blockchainId, numId));
+        .from(v4Programs).where(eq(v4Programs.pid, numId));
       if (prog) programId = prog.id;
     }
 

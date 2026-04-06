@@ -43,7 +43,7 @@ export function useProposeMilestone() {
    * @param kind 1 = OPTIONAL, 2 = NEGOTIATED (0 = MANDATORY — not allowed here)
    */
   const proposeMilestone = (
-    programId: bigint,
+    pid: bigint,
     kind: number,
     amount: bigint,
     descriptionCID: string,
@@ -55,7 +55,7 @@ export function useProposeMilestone() {
       abi: milestoneManagerAbi,
       functionName: "proposeMilestone",
       args: [
-        programId,
+        pid,
         kind,
         amount,
         descriptionCID,

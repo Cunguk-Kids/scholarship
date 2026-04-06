@@ -43,12 +43,12 @@ export function useMintUSDC() {
 export function useDonate() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
-  const donate = (programId: bigint, amountStr: string, nftMetadataURI: string) => {
+  const donate = (pid: bigint, amountStr: string, nftMetadataURI: string) => {
     writeContract({
       address: CORE_ADDRESS,
       abi: scholarshipCoreAbi,
       functionName: "donate",
-      args: [programId, parseUnits(amountStr, 6), nftMetadataURI],
+      args: [pid, parseUnits(amountStr, 6), nftMetadataURI],
     });
   };
 
@@ -58,12 +58,12 @@ export function useDonate() {
 export function useClaimYield() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
-  const claimYield = (programId: bigint, voteAddress: `0x${string}`) => {
+  const claimYield = (pid: bigint, voteAddress: `0x${string}`) => {
     writeContract({
       address: TREASURY_ADDRESS,
       abi: scholarshipTreasuryAbi,
       functionName: "claimYield",
-      args: [programId, voteAddress],
+      args: [pid, voteAddress],
     });
   };
 
@@ -73,12 +73,12 @@ export function useClaimYield() {
 export function useClaimRefund() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
-  const claimRefund = (programId: bigint, donor: `0x${string}`) => {
+  const claimRefund = (pid: bigint, donor: `0x${string}`) => {
     writeContract({
       address: TREASURY_ADDRESS,
       abi: scholarshipTreasuryAbi,
       functionName: "claimRefund",
-      args: [programId, donor],
+      args: [pid, donor],
     });
   };
 

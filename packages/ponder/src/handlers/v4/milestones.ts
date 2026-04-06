@@ -15,7 +15,7 @@ export const milestoneManagerHandlers = () => {
 
   ponder.on("MilestoneManager:MilestoneCreated", async ({ event }) => {
     try {
-      const { id, programId, scholar, kind } = event.args;
+      const { id, pid, scholar, kind } = event.args;
       const mId = Number(id);
 
       const [scholarRow] = await db
@@ -23,11 +23,11 @@ export const milestoneManagerHandlers = () => {
         .from(v4Scholars)
         .where(and(
           eq(v4Scholars.wallet, String(scholar)),
-          eq(v4Scholars.blockchainProgramId, Number(programId)),
+          eq(v4Scholars.pid, Number(pid)),
         ))
         .limit(1);
 
-      const progUuid = scholarRow?.programId ?? await findProgramUuid(Number(programId));
+      const progUuid = scholarRow?.programId ?? await findProgramUuid(Number(pid));
 
       const kindMap: Record<number, "MANDATORY" | "OPTIONAL" | "NEGOTIATED"> = {
         0: "MANDATORY", 1: "OPTIONAL", 2: "NEGOTIATED",
@@ -59,7 +59,7 @@ export const milestoneManagerHandlers = () => {
       await insertBlock({ event, eventName: "MilestoneManager:MilestoneCreated" });
       await sendSseToAll("main", {
         step: "MilestoneCreated",
-        data: { milestoneId: mId, programId: Number(programId), scholar, kind: kindStr },
+        data: { milestoneId: mId, pid: Number(pid), scholar, kind: kindStr },
         status: true, blockHash: event.block.hash,
       });
     } catch (err) {
@@ -71,7 +71,7 @@ export const milestoneManagerHandlers = () => {
 
   ponder.on("MilestoneManager:MilestoneProposed", async ({ event }) => {
     try {
-      const { id, programId, scholar, kind } = event.args;
+      const { id, pid, scholar, kind } = event.args;
       const mId = Number(id);
 
       const [scholarRow] = await db
@@ -79,7 +79,7 @@ export const milestoneManagerHandlers = () => {
         .from(v4Scholars)
         .where(and(
           eq(v4Scholars.wallet, String(scholar)),
-          eq(v4Scholars.blockchainProgramId, Number(programId)),
+          eq(v4Scholars.pid, Number(pid)),
         ))
         .limit(1);
 
@@ -114,7 +114,7 @@ export const milestoneManagerHandlers = () => {
       await insertBlock({ event, eventName: "MilestoneManager:MilestoneProposed" });
       await sendSseToAll("main", {
         step: "MilestoneProposed",
-        data: { milestoneId: mId, programId: Number(programId), scholar, kind: kindStr },
+        data: { milestoneId: mId, pid: Number(pid), scholar, kind: kindStr },
         status: true, blockHash: event.block.hash,
       });
     } catch (err) {
@@ -136,7 +136,7 @@ export const milestoneManagerHandlers = () => {
         .from(v4Milestones).where(eq(v4Milestones.blockchainId, Number(id))).limit(1);
 
       if (mRow && mRow.programId) {
-        const [prog] = await db.select({ blockchainId: v4Programs.blockchainId })
+        const [prog] = await db.select({ pid: v4Programs.pid })
           .from(v4Programs).where(eq(v4Programs.id, mRow.programId)).limit(1);
 
         if (prog) {
@@ -149,7 +149,7 @@ export const milestoneManagerHandlers = () => {
             abi: scholarshipCoreAbi,
             address: coreAddress as `0x${string}`,
             functionName: "getProgram",
-            args: [BigInt(prog.blockchainId)],
+            args: [BigInt(prog.pid)],
           });
           await db.update(v4Programs)
             .set({ allocatedFund: String(progSync.allocatedFund), updatedAt: new Date() })
@@ -261,7 +261,7 @@ export const milestoneManagerHandlers = () => {
         }
 
         if (milestone.programId) {
-          const [prog] = await db.select({ blockchainId: v4Programs.blockchainId })
+          const [prog] = await db.select({ pid: v4Programs.pid })
             .from(v4Programs)
             .where(eq(v4Programs.id, milestone.programId))
             .limit(1);
@@ -276,7 +276,7 @@ export const milestoneManagerHandlers = () => {
               abi: scholarshipCoreAbi,
               address: coreAddress as `0x${string}`,
               functionName: "getProgram",
-              args: [BigInt(prog.blockchainId)],
+              args: [BigInt(prog.pid)],
             });
             await db.update(v4Programs)
               .set({ 
@@ -284,7 +284,7 @@ export const milestoneManagerHandlers = () => {
                 allocatedFund: String(progSync.allocatedFund), 
                 updatedAt: new Date() 
               })
-              .where(eq(v4Programs.blockchainId, prog.blockchainId));
+              .where(eq(v4Programs.pid, prog.pid));
           }
         }
       }

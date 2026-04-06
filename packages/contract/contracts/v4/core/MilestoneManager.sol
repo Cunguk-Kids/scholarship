@@ -46,11 +46,11 @@ contract MilestoneManager is Initializable {
     address public core;        // ScholarshipCore — only caller for writeMandatory
     address public admin;
 
-    mapping(uint256 => address) public programCommittee; // programId → CommitteeGovernance
+    mapping(uint256 => address) public programCommittee; // pid → CommitteeGovernance
 
     modifier onlyCore()      { if (msg.sender != core)  revert NotCore();      _; }
-    modifier onlyCommittee(uint256 programId) {
-        address cg = programCommittee[programId];
+    modifier onlyCommittee(uint256 pid) {
+        address cg = programCommittee[pid];
         if (cg == address(0) || msg.sender != cg) revert NotCommittee();
         _;
     }
@@ -64,10 +64,10 @@ contract MilestoneManager is Initializable {
     /// milestoneId → owner (for quick auth)
     mapping(uint256 => address) public milestoneOwner;
 
-    /// programId → scholar → mandatory milestoneIds[]
+    /// pid → scholar → mandatory milestoneIds[]
     mapping(uint256 => mapping(address => uint256[])) public mandatoryIds;
 
-    /// programId → scholar → optional milestoneIds[]
+    /// pid → scholar → optional milestoneIds[]
     mapping(uint256 => mapping(address => uint256[])) public optionalIds;
 
     // ── Interface (minimal) to Core ──────────────────────────────────────────
@@ -77,8 +77,8 @@ contract MilestoneManager is Initializable {
     ITreasuryMin private _treasuryContract;
 
     // ── Events ───────────────────────────────────────────────────────────────
-    event MilestoneCreated(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind, bytes32 provider, bytes32 externalId);
-    event MilestoneProposed(uint256 indexed id, uint256 indexed programId, address indexed scholar, ScholarshipTypes.MilestoneKind kind, bytes32 provider, bytes32 externalId);
+    event MilestoneCreated(uint256 indexed id, uint256 indexed pid, address indexed scholar, ScholarshipTypes.MilestoneKind kind, bytes32 provider, bytes32 externalId);
+    event MilestoneProposed(uint256 indexed id, uint256 indexed pid, address indexed scholar, ScholarshipTypes.MilestoneKind kind, bytes32 provider, bytes32 externalId);
     event MilestoneApproved(uint256 indexed id, address approvedBy);
     event MilestoneRejected(uint256 indexed id, address rejectedBy);
     event MilestoneSubmitted(uint256 indexed id, address indexed scholar, string proofCID);
@@ -127,9 +127,9 @@ contract MilestoneManager is Initializable {
         _coreContract = IScholarshipCoreMin(coreAddr);
     }
 
-    function setProgramCommittee(uint256 programId, address committeeContract) external {
+    function setProgramCommittee(uint256 pid, address committeeContract) external {
         if (msg.sender != admin && msg.sender != core) revert NotCore();
-        programCommittee[programId] = committeeContract;
+        programCommittee[pid] = committeeContract;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -138,14 +138,14 @@ contract MilestoneManager is Initializable {
 
     /**
      * @notice Called by ScholarshipCore._activateScholar() for each winner.
-     * @param  programId  Program ID.
+     * @param  pid  Program ID.
      * @param  scholar    Winner address.
      * @param  amounts    Array of disbursement amounts — one per mandatory milestone.
      * @param  descs      Array of descriptionCIDs — same length as amounts.
      *                    Pass empty string to defer description off-chain.
      */
     function createMandatoryBatch(
-        uint256 programId,
+        uint256 pid,
         address scholar,
         uint256[] calldata amounts,
         string[] calldata descs,
@@ -164,12 +164,12 @@ contract MilestoneManager is Initializable {
             uint256 mId = ++_nextId;
             milestones[mId] = ScholarshipTypes.Milestone({
                 id:             mId,
-                programId:      programId,
+                pid:            pid,
                 scholar:        scholar,
                 kind:           ScholarshipTypes.MilestoneKind.MANDATORY,
                 amount:         amounts[i],
-                proposedBy:     address(0),   // created by system/core
-                approvedBy:     address(0),   // n/a for mandatory
+                proposedBy:     address(0),
+                approvedBy:     address(0),
                 descriptionCID: hasDescs ? descs[i] : "",
                 proofCID:       "",
                 provider:       hasProviders ? providers[i] : bytes32(0),
@@ -180,8 +180,8 @@ contract MilestoneManager is Initializable {
                 completedAt:    0
             });
             milestoneOwner[mId] = scholar;
-            mandatoryIds[programId][scholar].push(mId);
-            emit MilestoneCreated(mId, programId, scholar, ScholarshipTypes.MilestoneKind.MANDATORY, hasProviders ? providers[i] : bytes32(0), hasExternalIds ? externalIds[i] : bytes32(0));
+            mandatoryIds[pid][scholar].push(mId);
+            emit MilestoneCreated(mId, pid, scholar, ScholarshipTypes.MilestoneKind.MANDATORY, hasProviders ? providers[i] : bytes32(0), hasExternalIds ? externalIds[i] : bytes32(0));
             unchecked { ++i; }
         }
     }
@@ -193,7 +193,7 @@ contract MilestoneManager is Initializable {
     /**
      * @notice Scholar proposes an optional or negotiated milestone.
      *
-     * @param  programId      Program the scholar is enrolled in.
+     * @param  pid      Program the scholar is enrolled in.
      * @param  kind           Must be OPTIONAL or NEGOTIATED.
      * @param  amount         Requested disbursement if approved & completed.
      * @param  descriptionCID IPFS CID describing the deliverable.
@@ -204,7 +204,7 @@ contract MilestoneManager is Initializable {
      *         at approval time.
      */
     function proposeMilestone(
-        uint256 programId,
+        uint256 pid,
         ScholarshipTypes.MilestoneKind kind,
         uint256 amount,
         string calldata descriptionCID,
@@ -214,25 +214,25 @@ contract MilestoneManager is Initializable {
         if (kind == ScholarshipTypes.MilestoneKind.MANDATORY) revert WrongStatus(ScholarshipTypes.MilestoneStatus.PROPOSED);
 
         // Scholar must be active
-        ScholarshipTypes.Scholar memory s = _coreContract.getScholar(msg.sender, programId);
+        ScholarshipTypes.Scholar memory s = _coreContract.getScholar(msg.sender, pid);
         if (s.status != ScholarshipTypes.StudentStatus.ACTIVE) revert ScholarNotActive();
 
         // Program must allow optional milestones
-        ScholarshipTypes.Program memory prog = _coreContract.getProgram(programId);
+        ScholarshipTypes.Program memory prog = _coreContract.getProgram(pid);
         if (prog.maxOptionalMilestones == 0) revert OptionalDisabled();
 
         // Cap check (use runtime config)
         uint8 maxOptional = _coreContract.getProtocolConfig().maxOptionalMilestones;
-        uint256 existing = optionalIds[programId][msg.sender].length;
+        uint256 existing = optionalIds[pid][msg.sender].length;
         if (existing >= (prog.maxOptionalMilestones < maxOptional ? prog.maxOptionalMilestones : maxOptional)) revert TooManyOptional();
 
         // Committee must be set
-        if (programCommittee[programId] == address(0)) revert CommitteeNotSet();
+        if (programCommittee[pid] == address(0)) revert CommitteeNotSet();
 
         uint256 mId = ++_nextId;
         milestones[mId] = ScholarshipTypes.Milestone({
             id:              mId,
-            programId:       programId,
+            pid:             pid,
             scholar:         msg.sender,
             kind:            kind,
             amount:          amount,
@@ -248,8 +248,8 @@ contract MilestoneManager is Initializable {
             completedAt:     0
         });
         milestoneOwner[mId] = msg.sender;
-        optionalIds[programId][msg.sender].push(mId);
-        emit MilestoneProposed(mId, programId, msg.sender, kind, provider, externalId);
+        optionalIds[pid][msg.sender].push(mId);
+        emit MilestoneProposed(mId, pid, msg.sender, kind, provider, externalId);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -271,12 +271,12 @@ contract MilestoneManager is Initializable {
         if (m.kind == ScholarshipTypes.MilestoneKind.MANDATORY) revert AlreadyActed();
 
         // Only committee of that program
-        address cg = programCommittee[m.programId];
+        address cg = programCommittee[m.pid];
         if (cg == address(0)) revert CommitteeNotSet();
         if (msg.sender != cg) revert NotCommittee();
 
         // Check program has enough unallocated fund
-        ScholarshipTypes.Program memory prog = _coreContract.getProgram(m.programId);
+        ScholarshipTypes.Program memory prog = _coreContract.getProgram(m.pid);
         uint256 available = prog.totalFund - prog.allocatedFund;
         if (m.amount > available) revert InsufficientProgramFund();
 
@@ -285,7 +285,7 @@ contract MilestoneManager is Initializable {
         m.approvedBy = msg.sender;
 
         // Notify core to increment scholar.optionalApproved and allocatedFund
-        _coreContract.onOptionalApproved(m.programId, m.scholar, m.amount);
+        _coreContract.onOptionalApproved(m.pid, m.scholar, m.amount);
 
         emit MilestoneApproved(milestoneId, msg.sender);
     }
@@ -300,7 +300,7 @@ contract MilestoneManager is Initializable {
         if (m.id == 0) revert NotFound();
         if (m.status != ScholarshipTypes.MilestoneStatus.PROPOSED) revert WrongStatus(m.status);
 
-        address cg = programCommittee[m.programId];
+        address cg = programCommittee[m.pid];
         if (cg == address(0)) revert CommitteeNotSet();
         if (msg.sender != cg) revert NotCommittee();
 
@@ -308,7 +308,7 @@ contract MilestoneManager is Initializable {
         m.approvedBy = msg.sender;
 
         // Free up the optional slot so scholar can re-propose
-        _removeFromOptionalIds(m.programId, m.scholar, milestoneId);
+        _removeFromOptionalIds(m.pid, m.scholar, milestoneId);
 
         emit MilestoneRejected(milestoneId, msg.sender);
     }
@@ -326,10 +326,10 @@ contract MilestoneManager is Initializable {
         if (msg.sender != m.scholar)     revert NotOwner();
         if (m.status != ScholarshipTypes.MilestoneStatus.PENDING) revert WrongStatus(m.status);
 
-        ScholarshipTypes.Scholar memory s = _coreContract.getScholar(msg.sender, m.programId);
+        ScholarshipTypes.Scholar memory s = _coreContract.getScholar(msg.sender, m.pid);
         if (s.status != ScholarshipTypes.StudentStatus.ACTIVE) revert ScholarNotActive();
 
-        ScholarshipTypes.Program memory prog = _coreContract.getProgram(m.programId);
+        ScholarshipTypes.Program memory prog = _coreContract.getProgram(m.pid);
 
         m.proofCID       = proofCID;
         m.status         = ScholarshipTypes.MilestoneStatus.SUBMITTED;
@@ -356,10 +356,10 @@ contract MilestoneManager is Initializable {
         m.status      = ScholarshipTypes.MilestoneStatus.COMPLETED;
         m.completedAt = uint48(block.timestamp);
 
-        _treasuryContract.disburseMilestone(m.scholar, m.programId, milestoneId, m.amount);
+        _treasuryContract.disburseMilestone(m.scholar, m.pid, milestoneId, m.amount);
 
         // Notify core — handles scholar progress, program spentFund, NFT, reputation
-        _coreContract.onMilestoneCompleted(m.programId, m.scholar, milestoneId, m.amount, m.kind);
+        _coreContract.onMilestoneCompleted(m.pid, m.scholar, milestoneId, m.amount, m.kind);
 
         emit MilestoneCompleted(milestoneId, m.scholar, m.amount);
     }
@@ -381,7 +381,7 @@ contract MilestoneManager is Initializable {
         if (!_coreContract.hasBountyRole(msg.sender)) revert NotBountyRole();
         ScholarshipTypes.Milestone storage m = milestones[milestoneId];
         if (m.id == 0) revert NotFound();
-        ScholarshipTypes.Program memory prog = _coreContract.getProgram(m.programId);
+        ScholarshipTypes.Program memory prog = _coreContract.getProgram(m.pid);
         m.status          = ScholarshipTypes.MilestoneStatus.SUBMITTED;
         m.disputeDeadline = uint48(block.timestamp + prog.milestoneDisputeWindow);
         emit MilestoneReleased(milestoneId);
@@ -403,12 +403,12 @@ contract MilestoneManager is Initializable {
         return milestones[id];
     }
 
-    function getMandatoryIds(uint256 programId, address scholar) external view returns (uint256[] memory) {
-        return mandatoryIds[programId][scholar];
+    function getMandatoryIds(uint256 pid, address scholar) external view returns (uint256[] memory) {
+        return mandatoryIds[pid][scholar];
     }
 
-    function getOptionalIds(uint256 programId, address scholar) external view returns (uint256[] memory) {
-        return optionalIds[programId][scholar];
+    function getOptionalIds(uint256 pid, address scholar) external view returns (uint256[] memory) {
+        return optionalIds[pid][scholar];
     }
 
     // ── Internal helpers ─────────────────────────────────────────────────────
@@ -417,8 +417,8 @@ contract MilestoneManager is Initializable {
      * @dev Swap-and-pop to remove a milestoneId from optionalIds.
      *      O(n) where n ≤ MAX_OPTIONAL_MILESTONES (≤5) → acceptable.
      */
-    function _removeFromOptionalIds(uint256 programId, address scholar, uint256 mId) internal {
-        uint256[] storage arr = optionalIds[programId][scholar];
+    function _removeFromOptionalIds(uint256 pid, address scholar, uint256 mId) internal {
+        uint256[] storage arr = optionalIds[pid][scholar];
         uint256 len = arr.length;
         for (uint256 i; i < len; ) {
             if (arr[i] == mId) {
@@ -434,16 +434,16 @@ contract MilestoneManager is Initializable {
 // ─── Minimal interfaces (kept small to avoid import bloat) ──────────────────
 
 interface IScholarshipCoreMin {
-    function getScholar(address wallet, uint256 programId) external view returns (ScholarshipTypes.Scholar memory);
-    function getProgram(uint256 programId) external view returns (ScholarshipTypes.Program memory);
+    function getScholar(address wallet, uint256 pid) external view returns (ScholarshipTypes.Scholar memory);
+    function getProgram(uint256 pid) external view returns (ScholarshipTypes.Program memory);
     function hasBountyRole(address account) external view returns (bool);
     function getProtocolConfig() external view returns (ScholarshipTypes.ProtocolConfig memory);
     /// @notice Increment scholar.optionalApproved and program.allocatedFund
-    function onOptionalApproved(uint256 programId, address scholar, uint256 amount) external;
+    function onOptionalApproved(uint256 pid, address scholar, uint256 amount) external;
     /// @notice Progress tracking after a milestone completes
-    function onMilestoneCompleted(uint256 programId, address scholar, uint256 milestoneId, uint256 amount, ScholarshipTypes.MilestoneKind kind) external;
+    function onMilestoneCompleted(uint256 pid, address scholar, uint256 milestoneId, uint256 amount, ScholarshipTypes.MilestoneKind kind) external;
 }
 
 interface ITreasuryMin {
-    function disburseMilestone(address scholar, uint256 programId, uint256 milestoneId, uint256 amount) external;
+    function disburseMilestone(address scholar, uint256 pid, uint256 milestoneId, uint256 amount) external;
 }

@@ -33,7 +33,7 @@ disputesRoute.get("/", async (c) => {
       dispute: v4Disputes,
       program: {
         id: v4Programs.id,
-        blockchainId: v4Programs.blockchainId,
+        pid: v4Programs.pid,
         metadataCID: v4Programs.metadataCID,
         status: v4Programs.status,
       },
@@ -65,7 +65,7 @@ disputesRoute.get("/:id", async (c) => {
       dispute: v4Disputes,
       program: {
         id: v4Programs.id,
-        blockchainId: v4Programs.blockchainId,
+        pid: v4Programs.pid,
         metadataCID: v4Programs.metadataCID,
         status: v4Programs.status,
       },
@@ -82,7 +82,7 @@ disputesRoute.get("/:id", async (c) => {
           dispute: v4Disputes,
           program: {
             id: v4Programs.id,
-            blockchainId: v4Programs.blockchainId,
+            pid: v4Programs.pid,
             metadataCID: v4Programs.metadataCID,
             status: v4Programs.status,
           },

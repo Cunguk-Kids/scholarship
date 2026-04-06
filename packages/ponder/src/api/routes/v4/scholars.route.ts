@@ -30,7 +30,7 @@ scholarsRoute.get("/", async (c) => {
       scholar: v4Scholars,
       program: {
         id: v4Programs.id,
-        blockchainId: v4Programs.blockchainId,
+        pid: v4Programs.pid,
         metadataCID: v4Programs.metadataCID,
         status: v4Programs.status,
         initiator: v4Programs.initiator,
@@ -62,7 +62,7 @@ scholarsRoute.get("/:wallet", async (c) => {
     if (programId) {
       const numId = Number(programId);
       if (!isNaN(numId)) {
-        conditions.push(eq(v4Scholars.blockchainProgramId, numId));
+        conditions.push(eq(v4Scholars.pid, numId));
       }
     }
 
@@ -72,7 +72,7 @@ scholarsRoute.get("/:wallet", async (c) => {
       scholar: v4Scholars,
       program: {
         id: v4Programs.id,
-        blockchainId: v4Programs.blockchainId,
+        pid: v4Programs.pid,
         metadataCID: v4Programs.metadataCID,
         status: v4Programs.status,
       },

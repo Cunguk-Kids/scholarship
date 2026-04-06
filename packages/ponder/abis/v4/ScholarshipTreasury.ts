@@ -141,7 +141,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -172,7 +172,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -209,7 +209,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -234,7 +234,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -259,7 +259,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -297,7 +297,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -403,7 +403,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -459,7 +459,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -478,7 +478,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -503,7 +503,7 @@ export const scholarshipTreasuryAbi = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -598,7 +598,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -616,7 +616,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -634,7 +634,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -700,7 +700,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -728,7 +728,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -751,7 +751,7 @@ export const scholarshipTreasuryAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -774,7 +774,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -811,7 +811,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -830,7 +830,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -849,7 +849,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -1061,7 +1061,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -1084,7 +1084,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       }
     ],
@@ -1115,7 +1115,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {
@@ -1182,7 +1182,7 @@ export const scholarshipTreasuryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "programId",
+        "name": "pid",
         "type": "uint256"
       },
       {

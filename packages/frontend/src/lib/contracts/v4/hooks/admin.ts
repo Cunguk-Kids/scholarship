@@ -8,12 +8,12 @@ const ADMIN_ADDRESS = v4Addresses.ScholarshipAdmin;
 export function useExtendApplicationDeadline() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
-  const extendApplicationDeadline = (programId: bigint, newEnd: bigint) => {
+  const extendApplicationDeadline = (pid: bigint, newEnd: bigint) => {
     writeContract({
       address: ADMIN_ADDRESS,
       abi: scholarshipAdminAbi,
       functionName: "extendApplicationDeadline",
-      args: [programId, newEnd],
+      args: [pid, newEnd],
     });
   };
 
@@ -23,12 +23,12 @@ export function useExtendApplicationDeadline() {
 export function useExtendVotingDeadline() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
-  const extendVotingDeadline = (programId: bigint, newEnd: bigint) => {
+  const extendVotingDeadline = (pid: bigint, newEnd: bigint) => {
     writeContract({
       address: ADMIN_ADDRESS,
       abi: scholarshipAdminAbi,
       functionName: "extendVotingDeadline",
-      args: [programId, newEnd],
+      args: [pid, newEnd],
     });
   };
 
@@ -54,12 +54,12 @@ export function useUpdateProtocolConfig() {
 export function useAdminForceStatus() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
-  const forceStatus = (programId: bigint, newStatus: number) => {
+  const forceStatus = (pid: bigint, newStatus: number) => {
     writeContract({
       address: ADMIN_ADDRESS,
       abi: scholarshipAdminAbi,
       functionName: "adminForceStatus",
-      args: [programId, newStatus],
+      args: [pid, newStatus],
     });
   };
 
@@ -70,7 +70,7 @@ export function useAdminUpdateDates() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
   const updateDates = (
-    programId: bigint,
+    pid: bigint,
     appStart: bigint,
     appEnd: bigint,
     voteStart: bigint,
@@ -80,7 +80,7 @@ export function useAdminUpdateDates() {
       address: ADMIN_ADDRESS,
       abi: scholarshipAdminAbi,
       functionName: "adminUpdateDates",
-      args: [programId, appStart, appEnd, voteStart, voteEnd],
+      args: [pid, appStart, appEnd, voteStart, voteEnd],
     });
   };
 

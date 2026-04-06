@@ -8,12 +8,12 @@ const COMMITTEE_ADDRESS = v4Addresses.CommitteeGovernance;
 export function useAddCommitteeMember() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
-  const addMember = (programId: bigint, member: `0x${string}`) => {
+  const addMember = (pid: bigint, member: `0x${string}`) => {
     writeContract({
       address: COMMITTEE_ADDRESS,
       abi: committeeGovernanceAbi,
       functionName: "addCommitteeMember",
-      args: [programId, member],
+      args: [pid, member],
     });
   };
 
@@ -23,12 +23,12 @@ export function useAddCommitteeMember() {
 export function useRemoveCommitteeMember() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
-  const removeMember = (programId: bigint, member: `0x${string}`) => {
+  const removeMember = (pid: bigint, member: `0x${string}`) => {
     writeContract({
       address: COMMITTEE_ADDRESS,
       abi: committeeGovernanceAbi,
       functionName: "removeCommitteeMember",
-      args: [programId, member],
+      args: [pid, member],
     });
   };
 
@@ -39,7 +39,7 @@ export function useCommitteeSubmitScore() {
   const { writeContract, isPending, isSuccess, error, hash, reset } = useTxHook();
 
   const submitScore = (args: {
-    programId: bigint;
+    pid: bigint;
     applicant: `0x${string}`;
     academicScore: bigint;
     incomeScore: bigint;
@@ -50,7 +50,7 @@ export function useCommitteeSubmitScore() {
       abi: committeeGovernanceAbi,
       functionName: "submitScore",
       args: [
-        args.programId,
+        args.pid,
         args.applicant,
         args.academicScore,
         args.incomeScore,
@@ -67,14 +67,14 @@ export function useVoteOnDispute() {
 
   const voteOnDispute = (
     disputeId: bigint,
-    programId: bigint,
+    pid: bigint,
     upholdDispute: boolean
   ) => {
     writeContract({
       address: COMMITTEE_ADDRESS,
       abi: committeeGovernanceAbi,
       functionName: "voteOnDispute",
-      args: [disputeId, programId, upholdDispute],
+      args: [disputeId, pid, upholdDispute],
     });
   };
 
@@ -86,14 +86,14 @@ export function useVoteOnMilestone() {
 
   const voteOnMilestone = (
     milestoneId: bigint,
-    programId: bigint,
+    pid: bigint,
     approve: boolean
   ) => {
     writeContract({
       address: COMMITTEE_ADDRESS,
       abi: committeeGovernanceAbi,
       functionName: "voteOnMilestone",
-      args: [milestoneId, programId, approve],
+      args: [milestoneId, pid, approve],
     });
   };
 

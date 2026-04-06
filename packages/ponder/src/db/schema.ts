@@ -31,7 +31,7 @@ export const indexedBlocks = pgTable("indexed_blocks", {
 /** Full v4 program record — created on ProgramCreated, updated on ProgramStatusChanged */
 export const v4Programs = pgTable("v4_programs", {
   id: uuid("id").defaultRandom().primaryKey(),
-  blockchainId: integer("blockchain_id").notNull().unique(),
+  pid: integer("pid").notNull().unique(),
   initiator: varchar("initiator", { length: 42 }).notNull(),
   metadataCID: varchar("metadata_cid", { length: 255 }).default(""),
   status: programStatusEnum("status").default("CREATED"),
@@ -53,6 +53,7 @@ export const v4Programs = pgTable("v4_programs", {
   votingStart: timestamp("voting_start", { withTimezone: true }),
   votingEnd: timestamp("voting_end", { withTimezone: true }),
   openDonation: boolean("open_donation").default(true),
+  resolveProgress: integer("resolve_progress").default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
@@ -65,7 +66,7 @@ export const v4Programs = pgTable("v4_programs", {
 export const v4Applicants = pgTable("v4_applicants", {
   id: uuid("id").defaultRandom().primaryKey(),
   programId: uuid("program_id").references(() => v4Programs.id),
-  blockchainProgramId: integer("blockchain_program_id").notNull(),
+  pid: integer("pid").notNull(),
   wallet: varchar("wallet", { length: 42 }).notNull(),
   status: applicationStatusEnum("status").default("PENDING_REVIEW"),
   profileCID: varchar("profile_cid", { length: 255 }).default(""),
@@ -77,14 +78,14 @@ export const v4Applicants = pgTable("v4_applicants", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => ({
-  uniqApplicant: unique().on(t.wallet, t.blockchainProgramId),
+  uniqApplicant: unique().on(t.wallet, t.pid),
 }));
 
 /** Active scholar — created on ScholarSelected, updated on milestones + fraud */
 export const v4Scholars = pgTable("v4_scholars", {
   id: uuid("id").defaultRandom().primaryKey(),
   programId: uuid("program_id").references(() => v4Programs.id),
-  blockchainProgramId: integer("blockchain_program_id").notNull(),
+  pid: integer("pid").notNull(),
   wallet: varchar("wallet", { length: 42 }).notNull(),
   status: studentStatusEnum("status").default("ACTIVE"),
   freezeUntil: timestamp("freeze_until", { withTimezone: true }),
@@ -95,7 +96,7 @@ export const v4Scholars = pgTable("v4_scholars", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => ({
-  uniqScholar: unique().on(t.wallet, t.blockchainProgramId),
+  uniqScholar: unique().on(t.wallet, t.pid),
 }));
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -133,20 +134,20 @@ export const v4Milestones = pgTable("v4_milestones", {
 export const v4Votes = pgTable("v4_votes", {
   id: uuid("id").defaultRandom().primaryKey(),
   programId: uuid("program_id").references(() => v4Programs.id),
-  blockchainProgramId: integer("blockchain_program_id").notNull(),
+  pid: integer("pid").notNull(),
   voterAddress: varchar("voter_address", { length: 42 }).notNull(),
   candidateAddress: varchar("candidate_address", { length: 42 }).notNull(),
   votingWeight: numeric("voting_weight").default("0"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (t) => ({
-  uniqVote: unique().on(t.voterAddress, t.blockchainProgramId),
+  uniqVote: unique().on(t.voterAddress, t.pid),
 }));
 
 /** Optional confidence stake — created on ConfidenceStaked, resolved on ConfidenceStakeResolved */
 export const v4ConfidenceStakes = pgTable("v4_confidence_stakes", {
   id: uuid("id").defaultRandom().primaryKey(),
   programId: uuid("program_id").references(() => v4Programs.id),
-  blockchainProgramId: integer("blockchain_program_id").notNull(),
+  pid: integer("pid").notNull(),
   voterAddress: varchar("voter_address", { length: 42 }).notNull(),
   scholarAddress: varchar("scholar_address", { length: 42 }).notNull(),
   amount: numeric("amount").default("0"),
@@ -157,7 +158,7 @@ export const v4ConfidenceStakes = pgTable("v4_confidence_stakes", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => ({
-  uniqStake: unique().on(t.voterAddress, t.blockchainProgramId),
+  uniqStake: unique().on(t.voterAddress, t.pid),
 }));
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -213,7 +214,7 @@ export const v4Reputation = pgTable("v4_reputation", {
 export const v4Donations = pgTable("v4_donations", {
   id: uuid("id").defaultRandom().primaryKey(),
   programId: uuid("program_id").references(() => v4Programs.id),
-  blockchainProgramId: integer("blockchain_program_id").notNull(),
+  pid: integer("pid").notNull(),
   donor: varchar("donor", { length: 42 }).notNull(),
   grossAmount: numeric("gross_amount").default("0"),
   netAmount: numeric("net_amount").default("0"),
@@ -228,13 +229,13 @@ export const v4Donations = pgTable("v4_donations", {
 export const v4CommitteeMembers = pgTable("v4_committee_members", {
   id: uuid("id").defaultRandom().primaryKey(),
   programId: uuid("program_id").references(() => v4Programs.id),
-  blockchainProgramId: integer("blockchain_program_id").notNull(),
+  pid: integer("pid").notNull(),
   memberAddress: varchar("member_address", { length: 42 }).notNull(),
   isActive: boolean("is_active").default(true),
   addedAt: timestamp("added_at", { withTimezone: true }).defaultNow(),
   removedAt: timestamp("removed_at", { withTimezone: true }),
 }, (t) => ({
-  uniqMember: unique().on(t.memberAddress, t.blockchainProgramId),
+  uniqMember: unique().on(t.memberAddress, t.pid),
 }));
 
 /** Committee dispute vote — tracks individual member votes on disputes */

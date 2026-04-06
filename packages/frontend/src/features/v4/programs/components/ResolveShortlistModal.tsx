@@ -3,8 +3,9 @@ import { NeoModal } from '@/components/ui/NeoModal';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { WalletAvatar, shortenAddress } from '@/components/ui/WalletAvatar';
 import { NeoBadge } from '@/components/ui/NeoBadge';
-import { useResolveShortlist } from '@/lib/contracts/write-hooks';
+import { useResolveShortlistBatch } from '@/lib/contracts/v4/hooks/core';
 import type { Applicant } from '@/lib/api/types';
+import { useProgram } from '@/lib/api/hooks';
 
 interface Props {
   isOpen: boolean;
@@ -18,7 +19,13 @@ export function ResolveShortlistModal({ isOpen, onClose, programId, applicants }
   const [ranked, setRanked] = useState<Applicant[]>([]);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
-  const { resolveShortlist, isPending, isSuccess } = useResolveShortlist();
+  const { data: program } = useProgram(programId.toString());
+  const { resolveShortlistBatch, isPending, isSuccess } = useResolveShortlistBatch();
+
+  // Progress tracking
+  // Using a fallback for blockchainProgress while the API is updated
+  const blockchainProgress = (program as any)?.blockchainProgress || 0; 
+  const BATCH_SIZE = 50;
 
   useEffect(() => {
     // Auto-sort on open
@@ -46,8 +53,14 @@ export function ResolveShortlistModal({ isOpen, onClose, programId, applicants }
 
   const handleConfirm = () => {
     const wallets = ranked.map((a) => a.wallet as `0x${string}`);
-    resolveShortlist(BigInt(programId), wallets);
+    // Extract segment starting from current on-chain progress
+    const segment = wallets.slice(blockchainProgress, blockchainProgress + BATCH_SIZE);
+    const isLastBatch = (blockchainProgress + segment.length) >= wallets.length;
+
+    resolveShortlistBatch(BigInt(programId), segment, isLastBatch);
   };
+
+  const progressPercent = Math.min(100, Math.round((blockchainProgress / ranked.length) * 100)) || 0;
 
   return (
     <NeoModal isOpen={isOpen} onClose={onClose} title={`Resolve Shortlist — Program #${programId}`}>
@@ -55,9 +68,23 @@ export function ResolveShortlistModal({ isOpen, onClose, programId, applicants }
         <div className="bg-skyellow-light border-2 border-black rounded-xl p-3 text-sm">
           <p className="font-bold">📋 Instructions</p>
           <p className="text-gray-700 mt-1">
-            Applicants are auto-sorted by screening score (highest first). Drag rows to manually reorder.
-            Candidates above the <strong>screening threshold</strong> will be shortlisted; others screened out.
+            Applicants are auto-sorted by score.
+            <strong> Batching:</strong> Resolution is processed in groups of {BATCH_SIZE} to save gas.
           </p>
+          
+          {/* Progress bar */}
+          <div className="mt-3">
+            <div className="flex justify-between text-xs font-bold mb-1">
+              <span>Resolution Progress</span>
+              <span>{blockchainProgress} / {ranked.length}</span>
+            </div>
+            <div className="w-full bg-white border-2 border-black rounded-full h-4 overflow-hidden">
+              <div 
+                className="bg-skpurple h-full transition-all duration-500" 
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
@@ -102,11 +129,13 @@ export function ResolveShortlistModal({ isOpen, onClose, programId, applicants }
         <div className="flex gap-2 pt-2 border-t-2 border-gray-100">
           <NeoButton label="Cancel" variant="ghost" onClick={onClose} disabled={isPending} fullWidth />
           <NeoButton
-            label={isPending ? 'Submitting…' : `Confirm Shortlist (${ranked.length} applicants)`}
+            label={isPending ? 'Signing Batch...' : 
+                   blockchainProgress === 0 ? `Confirm Shortlist (${ranked.length})` :
+                   `Continue Resolution (${blockchainProgress} done)`}
             variant="primary"
             onClick={handleConfirm}
             loading={isPending}
-            disabled={isPending || ranked.length === 0}
+            disabled={isPending || ranked.length === 0 || blockchainProgress >= ranked.length}
             fullWidth
           />
         </div>

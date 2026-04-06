@@ -51,13 +51,13 @@ export function AdminControlModal({
   }, [forceSuccess, updateSuccess, onClose]);
 
   const handleForceStatus = () => {
-    adminForceStatus(BigInt(program.blockchainId), selectedStatus);
+    adminForceStatus(BigInt(program.pid), selectedStatus);
   };
 
   const handleUpdateDates = () => {
     const getEpoch = (iso: string) => Math.floor(new Date(iso).getTime() / 1000);
     adminUpdateDates(
-      BigInt(program.blockchainId),
+      BigInt(program.pid),
       BigInt(getEpoch(dates.appStart)),
       BigInt(getEpoch(dates.appEnd)),
       BigInt(getEpoch(dates.voteStart)),
@@ -68,7 +68,7 @@ export function AdminControlModal({
   const isPending = forcing || updating;
 
   return (
-    <NeoModal isOpen={isOpen} onClose={onClose} title={`Admin: Program ${program.blockchainId}`}>
+    <NeoModal isOpen={isOpen} onClose={onClose} title={`Admin: Program ${program.pid}`}>
       <div className="flex gap-2 mb-6">
         <button
           className={`flex-1 py-2 font-bold rounded-lg border-2 border-black transition-colors ${

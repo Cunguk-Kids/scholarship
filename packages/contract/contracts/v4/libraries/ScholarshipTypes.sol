@@ -115,7 +115,7 @@ library ScholarshipTypes {
     }
 
     struct Program {
-        uint256           id;
+        uint256           pid;
         address           initiator;
         string            metadataCID;
 
@@ -155,7 +155,7 @@ library ScholarshipTypes {
     // ═══════════════════════════════════════════════════════════════════
 
     struct Applicant {
-        uint256           programId;
+        uint256           pid;
         address           wallet;
         ApplicationStatus status;
         string            profileCID;
@@ -187,7 +187,7 @@ library ScholarshipTypes {
      *         per-scholar counters in MilestoneManager.
      */
     struct Scholar {
-        uint256       programId;
+        uint256       pid;
         address       wallet;
         StudentStatus status;
         bool          isBlacklisted;
@@ -208,7 +208,7 @@ library ScholarshipTypes {
      *
      * @dev    Storage layout (32-byte slots):
      *         slot 0 : id          (uint256)
-     *         slot 1 : programId   (uint256)
+     *         slot 1 : pid         (uint256)
      *         slot 2 : scholar     (address 20) | kind (uint8) — 11 bytes free
      *         slot 3 : amount      (uint256)
      *         slot 4 : proposedBy  (address 20) — who created this milestone
@@ -223,7 +223,7 @@ library ScholarshipTypes {
      */
     struct Milestone {
         uint256         id;
-        uint256         programId;
+        uint256         pid;
         address         scholar;
         MilestoneKind   kind;           // MANDATORY | OPTIONAL | NEGOTIATED
         uint256         amount;
@@ -255,7 +255,7 @@ library ScholarshipTypes {
     struct ConfidenceStake {
         address voter;
         address scholar;
-        uint256 programId;
+        uint256 pid;
         uint256 amount;
         bool    isResolved;
         bool    slashed;
@@ -263,7 +263,7 @@ library ScholarshipTypes {
 
     struct Dispute {
         uint256       id;
-        uint256       programId;
+        uint256       pid;
         address       scholar;
         uint256       milestoneId;
         address       bountyHunter;

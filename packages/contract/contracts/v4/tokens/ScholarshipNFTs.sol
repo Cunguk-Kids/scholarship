@@ -30,12 +30,12 @@ abstract contract BaseCredentialNFT is ERC721URIStorage, AccessControl {
     uint256 private _nextTokenId;
 
     /// @notice Prevents double-minting the same credential.
-    mapping(address => mapping(uint256 => bool)) public hasMinted;
+    mapping(address => mapping(uint256 => bool)) public hasMinted; // wallet -> pid -> status
 
     // ── Errors ───────────────────────────────────────────────────────────────
 
     error SoulboundCannotTransfer();
-    error AlreadyMinted(address wallet, uint256 programId);
+    error AlreadyMinted(address wallet, uint256 pid);
 
     // ── Constructor ──────────────────────────────────────────────────────────
 
@@ -68,20 +68,20 @@ abstract contract BaseCredentialNFT is ERC721URIStorage, AccessControl {
     /**
      * @notice Mint one credential NFT.
      * @param recipient   Wallet to receive the token.
-     * @param programId   Associated program (used for duplicate guard).
+     * @param pid         Associated program (used for duplicate guard).
      * @param metadataURI IPFS URI for the token's JSON metadata.
      * @return tokenId    Newly minted token ID.
      */
     function mint(
         address recipient,
-        uint256 programId,
+        uint256 pid,
         string calldata metadataURI
     ) external onlyRole(MINTER_ROLE) returns (uint256 tokenId) {
-        if (hasMinted[recipient][programId])
-            revert AlreadyMinted(recipient, programId);
+        if (hasMinted[recipient][pid])
+            revert AlreadyMinted(recipient, pid);
 
         tokenId = _nextTokenId++;
-        hasMinted[recipient][programId] = true;
+        hasMinted[recipient][pid] = true;
         _mint(recipient, tokenId);
         _setTokenURI(tokenId, metadataURI);
     }

@@ -28,7 +28,7 @@ export type DisputeStatus =
 
 export interface Program {
   id: string;
-  blockchainId: number;
+  pid: number;
   initiator: string;
   metadataCID: string;
   status: ProgramStatus;
@@ -67,7 +67,7 @@ export interface ProgramDetail extends Program {
 export interface Applicant {
   id: string;
   programId: string | null;
-  blockchainProgramId: number;
+  pid: number;
   wallet: string;
   status: ApplicationStatus;
   profileCID: string;
@@ -83,7 +83,7 @@ export interface Applicant {
 export interface Scholar {
   id: string;
   programId: string | null;
-  blockchainProgramId: number;
+  pid: number;
   wallet: string;
   status: ScholarStatus;
   freezeUntil: string | null;
@@ -118,7 +118,7 @@ export interface Milestone {
 export interface Vote {
   id: string;
   programId: string | null;
-  blockchainProgramId: number;
+  pid: number;
   voterAddress: string;
   candidateAddress: string;
   votingWeight: string;
@@ -128,7 +128,7 @@ export interface Vote {
 export interface ConfidenceStake {
   id: string;
   programId: string | null;
-  blockchainProgramId: number;
+  pid: number;
   voterAddress: string;
   scholarAddress: string;
   amount: string;

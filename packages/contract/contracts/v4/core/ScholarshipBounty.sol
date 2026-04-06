@@ -92,7 +92,7 @@ contract ScholarshipBounty is
 
     event DisputeRaised(
         uint256 indexed disputeId,
-        uint256 indexed programId,
+        uint256 indexed pid,
         address indexed scholar,
         address         bountyHunter,
         ScholarshipTypes.DisputeType disputeType,
@@ -171,14 +171,14 @@ contract ScholarshipBounty is
      *         contract before calling.  If potential reward is 0 (empty fund),
      *         no stake is required — BH still takes on cooldown risk.
      *
-     * @param programId    Programme the scholar is enrolled in.
+     * @param pid    Programme the scholar is enrolled in.
      * @param scholar      Scholar wallet to dispute.
      * @param milestoneId  Specific milestone to freeze (0 = general dispute).
      * @param disputeType  Fraud severity: LIGHT_FRAUD | MILESTONE_FRAUD | HEAVY_FRAUD.
      * @param evidenceCID  IPFS CID of evidence package.
      */
     function raiseDispute(
-        uint256 programId,
+        uint256 pid,
         address scholar,
         uint256 milestoneId,
         ScholarshipTypes.DisputeType disputeType,
@@ -191,17 +191,17 @@ contract ScholarshipBounty is
         if (block.timestamp < bh.cooldownUntil)     revert BHOnCooldown(bh.cooldownUntil);
 
         // Scholar must be active
-        ScholarshipTypes.Scholar memory scholarData = core.getScholar(scholar, programId);
+        ScholarshipTypes.Scholar memory scholarData = core.getScholar(scholar, pid);
         if (scholarData.status != ScholarshipTypes.StudentStatus.ACTIVE)
             revert ScholarNotActive();
 
         // One dispute per scholar per programme at a time
-        if (activeDisputeForScholar[scholar][programId] != 0)
+        if (activeDisputeForScholar[scholar][pid] != 0)
             revert ScholarAlreadyDisputed();
 
         // Calculate stake and potential reward
-        uint256 remainingFund    = core.getRemainingFund(scholar, programId);
-        ScholarshipTypes.Program memory prog = core.getProgram(programId);
+        uint256 remainingFund    = core.getRemainingFund(scholar, pid);
+        ScholarshipTypes.Program memory prog = core.getProgram(pid);
 
         uint256 potentialReward  = (remainingFund * prog.slashDist.bountyHunterPercent) / 100;
         uint256 stakeRequired    = (potentialReward * ScholarshipTypes.BH_STAKE_PERCENT) / 100;
@@ -224,7 +224,7 @@ contract ScholarshipBounty is
 
         disputes[disputeId] = ScholarshipTypes.Dispute({
             id:                 disputeId,
-            programId:          programId,
+            pid:                pid,
             scholar:            scholar,
             milestoneId:        milestoneId,
             bountyHunter:       msg.sender,
@@ -241,7 +241,7 @@ contract ScholarshipBounty is
         });
 
         bh.activeDisputeId                         = disputeId;
-        activeDisputeForScholar[scholar][programId] = disputeId;
+        activeDisputeForScholar[scholar][pid] = disputeId;
 
         // Freeze the relevant milestone if this is a milestone-level dispute.
         // Validate that the milestone actually belongs to this scholar — prevents
@@ -253,14 +253,14 @@ contract ScholarshipBounty is
                 "ScholarshipBounty: milestone does not belong to this scholar"
             );
             require(
-                targetMilestone.programId == programId,
+                targetMilestone.pid == pid,
                 "ScholarshipBounty: milestone not in this program"
             );
             milestone.freezeMilestone(milestoneId);
         }
 
         emit DisputeRaised(
-            disputeId, programId, scholar, msg.sender,
+            disputeId, pid, scholar, msg.sender,
             disputeType, evidenceCID, stakeRequired, potentialReward
         );
     }
@@ -395,14 +395,14 @@ contract ScholarshipBounty is
     function _executeBHWin(uint256 disputeId) internal {
         ScholarshipTypes.Dispute storage d  = disputes[disputeId];
         ScholarshipTypes.BountyHunterRecord storage bh = bhRecords[d.bountyHunter];
-        ScholarshipTypes.Program memory prog = core.getProgram(d.programId);
+        ScholarshipTypes.Program memory prog = core.getProgram(d.pid);
 
         // Slash the scholar via Core
-        core.slashScholar(d.scholar, d.programId, d.disputeType);
+        core.slashScholar(d.scholar, d.pid, d.disputeType);
 
         // Distribute remaining fund via Treasury
         treasury.slashAndDistribute(
-            d.programId,
+            d.pid,
             d.scholar,
             d.bountyHunter,
             prog.slashDist.bountyHunterPercent,
@@ -420,7 +420,7 @@ contract ScholarshipBounty is
         bh.totalWins        += 1;
         bh.consecutiveLosses = 0; // Reset consecutive loss counter on win
 
-        activeDisputeForScholar[d.scholar][d.programId] = 0;
+        activeDisputeForScholar[d.scholar][d.pid] = 0;
     }
 
     /**
@@ -455,7 +455,7 @@ contract ScholarshipBounty is
         }
 
         bh.cooldownUntil = block.timestamp + cooldown;
-        activeDisputeForScholar[d.scholar][d.programId] = 0;
+        activeDisputeForScholar[d.scholar][d.pid] = 0;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -477,16 +477,16 @@ contract ScholarshipBounty is
     /**
      * @notice Preview stake and potential reward before calling raiseDispute.
      * @param scholar    Scholar wallet.
-     * @param programId  Target programme.
+     * @param pid  Target programme.
      * @return stakeRequired    USDC BH must lock.
      * @return potentialReward  USDC BH earns if dispute is upheld.
      */
     function calculateStake(
         address scholar,
-        uint256 programId
+        uint256 pid
     ) external view returns (uint256 stakeRequired, uint256 potentialReward) {
-        uint256 remaining    = core.getRemainingFund(scholar, programId);
-        ScholarshipTypes.Program memory prog = core.getProgram(programId);
+        uint256 remaining    = core.getRemainingFund(scholar, pid);
+        ScholarshipTypes.Program memory prog = core.getProgram(pid);
         potentialReward      = (remaining * prog.slashDist.bountyHunterPercent) / 100;
         stakeRequired        = (potentialReward * ScholarshipTypes.BH_STAKE_PERCENT) / 100;
     }

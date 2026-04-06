@@ -11,8 +11,8 @@ export const scholarshipBountyHandlers = () => {
 
   ponder.on("ScholarshipBounty:DisputeRaised", async ({ event }) => {
     try {
-      const { disputeId, programId, scholar, bountyHunter, disputeType, evidenceCID, stake, potentialReward } = event.args;
-      const progUuid = await findProgramUuid(Number(programId));
+      const { disputeId, pid, scholar, bountyHunter, disputeType, evidenceCID, stake, potentialReward } = event.args;
+      const progUuid = await findProgramUuid(Number(pid));
 
       const typeMap: Record<number, NonNullable<typeof v4Disputes.$inferInsert["disputeType"]>> = {
         0: "LIGHT_FRAUD", 1: "MILESTONE_FRAUD", 2: "HEAVY_FRAUD",

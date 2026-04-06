@@ -5,6 +5,7 @@ import { useToggleOpenDonation } from '@/lib/contracts/write-hooks';
 import { DonateModal } from '../components/DonateModal';
 import { VoteModal } from '../components/VoteModal';
 import { ConfidenceStakeModal } from '../components/ConfidenceStakeModal';
+import { SelectWinnersModal } from '../components/SelectWinnersModal';
 import { useParams, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -50,6 +51,7 @@ export function ProgramDetailPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<{ address: `0x${string}`; name?: string } | null>(null);
   const [isStakeOpen, setIsStakeOpen] = useState(false);
   const [selectedScholar, setSelectedScholar] = useState<{ address: `0x${string}`; name?: string } | null>(null);
+  const [isSelectWinnersOpen, setIsSelectWinnersOpen] = useState(false);
 
   const { address: userAddress } = useAccount();
   const { toggle, isPending: isToggling } = useToggleOpenDonation();
@@ -103,7 +105,7 @@ export function ProgramDetailPage() {
           Programs
         </Link>
         <span>/</span>
-        <span className="font-bold text-black">{meta?.name ?? `#${program.blockchainId}`}</span>
+        <span className="font-bold text-black">{meta?.name ?? `#${program.pid}`}</span>
       </div>
 
       {/* Header */}
@@ -111,7 +113,7 @@ export function ProgramDetailPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="font-paytone text-3xl md:text-4xl">
-              {meta?.name ?? `Program #${program.blockchainId}`}
+              {meta?.name ?? `Program #${program.pid}`}
             </h1>
             <NeoBadge status={program.status} />
           </div>
@@ -130,7 +132,7 @@ export function ProgramDetailPage() {
               <span className="text-[10px] font-bold uppercase">Public:</span>
               <button
                 disabled={isToggling}
-                onClick={() => toggle(BigInt(program.blockchainId), !program.openDonation)}
+                onClick={() => toggle(BigInt(program.pid), !program.openDonation)}
                 className={`w-10 h-5 rounded-full border-2 border-black relative transition-colors ${program.openDonation ? 'bg-skgreen' : 'bg-gray-400'}`}
               >
                 <div className={`absolute top-0.5 w-3 h-3 bg-white border border-black rounded-full transition-all ${program.openDonation ? 'left-[22px]' : 'left-0.5'}`} />
@@ -158,6 +160,14 @@ export function ProgramDetailPage() {
               onClick={() => setIsDonateOpen(true)}
             />
           )}
+          {userAddress === program.initiator && program.status === 'VOTING' && (
+            <NeoButton
+              label="Select Winners"
+              variant="success"
+              size="md"
+              onClick={() => setIsSelectWinnersOpen(true)}
+            />
+          )}
         </div>
       </div>
 
@@ -165,7 +175,7 @@ export function ProgramDetailPage() {
         <DonateModal
           isOpen={isDonateOpen}
           onClose={() => setIsDonateOpen(false)}
-          programId={program.blockchainId}
+          programId={program.pid}
           programName={meta?.name}
         />
       )}
@@ -174,7 +184,7 @@ export function ProgramDetailPage() {
         <VoteModal
           isOpen={isVoteOpen}
           onClose={() => setIsVoteOpen(false)}
-          programId={BigInt(program.blockchainId)}
+          programId={BigInt(program.pid)}
           candidateAddress={selectedCandidate.address}
           candidateName={selectedCandidate.name}
         />
@@ -184,9 +194,16 @@ export function ProgramDetailPage() {
         <ConfidenceStakeModal
           isOpen={isStakeOpen}
           onClose={() => setIsStakeOpen(false)}
-          programId={BigInt(program.blockchainId)}
+          programId={BigInt(program.pid)}
           scholarAddress={selectedScholar.address}
           scholarName={selectedScholar.name}
+        />
+      )}
+
+      {isSelectWinnersOpen && (
+        <SelectWinnersForProgram
+          program={program}
+          onClose={() => setIsSelectWinnersOpen(false)}
         />
       )}
 
@@ -488,5 +505,19 @@ function ListTab<T extends { id?: string }>({
     <NeoCard hoverable={false}>
       <div className="divide-y-2 divide-gray-100">{data.map(renderItem)}</div>
     </NeoCard>
+  );
+}
+
+function SelectWinnersForProgram({ program, onClose }: { program: any; onClose: () => void }) {
+  const { data: applicants = [] } = useProgramApplicants(program.id);
+  const shortlisted = applicants.filter((a) => a.status === 'SHORTLISTED');
+  return (
+    <SelectWinnersModal
+      isOpen
+      onClose={onClose}
+      programId={program.pid}
+      shortlisted={shortlisted}
+      targetWinners={program.targetWinners}
+    />
   );
 }

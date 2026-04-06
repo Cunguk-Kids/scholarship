@@ -48,9 +48,9 @@ export function ExtendDeadlineModal({ isOpen, onClose, program }: Props) {
     const newEndTimestamp = Math.floor(new Date(newEndStr).getTime() / 1000);
     
     if (isAppOpen) {
-      extendApplicationDeadline(BigInt(program.blockchainId), BigInt(newEndTimestamp));
+      extendApplicationDeadline(BigInt(program.pid), BigInt(newEndTimestamp));
     } else if (isVoting) {
-      extendVotingDeadline(BigInt(program.blockchainId), BigInt(newEndTimestamp));
+      extendVotingDeadline(BigInt(program.pid), BigInt(newEndTimestamp));
     }
   };
 

@@ -130,7 +130,7 @@ function CandidateList({ program }: { program: Program }) {
           <CandidateCard
             key={applicant.id}
             applicant={applicant}
-            programId={program.blockchainId}
+            programId={program.pid}
           />
         ))}
       </div>
