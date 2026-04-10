@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { usePrograms, useProgramApplicants } from '@/lib/api/hooks';
 import { fetchApplicantProfile, fetchProgramMeta } from '@/lib/ipfs';
-import { useCastVote } from '@/lib/contracts/write-hooks';
+import { useVoteForCandidate } from '@/lib/contracts/write-hooks';
 import { useQuery } from '@tanstack/react-query';
 import type { Program, Applicant } from '@/lib/api/types';
 import { NeoCard, NeoCardBody } from '@/components/ui/NeoCard';
@@ -127,11 +127,7 @@ function CandidateList({ program }: { program: Program }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {shortlisted.map((applicant) => (
-          <CandidateCard
-            key={applicant.id}
-            applicant={applicant}
-            programId={program.pid}
-          />
+          <CandidateCard key={applicant.id} applicant={applicant} programId={program.pid} />
         ))}
       </div>
     </div>
@@ -146,7 +142,7 @@ function CandidateCard({ applicant, programId }: { applicant: Applicant; program
     enabled: !!applicant.profileCID,
   });
 
-  const { castVote, isPending, isSuccess } = useCastVote();
+  const { vote: castVote, isPending, isSuccess } = useVoteForCandidate();
 
   return (
     <>
@@ -191,7 +187,7 @@ function CandidateCard({ applicant, programId }: { applicant: Applicant; program
                 fullWidth
                 disabled={isPending || isSuccess}
                 loading={isPending}
-                onClick={() => castVote(BigInt(programId), applicant.wallet as `0x${string}`)}
+                onClick={() => castVote(BigInt(programId), applicant.wallet as `0x${string}`, true)}
               />
             </div>
             <NeoButton label="Stake" variant="ghost" onClick={() => setIsStakeModalOpen(true)} />

@@ -43,7 +43,7 @@ export function CreateProgramModal({ isOpen, onClose }: Props) {
     protocolPercent: 20,
   });
 
-  const { approve, isPending: isApproving, isSuccess: approved } = useApproveUSDC();
+  const { approve, isPending: isApproving, isSuccess: approved, hash: approveHash } = useApproveUSDC();
   const { create, isPending: isCreating, isSuccess: created } = useCreateProgram();
   const [metaCID, setMetaCID] = useState('');
 
@@ -105,9 +105,17 @@ export function CreateProgramModal({ isOpen, onClose }: Props) {
     }
   };
 
+  // Advance from approve → create when receipt is confirmed.
+  // We watch both `approved` (isSuccess from receipt hook) AND `approveHash + !isApproving`
+  // as a fallback, because on local chains the isSuccess pulse can be missed
+  // if the component re-renders at the exact same tick.
   useEffect(() => {
-    if (approved && step === 'approve') setStep('create');
+    if (step === 'approve' && approved) setStep('create');
   }, [approved, step]);
+
+  useEffect(() => {
+    if (step === 'approve' && approveHash && !isApproving) setStep('create');
+  }, [approveHash, isApproving, step]);
 
   useEffect(() => {
     if (created) setStep('done');

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useStakeConfidence, useApproveUSDC } from "@/lib/contracts/write-hooks";
+import { usePlaceConfidenceStake, useApproveUSDC } from "@/lib/contracts/write-hooks";
 import { NeoModal } from "@/components/ui/NeoModal";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { v4Addresses } from "@/constants/contractsV4";
@@ -16,7 +16,7 @@ export function ConfidenceStakeModal({ isOpen, onClose, programId, candidateWall
   const [step, setStep] = useState<"form" | "approve" | "stake">("form");
 
   const { approve, isPending: isApproving, isSuccess: approved } = useApproveUSDC();
-  const { stake, isPending: isStaking, isSuccess: staked } = useStakeConfidence();
+  const { stake, isPending: isStaking, isSuccess: staked } = usePlaceConfidenceStake();
 
   const handleNext = () => {
     if (step === "form") {
